@@ -1,0 +1,39 @@
+{
+  "name": "server",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc && tsc-alias",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:seed": "tsx src/db/seed.ts",
+    "db:demo": "tsx src/db/demo.ts",
+    "export:data": "tsx src/scripts/export-data.ts",
+    "slack:backfill": "tsx src/scripts/backfill-slack-channels.ts",
+    "make-admin": "tsx src/db/make-admin.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.8",
+    "better-auth": "^1.6.20",
+    "dotenv": "^16.4.7",
+    "drizzle-orm": "^0.45.2",
+    "hono": "^4.9.10",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.3",
+    "@types/pg": "^8.11.10",
+    "drizzle-kit": "^0.31.5",
+    "tsc-alias": "^1.8.17",
+    "tsx": "^4.19.2",
+    "typescript": "~6.0.2",
+    "vitest": "^4.1.9"
+  }
+}

@@ -1,0 +1,652 @@
+﻿Replicate This v2.0 — Design Specification
+Date: 2026-04-17 Organization: FORRT / Replication Journal Federation Status: Approval Needed for Implementation
+
+
+________________
+
+
+1. Overview
+Replicate This is a community-driven, public registry for nominating published research papers that merit independent verification through replication or reproduction. v2.0 transitions from a static registry to an interactive platform where researchers can nominate studies, claim replication intent, form collaborative working groups, and signal community priority through voting.
+
+
+The platform is designed around two core constraints that shape every decision:
+
+
+* Zero-PII compliance with German Datenschutz (GDPR) — no names, emails, or identifying data are persisted to the database
+* Zero infrastructure cost at rest — serverless architecture on Vercel with Supabase, near-$0 to host
+
+
+________________
+
+
+2. Tech Stack
+Component
+	Technology
+	Reason
+	Framework
+	Next.js 15+ (App Router)
+	SSR for privacy, Server Actions for logic, React 19 optimistic UI
+	Auth
+	Better Auth[a][b]
+	Type-safe, customizable hooks, ORCID OIDC support
+	Database
+	Supabase (Postgres, Frankfurt eu-central-1)
+	GDPR data residency, Realtime, RLS
+	Deployment
+	Vercel
+	Serverless, zero initial cost
+	Email
+	Postmark (EU data region)
+	Datenschutz-compliant transactional email, DPA signed pre-launch
+	DOI Metadata
+	Crossref API
+	Open, free metadata source for academic papers
+	
+
+________________
+
+
+3. Visual Design
+Direction: Clean & Accessible
+
+
+Light backgrounds, neutral whites[c], green accent (#059669), sans-serif typeface. Designed for a broad academic audience — approachable and readable, not sterile. Reference aesthetic: Wikipedia meets Linear.
+
+
+Status badges use semantic colour: green for approved, amber for in_progress (displayed publicly as "Claimed / In Progress"),[d] grey for pending (admin-only view).
+
+
+________________
+
+
+4. Architecture Approach
+Hybrid: BaaS-first for public surfaces, Server Actions for private/complex logic.
+
+
+* The public registry (nominations list, voting, DOI lookup) uses Supabase RLS for data access — simple, fast, low overhead
+* The collaboration hub[e] (private working groups, live chat, claim handshake) is fully gated by server-side membership checks in Next.js — RLS acts as a second enforcement layer, not the primary gate
+* This keeps simple features simple and gives explicit control where permissions are complex
+
+
+________________
+
+
+5. Database Schema
+nominations
+Column
+	Type
+	Notes
+	id
+	UUID PK
+	
+
+	doi
+	TEXT UNIQUE
+	Normalised: toLowerCase().trim() before write
+	metadata[f]
+	JSONB
+	Cached Crossref response: title, authors, journal, publication_date
+	discipline
+	TEXT
+	Dropdown-constrained
+	justification
+	TEXT
+	Free text from submitter
+	nominator_uid
+	TEXT
+	References users.id; SET NULL on user deletion
+	status[g]
+	ENUM
+	pending → approved → in_progress → (terminal); rejected any time before in_progress
+	last_activity_at
+	TIMESTAMPTZ
+	Updated by trigger on votes, claims, hub_messages inserts
+	created_at
+	TIMESTAMPTZ
+	
+
+	votes[h][i]
+Column
+	Type
+	Notes
+	nomination_id
+	UUID FK
+	
+
+	user_uid
+	TEXT FK
+	
+
+	value
+	SMALLINT
+	+1 or -1
+	created_at
+	TIMESTAMPTZ
+	Used for 24-hour gate check
+	
+
+Constraint: UNIQUE(nomination_id, user_uid)
+claims[j][k]
+Column
+	Type
+	Notes
+	id
+	UUID PK
+	
+
+	nomination_id
+	UUID FK
+	
+
+	claimant_uid
+	TEXT FK
+	
+
+	message
+	TEXT
+	Replicator's pitch — expertise, lab, timeline
+	status
+	ENUM
+	pending → accepted | rejected
+	created_at
+	TIMESTAMPTZ
+	
+
+	working_groups
+Column
+	Type
+	Notes
+	id
+	UUID PK
+	
+
+	nomination_id
+	UUID FK
+	
+
+	created_at
+	TIMESTAMPTZ
+	
+
+	working_group_members
+Column
+	Type
+	Notes
+	group_id
+	UUID FK
+	
+
+	user_uid
+	TEXT FK
+	ON DELETE CASCADE
+	role
+	ENUM
+	nominator | replicator; mutable for Admin "Promote" action
+	joined_at
+	TIMESTAMPTZ
+	
+
+	
+
+Index: (group_id, user_uid) — required for Realtime RLS performance
+hub_posts
+Column
+	Type
+	Notes
+	id
+	UUID PK
+	
+
+	group_id
+	UUID FK
+	
+
+	author_uid
+	TEXT FK
+	
+
+	content
+	TEXT
+	
+
+	parent_id
+	UUID
+	Nullable; references hub_posts.id for threading
+	created_at
+	TIMESTAMPTZ
+	
+
+	hub_messages
+Column
+	Type
+	Notes
+	id
+	UUID PK
+	
+
+	group_id
+	UUID FK
+	
+
+	author_uid
+	TEXT FK
+	
+
+	content
+	TEXT
+	
+
+	created_at
+	TIMESTAMPTZ
+	
+
+	
+
+RLS policy: auth.uid() IN (SELECT user_uid FROM working_group_members WHERE group_id = hub_messages.group_id)
+hub_links
+Column
+	Type
+	Notes
+	id
+	UUID PK
+	
+
+	group_id
+	UUID FK
+	
+
+	url
+	TEXT
+	
+
+	label
+	TEXT
+	
+
+	added_by_uid
+	TEXT FK
+	
+
+	created_at
+	TIMESTAMPTZ
+	
+
+	inquiries
+Column
+	Type
+	Notes
+	id
+	UUID PK
+	
+
+	nomination_id
+	UUID FK
+	
+
+	sender_uid
+	TEXT FK
+	Sender must be logged in
+	content
+	TEXT
+	
+
+	delivery_status
+	ENUM
+	pending → sent | failed; logged from Postmark response
+	created_at
+	TIMESTAMPTZ
+	
+
+	read_at
+	TIMESTAMPTZ
+	Nullable
+	in_app_notifications
+Column
+	Type
+	Notes
+	id
+	UUID PK
+	
+
+	user_uid
+	TEXT FK
+	ON DELETE CASCADE
+	type
+	TEXT
+	e.g. new_claim, claim_accepted, new_inquiry, nomination_rejected
+	data
+	JSONB
+	Context payload (nomination_id, reason text, etc.)
+	read_at
+	TIMESTAMPTZ
+	Nullable
+	created_at
+	TIMESTAMPTZ
+	
+
+	moderation_logs
+Column
+	Type
+	Notes
+	id
+	UUID PK
+	
+
+	admin_uid
+	TEXT FK
+	
+
+	nomination_id
+	UUID FK
+	
+
+	action
+	TEXT
+	e.g. approved, rejected, undo_rejection, promote_nominator
+	reason
+	TEXT
+	Required for rejection and promotion actions
+	timestamp
+	TIMESTAMPTZ
+	
+
+	Views
+nomination_vote_totals
+
+
+CREATE VIEW nomination_vote_totals AS
+
+
+SELECT nomination_id, SUM(value) AS score
+
+
+FROM votes
+
+
+GROUP BY nomination_id;
+
+
+Stays a standard view for v2. Can be converted to a Materialized View with a refresh trigger if performance degrades at scale.
+Triggers
+update_last_activity — fires AFTER INSERT on votes, claims, hub_messages; sets nominations.last_activity_at = NOW() for the relevant nomination_id.
+
+
+accept_claim_transaction — fires AFTER UPDATE on claims WHERE status = 'accepted'; atomically:
+
+
+1. Inserts into working_groups
+2. Inserts nominator and replicator into working_group_members
+3. Sets nominations.status = 'in_progress'
+
+
+________________
+
+
+6. Authentication & Privacy
+Providers
+Google, GitHub, ORCID (via OIDC using genericOAuth plugin). ORCID's sub claim is the 16-digit iD — already a pseudonymous academic identifier by design.
+Zero-PII Hook
+export const auth = betterAuth({
+
+
+  databaseHooks: {
+
+
+    user: {
+
+
+      create: {
+
+
+        before: async (user) => {
+
+
+          const hashedId = sha256(user.id + process.env.UID_PEPPER);
+
+
+          const dummyEmail =
+
+
+            sha256(user.email + process.env.EMAIL_PEPPER) +
+
+
+            "@privacy.forrt.org";
+
+
+          return {
+
+
+            data: {
+
+
+              ...user,
+
+
+              id: hashedId,
+
+
+              name: "Anonymous Researcher",
+
+
+              email: dummyEmail, // Satisfies unique constraint; real email never stored
+
+
+              image: null,
+
+
+            },
+
+
+          };
+
+
+        },
+
+
+      },
+
+
+    },
+
+
+  },
+
+
+  advanced: {
+
+
+    cookiePrefix: "__Host-better-auth",
+
+
+    useSecureCookies: true,
+
+
+  },
+
+
+});
+
+
+Account linking: The deterministic sha256(rawEmail + EMAIL_PEPPER) dummy email is stable across providers that share the same underlying email address — account linking works without storing the real email.
+Session & Deletion
+* Sessions: httpOnly, sameSite: lax, secure, server-only (__Host- prefix)
+* Delete account: purges the users row; cascades to all activity via ON DELETE CASCADE; nominations.nominator_uid set to NULL (public scientific records are retained)
+GDPR Notes
+* UIDs are pseudonymised, not anonymised. Treated as personal data internally.
+* Privacy policy must state: emails are processed transiently for notification purposes and never persisted to disk.
+* Right to erasure: single-click delete, instant effect.
+
+
+________________
+
+
+7. Nomination & Moderation Pipeline
+Submission Flow
+1. Logged-in user submits form: DOI, discipline, justification
+2. Server Action normalises DOI (toLowerCase().trim())
+3. Checks nominations for existing non-rejected entry with same DOI — returns "This study has already been nominated" with a link if found
+4. Calls Crossref API with AbortController (5-second timeout) and a User-Agent: mailto:admin@forrt.org header to join the Crossref Polite Pool (faster, less rate-limited) — on timeout, returns friendly error; nomination is not written[l]
+5. On success: writes nominations row with status: pending, caches Crossref metadata into metadata JSONB
+6. Creates in_app_notifications for all maintainer role users
+Moderation Dashboard (/admin)
+* Protected route — middleware checks maintainer role; notFound() if not
+* Supabase Realtime subscription on nominations filtered to status: pending — live badge on new arrivals
+* Pending tab: paginated list showing cached title, discipline, justification, researcher token (user_uid.slice(0,6)), submission date
+* Approve: status → approved, logged to moderation_logs
+* Reject: requires reason field; status → rejected, reason delivered to nominator via in_app_notification (type: nomination_rejected), logged
+* Archived tab: shows rejected nominations; Undo action resets to pending, logs reversal
+Status Flow
+pending → approved → in_progress
+
+
+    ↓
+
+
+ rejected  (admin override, any time before in_progress)
+
+
+Admins can manually override status at any point before in_progress.
+
+
+________________
+
+
+8. Community Voting
+* Gated[m][n]: user must be logged in and account must be older than 24 hours (created_at < NOW() - INTERVAL '24 hours')
+* Server Action toggle: no vote → insert; same vote → delete (un-vote); opposite vote → update
+* UNIQUE(nomination_id, user_uid) enforced at DB level
+* Score computed from nomination_vote_totals view — never cached on the nomination row
+* Registry default sort: score DESC, secondary last_activity_at DESC; additional sort by created_at via query param
+* Frontend: optimistic UI via useOptimistic — immediate increment/highlight, server rollback on failure
+* ORCID vote weighting: future feature, implementable as a view-level change only — no schema migration required
+
+
+________________
+
+
+9. Collaboration & Working Groups
+Claim[o] Submission
+* "Claim this study" button visible on all approved and in_progress nominations (groups stay open)
+* Claimant writes a pitch message (expertise, lab readiness, timeline)
+* Server Action inserts claims row with status: pending
+* in_app_notifications sent to nominator ("New claim on your nomination") and claimant (confirmation)
+Nominator Vetting
+* Nominator's dashboard lists all pending claims with researcher token and pitch message
+* Clicking the token triggers a Server Action that fetches the claimant's public ORCID biography or GitHub profile on-the-fly and renders it in a modal — no profile data written to DB
+Handshake
+* Accept: DB transaction fires accept_claim_transaction trigger — creates working group, adds members, sets nomination in_progress; claimant notified
+* Decline: claims.status → rejected; nominator may add a note; claimant notified
+* Multiple claims can be pending simultaneously; accepting one does not auto-reject others
+Collaboration Hub (/hub/[group_id])
+Access gated by server-side membership check in layout.tsx — returns notFound() for non-members. RLS on hub_messages enforces membership as a second layer.
+
+
+Three panels:
+
+
+1. Info — member tokens, nomination metadata, shared external links (hub_links). Any member can add a link with a label.
+2. Message board — threaded posts (hub_posts) with parent_id for replies. Async, not real-time. For longer updates and decisions.
+3. Live chat — hub_messages via Supabase Realtime, subscribed only after server confirms membership. Persisted for continuity; ephemeral in feel.
+Ghost Nominator Recovery[p]
+If the original nominator becomes unresponsive, an Admin can use "Promote to Nominator" on any active replicator in the group — updates working_group_members.role, logs action to moderation_logs with required reason.
+
+
+________________
+
+
+10. Inquiry System
+Third parties (logged-in, non-group-members) can send an inquiry from any nomination's public page.
+
+
+Flow:
+
+
+1. Server Action writes to inquiries with delivery_status: pending
+2. Creates in_app_notifications for all working group members
+3. Fetches recipient emails transiently: queries Better Auth's accounts table for the recipient's stored OAuth access token; if the token is expired, uses the stored refresh token (offline_access scope requested at OAuth handshake) to obtain a fresh one before calling the provider's userinfo endpoint in-memory
+4. Sends via Postmark (EU data region); logs Postmark's response status to inquiries.delivery_status
+5. Email addresses discarded immediately — never written to disk
+
+
+Note: Email delivery is best-effort. ORCID accounts may have private-by-default emails, and token refresh can fail if the user has revoked access. The in_app_notification is the primary delivery method; the Postmark email is a bonus layer.
+
+
+________________
+
+
+11. Public Registry
+* Lists all nominations with status in (approved, in_progress)
+* Each card: cached title, authors, journal, year (from metadata), vote score, status badge, discipline tag. The in_progress status renders as "Claimed / In Progress" on the public badge to preserve the v1 vocabulary users expect
+* Filterable by discipline, status
+* Sorted by score DESC / last_activity_at DESC by default
+* Claim button visible on all non-pending entries
+
+
+________________
+
+
+12. User Personas & Routes
+Persona
+	Key Routes
+	Nominator
+	/nominate, /dashboard (claims inbox, nomination status)
+	Replicator
+	/registry, /hub/[group_id]
+	Maintainer
+	/admin (moderation queue, archived tab)
+	Public
+	/registry, /nominations/[id] (read-only)
+	
+
+________________
+
+
+13. Compliance Summary
+Requirement
+	Implementation
+	Data residency
+	Supabase Frankfurt eu-central-1
+	No PII storage
+	Deterministic dummy email; name/image stripped in databaseHooks
+	Pseudonymisation
+	UIDs are hashed + peppered; treated as personal data internally
+	Transient processing
+	Emails fetched at send-time, never persisted; noted in privacy policy
+	Right to erasure
+	Cascade delete on user row
+	Email processor
+	Postmark EU region; DPA signed before launch
+	Cookie security
+	__Host- prefix, httpOnly, secure, sameSite: lax
+	
+
+________________
+
+
+14. Out of Scope for v2
+* ORCID-weighted voting (view-level change when ready)
+* Real-time presence indicators in the hub
+* Public researcher profiles
+* Replication outcome tracking / result submission
+
+
+[a]I'm confused by how this works - can only see this this is self-hosted. If that is the case, likely not feasible for us?
+[b]I need to check this out once. Let me see if this works on Github Pages
+[c]Love how this is the opposite of the current mockup. I don't have strong feelings, but I think Luke quite likes the current version :)
+[d]I find that confusing - in progress is better than approved, not problematic? Also, I am not sure if we need an approved badge, since that applies to everything users see?
+[e]again, I would break this out as a possible future feature
+[f]reference?
+[g]Final status should be completed / published?
+[h]I think we want two voting schemes: do you want this to see replicated (upvotes only) and do you think this will replicate (yes/no predictions), shown as distribution
+[i]could be saved as one and then split for display - or two - whatever is more efficient with supabase
+[j]let's call this contribution
+[k]and maybe split lead/contributor? But that is something to discuss
+[l]users should be able to nominate targets without crossref dois / any DOIs - so if crossref fails, we might want to fall back to the doi.org API that resolves other providers, and then ask user to enter the reference details manually (after double-checking the DOI)
+[m]let's not gate initial votes - that reduces engagement - we could count them less, or restrict users to a certain number of early votes
+[n]User logged in is a must, reason - Spamming with different sessions
+[o]let's discuss with Luke how complex we want to make this
+1 total reaction
+Keegan Vaz reacted with 👍 at 2026-04-21 21:06 PM
+[p]I don't think nominators have any special role after their nomination - they should be notified when the status changes to completed or published - but apart from that, they can become a contributor if they want to, or just leave the idea behind ...
+1 total reaction
+Keegan Vaz reacted with 👍 at 2026-04-21 21:06 PM

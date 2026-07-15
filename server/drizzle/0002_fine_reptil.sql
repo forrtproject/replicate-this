@@ -1,0 +1,1 @@
+ALTER TABLE "nominations" ADD COLUMN "verification_type" text DEFAULT 'replication' NOT NULL;

@@ -1,0 +1,75 @@
+Product Requirements Document: Replicate This (v2.0)
+Project Name: Replicate This
+Organization: FORRT (Framework for Open and Reproducible Research Training) / Replication Journal Federation
+Status: V2.0 (Full-Stack Web Application)
+Architecture: Serverless / Next.js / Supabase (Frankfurt Region)
+________________
+
+
+1. Executive Summary
+Replicate This is a community-driven, public registry for nominating published research papers that merit independent verification through replication or reproduction. This platform aims to change the scientific culture of criticism into one of collaboration by normalizing verification as a routine, shared scientific interest.
+
+The 2.0 version transitions from a static registry to an interactive platform where researchers can nominate studies, contribute replication intent, and signal community priority through upvote-based voting.
+
+2. Objectives & Goals
+* Normalize Replication: Build a public record of studies the community considers important to verify — without framing nominations as either an honor or a criticism.
+* Facilitate Contribution: Allow researchers to signal intent to replicate a study and coordinate lightweight efforts without requiring a formal handshake or approval.
+* Maintain Zero-PII Compliance: Adhere to strict German Datenschutz (GDPR) by ensuring no sensitive personal data (names/emails) is stored in the database. Users may optionally display a name or alias and a contact channel of their choosing.
+* Crowdsource Priorities: Allow the academic community to highlight which papers are most urgently in need of replication through an upvote system.
+* Zero Infrastructure Costs: Utilize a serverless architecture to ensure the platform requires near $0 to host at scale.
+
+
+
+
+3. User Personas
+1. The Nominator: A researcher or student who identifies a study worth verifying. They submit it to the registry and optionally display contact details for others to reach them.
+2. The Contributor: A researcher looking for a meaningful project. They browse the registry, contribute to studies, and coordinate verification efforts.
+3. The Maintainer (Admin): A FORRT team member who reviews incoming nominations for adherence to the Code of Conduct and approves them for public display.
+________________
+
+
+4. Functional Requirements
+4.1 Authentication (Privacy-First)
+* Providers: Exclusive support for Google, GitHub, and ORCID login.
+* No PII Storage: Better Auth is configured to strip names and emails before saving to the database. Only a non-identifying UID and the provider's unique ID are persisted.
+* Session Management: Secure, server-only cookies via Better Auth for high security and GDPR compliance.
+
+4.2 The Nomination & Moderation Pipeline
+* Submission: Users submit nominations via a structured form (DOI, Justification, Discipline).
+* Moderation Buffer: Nominations default to a "Pending" state and are hidden from the public until approved by a Maintainer.
+* Status Management: Administrators can label nominations as "In Progress" to update the public UI.
+
+4.3 Contribution
+* Contributing: Logged-in users can contribute to a study to signal intent to replicate. Contributions are auto-accepted — no nominator approval required.
+* Collaboration Hub: Deferred to a future release. A private working group space (chat, message board, shared links) is out of scope for v2.
+* Inquiry System: Users may optionally display social profile links (e.g. ORCID, GitHub, Twitter, LinkedIn) on their nominations and contributions. Third parties contact nominators or contributors directly through those external platforms — no in-app messaging or email relay is involved.
+
+4.4 Community Engagement
+* Upvote System: An upvote-only system on each nomination to signal scientific priority. No downvotes.
+* Reputation (Optional): Weighting votes from ORCID-verified accounts higher to ensure academic integrity.
+________________
+
+
+5. Technical Architecture
+Component
+	Technology
+	Reasoning
+	Framework
+	Next.js 15+ (App Router)
+	High performance, SSR for privacy, and Server Actions for logic.
+	Auth
+	Better Auth
+	Type-safe, customizable, and handles ORCID via OIDC.
+	Database
+	Supabase (Postgres)
+	Hosted in Frankfurt (eu-central-1) for German compliance.
+	Deployment
+	Vercel
+	Scalable serverless hosting with zero initial cost.
+	________________
+
+
+6. Compliance & Privacy (Datenschutz)
+1. Data Residency: All database clusters are pinned to the Frankfurt region.
+2. Minimization: The application operates on "Identity-at-a-Distance." Personal profiles are fetched from providers at runtime and never stored locally. Social links are stored only when a user explicitly opts in and are labelled as publicly visible.
+3. Right to Erasure: A single-click "Delete Account" function that purges the hashed UID and removes the user's association with any nominations or contributions. Nomination and contribution records themselves are permanent — they are stable scientific records that remain after a user deletes their account.

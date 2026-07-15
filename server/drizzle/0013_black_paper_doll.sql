@@ -1,0 +1,1 @@
+ALTER TABLE "nominations" ADD COLUMN "replication_games" boolean DEFAULT false NOT NULL;

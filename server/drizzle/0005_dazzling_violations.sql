@@ -1,0 +1,1 @@
+ALTER TABLE "user" ADD COLUMN "links" jsonb DEFAULT '{}'::jsonb NOT NULL;

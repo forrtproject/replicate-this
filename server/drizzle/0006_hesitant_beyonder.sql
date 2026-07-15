@@ -1,0 +1,1 @@
+ALTER TABLE "nominations" ADD COLUMN "last_milestone" integer DEFAULT 0 NOT NULL;

@@ -1,0 +1,1 @@
+ALTER TABLE "nominations" ADD COLUMN "availability" jsonb DEFAULT '[]'::jsonb NOT NULL;

@@ -1,0 +1,1 @@
+ALTER TABLE "nominations" ADD COLUMN "availability_links" jsonb DEFAULT '{}'::jsonb NOT NULL;
