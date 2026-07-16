@@ -10,7 +10,7 @@ import { StatusBadge } from '@/features/nominations/StatusBadge'
 import { VerificationBanner } from '@/features/nominations/VerificationBadge'
 import { AvailabilityList } from '@/features/nominations/Availability'
 import { JournalTags } from '@/features/nominations/JournalTags'
-import { ReplicationGamesTag } from '@/features/nominations/ReplicationGamesTag'
+import { ReplicationWorkshopTag } from '@/features/nominations/ReplicationWorkshopTag'
 import { formatReference, researcherLabel } from '@/features/nominations/format'
 import { ContactLinks } from '@/features/profile/ContactLinks'
 import { ContributionPanel } from '@/features/contributions/ContributionPanel'
@@ -56,7 +56,7 @@ export function NominationDetailPage() {
       <div className="mb-2 mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
         <span className="rounded-full bg-muted px-2 py-0.5 text-ink/70">{n.discipline}</span>
         <StatusBadge status={n.status} />
-        {n.replicationGames && <ReplicationGamesTag />}
+        {n.replicationWorkshop && <ReplicationWorkshopTag />}
         <JournalTags nomination={n} />
         {n.nominatorToken && (
           <span>Nominated by {researcherLabel(n.nominatorName, n.nominatorToken)}</span>

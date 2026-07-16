@@ -129,6 +129,14 @@ export const auth = betterAuth({
         defaultValue: 'user',
         input: false, // never settable by the client
       },
+      // Surfaced in the session so the client can redirect new users to the
+      // post-signup walkthrough exactly once. Set server-side via POST /profile/onboarded.
+      onboarded: {
+        type: 'boolean',
+        required: false,
+        defaultValue: false,
+        input: false,
+      },
     },
   },
 

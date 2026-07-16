@@ -13,20 +13,54 @@ interface MyContribution {
 export interface Contributor {
   token: string
   name: string | null
+  image?: string
   links: import('@/types').ProfileLinks
   message: string
   createdAt: string
+  // Team-only fields (present when the viewer is on the team):
+  uid?: string
+  isSelf?: boolean
+  /** This teammate's email, if they've shared it with the viewer. */
+  email?: string | null
+  /** Whether the viewer has shared their own email with this teammate. */
+  youSharedWithThem?: boolean
+}
+
+export interface ContributorsResponse {
+  contributors: Contributor[]
+  viewerOnTeam: boolean
+  viewerHasEmail: boolean
 }
 
 export function useContributors(nominationId: string, enabled: boolean) {
   return useQuery({
     queryKey: ['contributors', nominationId],
     queryFn: () =>
-      api.get<{ contributors: Contributor[] }>(
-        `/nominations/${nominationId}/contributors`,
-      ),
-    select: (d) => d.contributors,
+      api.get<ContributorsResponse>(`/nominations/${nominationId}/contributors`),
     enabled,
+  })
+}
+
+/** Share the viewer's notification email with one teammate, or the whole team. */
+export function useShareEmail(nominationId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: { recipientUid?: string; all?: boolean }) =>
+      api.post<{ ok: true; shared: number }>(
+        `/contributions/${nominationId}/share-email`,
+        input,
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['contributors', nominationId] }),
+  })
+}
+
+/** Revoke a previously shared email (one teammate, or all). */
+export function useUnshareEmail(nominationId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (input: { recipientUid?: string; all?: boolean }) =>
+      api.delete<{ ok: true }>(`/contributions/${nominationId}/share-email`, input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['contributors', nominationId] }),
   })
 }
 

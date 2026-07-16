@@ -52,9 +52,6 @@ export function RootLayout() {
             <span className="font-display text-xl font-semibold tracking-tight">
               Replicate&nbsp;This
             </span>
-            <span className="hidden text-xs text-muted-foreground sm:inline">
-              a replication registry
-            </span>
           </Link>
           <nav className="flex items-center gap-5">
             <NavItem to="/registry">Registry</NavItem>

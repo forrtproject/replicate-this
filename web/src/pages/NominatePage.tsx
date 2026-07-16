@@ -20,7 +20,8 @@ const EMPTY_FORM: NominationFormValues = {
   designDeviations: '',
   availability: [],
   availabilityLinks: {},
-  replicationGames: false,
+  replicationWorkshop: false,
+  experimentalResearch: false,
 }
 
 export function NominatePage() {

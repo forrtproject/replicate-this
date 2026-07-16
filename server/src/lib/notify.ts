@@ -25,6 +25,7 @@ const TYPE_CATEGORY: Record<string, EmailPrefKey> = {
   // People engaging with you.
   new_contribution: 'contributions',
   new_inquiry: 'contributions',
+  team_member_joined: 'contributions',
   // Studies you subscribed to.
   watched_comment: 'watched',
   watched_update: 'watched',
@@ -45,6 +46,7 @@ const SUBJECTS: Record<string, string> = {
   nomination_admin_edited: 'A maintainer edited your nomination',
   new_contribution: 'Someone is contributing to your nomination',
   new_inquiry: 'You received a new inquiry',
+  team_member_joined: 'Someone joined a replication team you’re on',
   watched_comment: 'New comment on a study you subscribe to',
   watched_update: 'New progress update on a study you subscribe to',
   watched_contribution: 'New contributor on a study you subscribe to',

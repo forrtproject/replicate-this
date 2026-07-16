@@ -97,8 +97,10 @@ export interface NominationSummary {
   verificationType: VerificationType
   availability: AvailabilityKey[]
   availabilityLinks: Partial<Record<AvailabilityKey, string>>
-  // Nominator-set tag: suits a Replication Games event.
-  replicationGames: boolean
+  // Nominator-set tag: suits a Replication Workshop event.
+  replicationWorkshop: boolean
+  // Nominator-set flag: the study is experimental research (gates the Rx tag).
+  experimentalResearch: boolean
   status: NominationStatus
   nominatorToken: string | null
   nominatorName: string | null

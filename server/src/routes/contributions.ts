@@ -29,6 +29,39 @@ async function count(nominationId: string): Promise<number> {
   return n
 }
 
+/** UIDs of everyone contributing to a nomination. */
+async function contributorUids(nominationId: string): Promise<string[]> {
+  const rows = await db
+    .select({ uid: schema.contributions.contributorUid })
+    .from(schema.contributions)
+    .where(eq(schema.contributions.nominationId, nominationId))
+  return rows.map((r) => r.uid)
+}
+
+/** Everyone on the team: the nominator plus all contributors (may include dupes). */
+async function teamMemberUids(
+  nominationId: string,
+  nominatorUid: string | null,
+): Promise<string[]> {
+  const uids = new Set(await contributorUids(nominationId))
+  if (nominatorUid) uids.add(nominatorUid)
+  return [...uids]
+}
+
+async function isContributor(nominationId: string, uid: string): Promise<boolean> {
+  const [row] = await db
+    .select({ x: sql`1` })
+    .from(schema.contributions)
+    .where(
+      and(
+        eq(schema.contributions.nominationId, nominationId),
+        eq(schema.contributions.contributorUid, uid),
+      ),
+    )
+    .limit(1)
+  return Boolean(row)
+}
+
 // Current user's contributions, with the nomination they joined.
 contributionsRouter.get('/mine', async (c) => {
   const user = requireUser(c)
@@ -64,6 +97,10 @@ contributionsRouter.post('/:nominationId', async (c) => {
     throw new HttpError(400, 'You nominated this study — you are already involved.')
   }
 
+  // A genuine join vs. re-saving the pitch message: only a first join fans out
+  // notifications, subscribes the user, and advances the lifecycle.
+  const isNewJoin = !(await isContributor(nominationId, user.id))
+
   await db
     .insert(schema.contributions)
     .values({ nominationId, contributorUid: user.id, message })
@@ -83,6 +120,36 @@ contributionsRouter.post('/:nominationId', async (c) => {
   }
   await notifySubscribers(nominationId, 'watched_contribution', {}, user.id)
 
+  if (isNewJoin) {
+    // Auto-subscribe the new member to the study they just joined.
+    await db
+      .insert(schema.subscriptions)
+      .values({ nominationId, userUid: user.id })
+      .onConflictDoNothing()
+
+    // Tell the rest of the team (contributors, minus the joiner and the
+    // nominator who already got `new_contribution`) that someone joined.
+    const others = (await contributorUids(nominationId)).filter(
+      (uid) => uid !== user.id && uid !== nomination.nominatorUid,
+    )
+    await notify(
+      others.map((uid) => ({
+        userUid: uid,
+        type: 'team_member_joined',
+        data: { nominationId, contributorToken: user.id.slice(0, 8) },
+      })),
+    )
+
+    // First contributor moves an open (approved) study into progress.
+    if (nomination.status === 'approved') {
+      await db
+        .update(schema.nominations)
+        .set({ status: 'in_progress', lastActivityAt: new Date() })
+        .where(eq(schema.nominations.id, nominationId))
+      await notifySubscribers(nominationId, 'watched_status', { status: 'in_progress' }, user.id)
+    }
+  }
+
   return c.json({ userContributed: true, contributions: await count(nominationId) }, 201)
 })
 
@@ -90,7 +157,8 @@ contributionsRouter.post('/:nominationId', async (c) => {
 contributionsRouter.delete('/:nominationId', async (c) => {
   const user = requireUser(c)
   const nominationId = c.req.param('nominationId')
-  await db
+
+  const [removed] = await db
     .delete(schema.contributions)
     .where(
       and(
@@ -98,5 +166,94 @@ contributionsRouter.delete('/:nominationId', async (c) => {
         eq(schema.contributions.contributorUid, user.id),
       ),
     )
+    .returning({ id: schema.contributions.id })
+
+  if (removed) {
+    // Drop any email shares this member made or received on the nomination.
+    await db
+      .delete(schema.teamEmailShares)
+      .where(
+        and(
+          eq(schema.teamEmailShares.nominationId, nominationId),
+          sql`(${schema.teamEmailShares.sharerUid} = ${user.id} or ${schema.teamEmailShares.recipientUid} = ${user.id})`,
+        ),
+      )
+
+    // When the last contributor leaves, an in-progress study reverts to open.
+    if ((await count(nominationId)) === 0) {
+      const [n] = await db
+        .select({ status: schema.nominations.status })
+        .from(schema.nominations)
+        .where(eq(schema.nominations.id, nominationId))
+        .limit(1)
+      if (n?.status === 'in_progress') {
+        await db
+          .update(schema.nominations)
+          .set({ status: 'approved', lastActivityAt: new Date() })
+          .where(eq(schema.nominations.id, nominationId))
+        await notifySubscribers(nominationId, 'watched_status', { status: 'approved' }, user.id)
+      }
+    }
+  }
+
   return c.json({ userContributed: false, contributions: await count(nominationId) })
+})
+
+// Share your notification email with teammates on this nomination. Body:
+//   { all: true }            → share with everyone currently on the team, or
+//   { recipientUid: "..." }  → share with one specific teammate.
+// Directional: it grants that person visibility of your email; it doesn't reveal theirs.
+contributionsRouter.post('/:nominationId/share-email', async (c) => {
+  const user = requireUser(c)
+  const nominationId = c.req.param('nominationId')
+  const body = await c.req.json().catch(() => ({}))
+
+  const nomination = await getNomination(nominationId)
+  const onTeam =
+    nomination.nominatorUid === user.id || (await isContributor(nominationId, user.id))
+  if (!onTeam) throw new HttpError(403, 'Only team members can share their email.')
+
+  const members = new Set(await teamMemberUids(nominationId, nomination.nominatorUid))
+  members.delete(user.id)
+
+  let recipients: string[]
+  if (body.all === true) {
+    recipients = [...members]
+  } else {
+    const recipientUid = String(body.recipientUid ?? '')
+    if (!recipientUid) throw new HttpError(400, 'recipientUid or all is required.')
+    if (!members.has(recipientUid)) {
+      throw new HttpError(400, 'That person is not on this team.')
+    }
+    recipients = [recipientUid]
+  }
+
+  if (recipients.length > 0) {
+    await db
+      .insert(schema.teamEmailShares)
+      .values(recipients.map((uid) => ({ nominationId, sharerUid: user.id, recipientUid: uid })))
+      .onConflictDoNothing()
+  }
+  return c.json({ ok: true, shared: recipients.length })
+})
+
+// Revoke a previously shared email. Body: { recipientUid } or { all: true }.
+contributionsRouter.delete('/:nominationId/share-email', async (c) => {
+  const user = requireUser(c)
+  const nominationId = c.req.param('nominationId')
+  const body = await c.req.json().catch(() => ({}))
+
+  const base = and(
+    eq(schema.teamEmailShares.nominationId, nominationId),
+    eq(schema.teamEmailShares.sharerUid, user.id),
+  )
+  const recipientUid = String(body.recipientUid ?? '')
+  await db
+    .delete(schema.teamEmailShares)
+    .where(
+      body.all === true
+        ? base
+        : and(base, eq(schema.teamEmailShares.recipientUid, recipientUid)),
+    )
+  return c.json({ ok: true })
 })

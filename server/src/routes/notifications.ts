@@ -30,3 +30,21 @@ notificationsRouter.post('/read', async (c) => {
     )
   return c.json({ ok: true })
 })
+
+// Mark a single notification read (e.g. when the user clicks it). Scoped to the
+// owner so one user can't touch another's notifications.
+notificationsRouter.post('/:id/read', async (c) => {
+  const user = requireUser(c)
+  const id = c.req.param('id')
+  await db
+    .update(schema.notifications)
+    .set({ readAt: new Date() })
+    .where(
+      and(
+        eq(schema.notifications.id, id),
+        eq(schema.notifications.userUid, user.id),
+        isNull(schema.notifications.readAt),
+      ),
+    )
+  return c.json({ ok: true })
+})

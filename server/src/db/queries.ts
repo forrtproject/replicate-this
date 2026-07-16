@@ -23,8 +23,10 @@ export interface NominationSummary {
   verificationType: string
   availability: string[]
   availabilityLinks: Record<string, string>
-  // Nominator-set tag: suits a Replication Games event.
-  replicationGames: boolean
+  // Nominator-set tag: suits a Replication Workshop event.
+  replicationWorkshop: boolean
+  // Nominator-set flag: the study is experimental research.
+  experimentalResearch: boolean
   status: string
   // Pseudonymous short token for public attribution (never the full UID).
   nominatorToken: string | null
@@ -116,6 +118,7 @@ interface Row extends Record<string, unknown> {
   availability: string[]
   availability_links: Record<string, string> | null
   replication_games: boolean
+  experimental_research: boolean
   slack_channel_name: string
   justification: string
   data_location: string
@@ -149,7 +152,8 @@ function toSummary(r: Row): NominationSummary {
     verificationType: r.verification_type,
     availability: Array.isArray(r.availability) ? r.availability : [],
     availabilityLinks: r.availability_links ?? {},
-    replicationGames: r.replication_games,
+    replicationWorkshop: r.replication_games,
+    experimentalResearch: r.experimental_research,
     status: r.status,
     nominatorToken: r.nominator_token,
     nominatorName: r.nominator_name,
@@ -174,8 +178,8 @@ function toSummary(r: Row): NominationSummary {
 export async function listPublicNominations(viewer: string | null): Promise<NominationSummary[]> {
   const res = await db.execute<Row>(sql`
     select n.id, n.doi, n.metadata, n.discipline, n.verification_type, n.availability,
-           n.availability_links, n.replication_games, n.status, n.last_activity_at,
-           n.created_at, ${AGG(viewer)}
+           n.availability_links, n.replication_games, n.experimental_research, n.status,
+           n.last_activity_at, n.created_at, ${AGG(viewer)}
     from nominations n
     ${JOINS(viewer)}
     where n.status in ${sql`(${sql.join(PUBLIC_STATUSES.map((s) => sql`${s}`), sql`, `)})`}
@@ -191,9 +195,9 @@ export async function getNominationDetail(
 ): Promise<NominationDetail | null> {
   const res = await db.execute<Row>(sql`
     select n.id, n.doi, n.metadata, n.metadata_manual, n.discipline, n.verification_type,
-           n.availability, n.availability_links, n.replication_games, n.justification,
-           n.data_location, n.robustness_checks, n.design_deviations, n.slack_channel_name,
-           n.status, n.last_activity_at, n.created_at, ${AGG(viewer)}
+           n.availability, n.availability_links, n.replication_games, n.experimental_research,
+           n.justification, n.data_location, n.robustness_checks, n.design_deviations,
+           n.slack_channel_name, n.status, n.last_activity_at, n.created_at, ${AGG(viewer)}
     from nominations n
     ${JOINS(viewer)}
     where n.id = ${id}

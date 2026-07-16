@@ -5,6 +5,7 @@ import { useMyContributions } from '@/features/contributions/api'
 import {
   useNotifications,
   useMarkNotificationsRead,
+  useMarkNotificationRead,
   notificationLabel,
 } from '@/features/notifications/api'
 import { StatusBadge } from '@/features/nominations/StatusBadge'
@@ -32,6 +33,7 @@ export function DashboardPage() {
   const contributions = useMyContributions()
   const notifications = useNotifications()
   const markRead = useMarkNotificationsRead()
+  const markOneRead = useMarkNotificationRead()
 
   return (
     <div className="mx-auto max-w-4xl space-y-10 px-4 py-10">
@@ -63,24 +65,32 @@ export function DashboardPage() {
           {notifications.data?.notifications.length === 0 && (
             <Empty>No notifications.</Empty>
           )}
-          {notifications.data?.notifications.slice(0, 10).map((n) => (
-            <div
-              key={n.id}
-              className={`rounded-md border px-3 py-2 text-sm ${
-                n.readAt ? 'border-border text-muted-foreground' : 'border-primary/40 bg-accent'
-              }`}
-            >
-              {notificationLabel(n)}{' '}
-              {typeof n.data.nominationId === 'string' && (
-                <Link
-                  to={`/nominations/${n.data.nominationId}`}
-                  className="text-primary underline"
-                >
-                  view
-                </Link>
-              )}
-            </div>
-          ))}
+          {notifications.data?.notifications.slice(0, 10).map((n) => {
+            const nominationId =
+              typeof n.data.nominationId === 'string' ? n.data.nominationId : null
+            const className = `block w-full rounded-md border px-3 py-2 text-left text-sm transition-colors ${
+              n.readAt
+                ? 'border-border text-muted-foreground'
+                : 'border-primary/40 bg-accent hover:border-primary'
+            }`
+            const markIfUnread = () => {
+              if (!n.readAt) markOneRead.mutate(n.id)
+            }
+            return nominationId ? (
+              <Link
+                key={n.id}
+                to={`/nominations/${nominationId}`}
+                onClick={markIfUnread}
+                className={className}
+              >
+                {notificationLabel(n)}
+              </Link>
+            ) : (
+              <button key={n.id} onClick={markIfUnread} className={className}>
+                {notificationLabel(n)}
+              </button>
+            )
+          })}
         </div>
       </section>
 

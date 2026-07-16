@@ -64,7 +64,8 @@ function EditForm({ nomination: n }: { nomination: NominationDetail }) {
     designDeviations: n.designDeviations,
     availability: n.availability,
     availabilityLinks: n.availabilityLinks,
-    replicationGames: n.replicationGames,
+    replicationWorkshop: n.replicationWorkshop,
+    experimentalResearch: n.experimentalResearch,
   }))
 
   async function onSubmit(e: React.FormEvent) {

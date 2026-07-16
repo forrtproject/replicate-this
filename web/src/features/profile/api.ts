@@ -5,9 +5,11 @@ import type { EmailPrefs, ProfileLinks } from '@/types'
 
 interface Profile {
   name: string
+  image: string
   links: ProfileLinks
   notificationEmail: string
   emailPrefs: EmailPrefs
+  onboarded: boolean
 }
 
 export function useProfile() {
@@ -25,6 +27,27 @@ export function useUpdateLinks() {
       qc.invalidateQueries({ queryKey: ['profile'] })
       qc.invalidateQueries({ queryKey: nominationKeys.all })
     },
+  })
+}
+
+/** Set or clear the profile avatar (emoji or inline image data URL; '' clears it). */
+export function useUpdateAvatar() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (image: string) => api.patch<{ image: string }>('/profile/avatar', { image }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['profile'] })
+      qc.invalidateQueries({ queryKey: nominationKeys.all })
+    },
+  })
+}
+
+/** Mark the post-signup walkthrough finished (or skipped). */
+export function useCompleteOnboarding() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => api.post<{ ok: true }>('/profile/onboarded'),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['profile'] }),
   })
 }
 

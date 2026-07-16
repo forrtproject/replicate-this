@@ -6,7 +6,7 @@ import { StatusBadge } from './StatusBadge'
 import { VerificationBadge } from './VerificationBadge'
 import { AvailabilityTags } from './Availability'
 import { JournalTags } from './JournalTags'
-import { ReplicationGamesTag } from './ReplicationGamesTag'
+import { ReplicationWorkshopTag } from './ReplicationWorkshopTag'
 import { formatReference, researcherLabel } from './format'
 
 export function NominationCard({ nomination: n }: { nomination: NominationSummary }) {
@@ -33,7 +33,7 @@ export function NominationCard({ nomination: n }: { nomination: NominationSummar
 
         <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
           <span className="rounded-full bg-muted px-2 py-0.5 text-ink/70">{n.discipline}</span>
-          {n.replicationGames && <ReplicationGamesTag />}
+          {n.replicationWorkshop && <ReplicationWorkshopTag />}
           <JournalTags nomination={n} />
           {n.contributions > 0 && (
             <span className="inline-flex items-center gap-1">

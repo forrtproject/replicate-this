@@ -31,10 +31,19 @@ describe('matchJournalTags', () => {
     ).toEqual(['R2', 'RC'])
   })
 
-  it('adds RX for experimental disciplines', () => {
+  it('adds RX only when experimental research is flagged', () => {
+    expect(
+      keys({
+        discipline: 'Psychology',
+        verificationType: 'replication',
+        availability: [],
+        experimentalResearch: true,
+      }),
+    ).toEqual(['R2', 'RX'])
+    // Experimental discipline alone no longer implies RX — the flag is required.
     expect(
       keys({ discipline: 'Psychology', verificationType: 'replication', availability: [] }),
-    ).toEqual(['R2', 'RX'])
+    ).toEqual(['R2'])
   })
 
   it('stacks every qualifying tag', () => {

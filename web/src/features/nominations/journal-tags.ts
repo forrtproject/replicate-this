@@ -11,6 +11,8 @@ export interface JournalTagInput {
   discipline: string
   verificationType: VerificationType
   availability: AvailabilityKey[]
+  /** Nominator-flagged: the study is experimental research (gates the RX tag). */
+  experimentalResearch?: boolean
 }
 
 export interface JournalTag {
@@ -22,10 +24,6 @@ export interface JournalTag {
 }
 
 const wantsReproduction = (t: VerificationType) => t === 'reproduction' || t === 'both'
-
-// Our discipline list has no explicit "experimental" flag; these are the
-// disciplines where nominated studies are predominantly experimental.
-const EXPERIMENTAL_DISCIPLINES = ['Psychology', 'Neuroscience', 'Biology', 'Medicine', 'Physics']
 
 const RULES: (JournalTag & { matches: (n: JournalTagInput) => boolean })[] = [
   {
@@ -56,9 +54,9 @@ const RULES: (JournalTag & { matches: (n: JournalTagInput) => boolean })[] = [
   },
   {
     key: 'RX',
-    name: 'ReScience X',
-    hint: 'Reruns and rewrites of experimental research.',
-    matches: (n) => EXPERIMENTAL_DISCIPLINES.includes(n.discipline),
+    name: 'Rx — Experimental Research (ReScience X)',
+    hint: 'Reruns and rewrites of experimental research — the nominator flagged this study as experimental.',
+    matches: (n) => !!n.experimentalResearch,
   },
 ]
 

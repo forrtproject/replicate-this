@@ -41,7 +41,8 @@ export interface SubmitNominationInput {
   dataLocation?: string
   robustnessChecks?: string
   designDeviations?: string
-  replicationGames?: boolean
+  replicationWorkshop?: boolean
+  experimentalResearch?: boolean
   metadata?: NominationMetadata
 }
 

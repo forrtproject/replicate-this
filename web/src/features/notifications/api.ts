@@ -29,6 +29,15 @@ export function useMarkNotificationsRead() {
   })
 }
 
+/** Mark a single notification read — e.g. when the user clicks it. */
+export function useMarkNotificationRead() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api.post(`/notifications/${id}/read`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['notifications'] }),
+  })
+}
+
 const LABELS: Record<string, string> = {
   new_nomination: 'New nomination awaiting review',
   nomination_approved: 'Your nomination was approved',
@@ -43,6 +52,7 @@ const LABELS: Record<string, string> = {
   watched_status: 'Status change on a study you subscribe to',
   completion_requested: 'A team posted an article link — completion approval needed',
   new_contribution: 'Someone is contributing to your nomination',
+  team_member_joined: 'Someone joined a replication team you’re on',
   new_inquiry: 'You received a new inquiry',
   moderation_new_inquiry: 'New message posted on a nomination',
   moderation_new_comment: 'New comment posted on a nomination',

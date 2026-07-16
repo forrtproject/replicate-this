@@ -8,6 +8,7 @@ import { NominationDetailPage } from '@/pages/NominationDetailPage'
 import { EditNominationPage } from '@/pages/EditNominationPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { ProfilePage } from '@/pages/ProfilePage'
+import { WelcomePage } from '@/pages/WelcomePage'
 import { AdminPage } from '@/pages/AdminPage'
 import { CommentsModerationPage } from '@/pages/CommentsModerationPage'
 import { UsersPage } from '@/pages/UsersPage'
@@ -53,6 +54,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireAuth>
             <ProfilePage />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: 'welcome',
+        element: (
+          <RequireAuth>
+            <WelcomePage />
           </RequireAuth>
         ),
       },

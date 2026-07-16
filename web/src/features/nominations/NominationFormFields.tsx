@@ -6,7 +6,7 @@ import {
 } from '@/types'
 import { DefinedTerm } from './VerificationBadge'
 import { JournalTags } from './JournalTags'
-import { ReplicationGamesInfo, REPLICATION_GAMES_URL } from './ReplicationGamesTag'
+import { ReplicationWorkshopInfo, REPLICATION_WORKSHOP_URL } from './ReplicationWorkshopTag'
 
 /** The nomination fields shared by the submit and edit forms. */
 export interface NominationFormValues {
@@ -19,7 +19,8 @@ export interface NominationFormValues {
   designDeviations: string
   availability: AvailabilityKey[]
   availabilityLinks: Partial<Record<AvailabilityKey, string>>
-  replicationGames: boolean
+  replicationWorkshop: boolean
+  experimentalResearch: boolean
 }
 
 export function NominationFormFields({
@@ -205,31 +206,51 @@ export function NominationFormFields({
         <legend className="mb-1 text-sm font-medium">
           Tags <span className="font-normal text-muted-foreground">(optional)</span>
         </legend>
-        <div className="flex items-start gap-2 text-sm">
-          <input
-            id="replication-games"
-            type="checkbox"
-            checked={values.replicationGames}
-            onChange={(e) => set({ replicationGames: e.target.checked })}
-            className="mt-0.5 accent-primary"
-          />
-          <span>
-            <label htmlFor="replication-games" className="cursor-pointer">
-              Replication Games suitability
-            </label>{' '}
-            <ReplicationGamesInfo />
-            <span className="block text-xs text-muted-foreground">
-              This paper could be reproduced by a team in a one-day Replication Games event.{' '}
-              <a
-                href={REPLICATION_GAMES_URL}
-                target="_blank"
-                rel="noreferrer"
-                className="text-green underline"
-              >
-                Learn more
-              </a>
+        <div className="space-y-2">
+          <div className="flex items-start gap-2 text-sm">
+            <input
+              id="replication-workshop"
+              type="checkbox"
+              checked={values.replicationWorkshop}
+              onChange={(e) => set({ replicationWorkshop: e.target.checked })}
+              className="mt-0.5 accent-primary"
+            />
+            <span>
+              <label htmlFor="replication-workshop" className="cursor-pointer">
+                Replication Workshop suitability
+              </label>{' '}
+              <ReplicationWorkshopInfo />
+              <span className="block text-xs text-muted-foreground">
+                This paper could be reproduced by a team in a one-day Replication Workshop event.{' '}
+                <a
+                  href={REPLICATION_WORKSHOP_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-green underline"
+                >
+                  Learn more
+                </a>
+              </span>
             </span>
-          </span>
+          </div>
+          <div className="flex items-start gap-2 text-sm">
+            <input
+              id="experimental-research"
+              type="checkbox"
+              checked={values.experimentalResearch}
+              onChange={(e) => set({ experimentalResearch: e.target.checked })}
+              className="mt-0.5 accent-primary"
+            />
+            <span>
+              <label htmlFor="experimental-research" className="cursor-pointer">
+                Experimental research
+              </label>
+              <span className="block text-xs text-muted-foreground">
+                This study is experimental. Enables the{' '}
+                <span className="font-medium">Rx — Experimental Research</span> target journal.
+              </span>
+            </span>
+          </div>
         </div>
       </fieldset>
 

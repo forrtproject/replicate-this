@@ -68,9 +68,11 @@ profileRouter.get('/', async (c) => {
   const [row] = await db
     .select({
       name: schema.user.name,
+      image: schema.user.image,
       links: schema.user.links,
       notificationEmail: schema.user.notificationEmail,
       emailPrefs: schema.user.emailPrefs,
+      onboarded: schema.user.onboarded,
     })
     .from(schema.user)
     .where(eq(schema.user.id, user.id))
@@ -78,10 +80,56 @@ profileRouter.get('/', async (c) => {
   if (!row) throw new HttpError(404, 'Profile not found.')
   return c.json({
     name: row.name,
+    image: row.image ?? '',
     links: (row.links ?? {}) as ProfileLinks,
     notificationEmail: row.notificationEmail,
     emailPrefs: (row.emailPrefs ?? {}) as EmailPrefs,
+    onboarded: row.onboarded,
   })
+})
+
+/**
+ * A profile avatar is either a short emoji or a small inline image data URL.
+ * We store it inline in `user.image` (no blob store) — hence the size cap.
+ */
+const AVATAR_MAX_BYTES = 1_500_000 // ~1 MB image once base64-encoded
+function validateAvatar(image: string): void {
+  if (image.startsWith('data:image/')) {
+    if (!/^data:image\/(png|jpeg|jpg|gif|webp);base64,/i.test(image)) {
+      throw new HttpError(400, 'Only PNG, JPEG, GIF, or WEBP images are supported.')
+    }
+    if (image.length > AVATAR_MAX_BYTES) {
+      throw new HttpError(400, 'That image is too large — please use one under ~1 MB.')
+    }
+    return
+  }
+  // Otherwise it's an emoji (or a couple of them); keep it short.
+  if ([...image].length > 8) {
+    throw new HttpError(400, 'Choose a single emoji or upload an image.')
+  }
+}
+
+// Set or clear the profile avatar (emoji or inline image). Send image: '' or null to clear.
+profileRouter.patch('/avatar', async (c) => {
+  const user = requireUser(c)
+  const body = await c.req.json().catch(() => ({}))
+  const image = body.image == null ? '' : String(body.image).trim()
+  if (image) validateAvatar(image)
+  await db
+    .update(schema.user)
+    .set({ image: image || null, updatedAt: new Date() })
+    .where(eq(schema.user.id, user.id))
+  return c.json({ image })
+})
+
+// Mark the post-signup walkthrough finished (or skipped) so we stop redirecting.
+profileRouter.post('/onboarded', async (c) => {
+  const user = requireUser(c)
+  await db
+    .update(schema.user)
+    .set({ onboarded: true, updatedAt: new Date() })
+    .where(eq(schema.user.id, user.id))
+  return c.json({ ok: true })
 })
 
 // Opt-in email notifications: an address plus per-category preferences.

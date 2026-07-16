@@ -53,7 +53,8 @@ function parseNominationFields(body: Record<string, unknown>) {
   const dataLocation = String(body.dataLocation ?? '').trim()
   const robustnessChecks = String(body.robustnessChecks ?? '').trim()
   const designDeviations = String(body.designDeviations ?? '').trim()
-  const replicationGames = body.replicationGames === true
+  const replicationWorkshop = body.replicationWorkshop === true
+  const experimentalResearch = body.experimentalResearch === true
   const availability = Array.isArray(body.availability)
     ? [...new Set(body.availability.map(String))].filter((a) =>
         AVAILABILITY_KEYS.includes(a as never),
@@ -90,7 +91,8 @@ function parseNominationFields(body: Record<string, unknown>) {
     dataLocation,
     robustnessChecks,
     designDeviations,
-    replicationGames,
+    replicationWorkshop,
+    experimentalResearch,
     availability,
     availabilityLinks,
   }
@@ -111,7 +113,8 @@ nominationsRouter.post('/', async (c) => {
     dataLocation,
     robustnessChecks,
     designDeviations,
-    replicationGames,
+    replicationWorkshop,
+    experimentalResearch,
     availability,
     availabilityLinks,
   } = parseNominationFields(body)
@@ -172,7 +175,8 @@ nominationsRouter.post('/', async (c) => {
       dataLocation,
       robustnessChecks,
       designDeviations,
-      replicationGames,
+      replicationWorkshop,
+      experimentalResearch,
       nominatorUid: user.id,
       status: 'pending',
     })
@@ -224,7 +228,8 @@ nominationsRouter.patch('/:id', async (c) => {
       dataLocation: fields.dataLocation,
       robustnessChecks: fields.robustnessChecks,
       designDeviations: fields.designDeviations,
-      replicationGames: fields.replicationGames,
+      replicationWorkshop: fields.replicationWorkshop,
+      experimentalResearch: fields.experimentalResearch,
       metadata: fields.journalOverride
         ? { ...metadata, journal: fields.journalOverride }
         : metadata,
@@ -272,11 +277,17 @@ nominationsRouter.get('/:id', async (c) => {
   return c.json({ nomination })
 })
 
-// The replication team: pseudonymous tokens of everyone contributing.
+// The replication team: pseudonymous tokens of everyone contributing. Team
+// members additionally see per-teammate email-sharing state (and any email a
+// teammate has chosen to reveal to them); non-members see only the public roster.
 nominationsRouter.get('/:id/contributors', async (c) => {
   const id = c.req.param('id')
+  const viewer = c.get('user')?.id ?? null
   const [n] = await db
-    .select({ status: schema.nominations.status })
+    .select({
+      status: schema.nominations.status,
+      nominatorUid: schema.nominations.nominatorUid,
+    })
     .from(schema.nominations)
     .where(eq(schema.nominations.id, id))
     .limit(1)
@@ -288,7 +299,9 @@ nominationsRouter.get('/:id/contributors', async (c) => {
     .select({
       contributorUid: schema.contributions.contributorUid,
       name: schema.user.name,
+      image: schema.user.image,
       links: schema.user.links,
+      notificationEmail: schema.user.notificationEmail,
       message: schema.contributions.message,
       createdAt: schema.contributions.createdAt,
     })
@@ -297,13 +310,61 @@ nominationsRouter.get('/:id/contributors', async (c) => {
     .where(eq(schema.contributions.nominationId, id))
     .orderBy(schema.contributions.createdAt)
 
+  const viewerOnTeam =
+    !!viewer && (viewer === n.nominatorUid || rows.some((r) => r.contributorUid === viewer))
+
+  // Directional email shares: who revealed their email TO the viewer, and whom
+  // the viewer has revealed theirs to. Only loaded for team members.
+  const sharedToViewer = new Set<string>()
+  const viewerSharedWith = new Set<string>()
+  let viewerHasEmail = false
+  if (viewerOnTeam && viewer) {
+    const shares = await db
+      .select({
+        sharerUid: schema.teamEmailShares.sharerUid,
+        recipientUid: schema.teamEmailShares.recipientUid,
+      })
+      .from(schema.teamEmailShares)
+      .where(eq(schema.teamEmailShares.nominationId, id))
+    for (const s of shares) {
+      if (s.recipientUid === viewer) sharedToViewer.add(s.sharerUid)
+      if (s.sharerUid === viewer) viewerSharedWith.add(s.recipientUid)
+    }
+    viewerHasEmail = rows.some((r) => r.contributorUid === viewer && !!r.notificationEmail)
+    if (!viewerHasEmail && viewer === n.nominatorUid) {
+      const [vu] = await db
+        .select({ notificationEmail: schema.user.notificationEmail })
+        .from(schema.user)
+        .where(eq(schema.user.id, viewer))
+        .limit(1)
+      viewerHasEmail = !!vu?.notificationEmail
+    }
+  }
+
   return c.json({
-    contributors: rows.map((r) => ({
-      token: r.contributorUid.slice(0, 8),
-      name: r.name,
-      links: (r.links ?? {}) as Record<string, string>,
-      message: r.message,
-      createdAt: r.createdAt,
-    })),
+    viewerOnTeam,
+    viewerHasEmail,
+    contributors: rows.map((r) => {
+      const base = {
+        token: r.contributorUid.slice(0, 8),
+        name: r.name,
+        image: r.image ?? '',
+        links: (r.links ?? {}) as Record<string, string>,
+        message: r.message,
+        createdAt: r.createdAt,
+      }
+      if (!viewerOnTeam) return base
+      const isSelf = r.contributorUid === viewer
+      return {
+        ...base,
+        uid: r.contributorUid,
+        isSelf,
+        email:
+          !isSelf && sharedToViewer.has(r.contributorUid) && r.notificationEmail
+            ? r.notificationEmail
+            : null,
+        youSharedWithThem: !isSelf && viewerSharedWith.has(r.contributorUid),
+      }
+    }),
   })
 })

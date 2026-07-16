@@ -10,6 +10,7 @@ import {
   useUpdateEmailPrefs,
   useDeleteAccount,
 } from '@/features/profile/api'
+import { AvatarEditor } from '@/features/profile/AvatarEditor'
 import { ApiError } from '@/lib/api'
 import {
   PROFILE_LINKS,
@@ -30,14 +31,31 @@ export function ProfilePage() {
         <h1 className="mt-1 font-display text-3xl font-semibold">Profile</h1>
       </div>
 
-      <ResearcherIdCard id={researcherId} />
+      <AvatarCard />
       <PseudonymCard />
       <LinksCard />
       <EmailNotificationsCard
         isMaintainer={(session?.user as { role?: string } | undefined)?.role === 'maintainer'}
       />
+      <ResearcherIdFooter id={researcherId} />
       <DangerZone />
     </div>
+  )
+}
+
+function AvatarCard() {
+  const { data: profile, isLoading } = useProfile()
+  return (
+    <Card
+      title="Profile photo"
+      hint="Pick an emoji or upload a picture. It appears on your profile and next to your name on replication teams."
+    >
+      {isLoading || !profile ? (
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      ) : (
+        <AvatarEditor current={profile.image} name={profile.name} />
+      )}
+    </Card>
   )
 }
 
@@ -51,29 +69,30 @@ function Card({ title, hint, children }: { title: string; hint?: string; childre
   )
 }
 
-function ResearcherIdCard({ id }: { id: string }) {
+// Deliberately low-key: the pseudonym is your identity now. The Researcher ID
+// only matters for the rare "ask a maintainer for admin" flow, so it lives as a
+// small muted line rather than a prominent card.
+function ResearcherIdFooter({ id }: { id: string }) {
   const [copied, setCopied] = useState(false)
   return (
-    <Card
-      title="Researcher ID"
-      hint="Your pseudonymous identifier. Share it with a maintainer to request the admin role."
-    >
-      <div className="flex items-center gap-3">
-        <span className="data text-xl font-semibold">#{id}</span>
-        <button
-          onClick={() =>
-            navigator.clipboard?.writeText(`#${id}`).then(() => {
-              setCopied(true)
-              setTimeout(() => setCopied(false), 1500)
-            })
-          }
-          className="inline-flex items-center gap-1.5 rounded-md border border-line px-2.5 py-1 text-xs font-medium hover:border-green"
-        >
-          {copied ? <Check className="h-3.5 w-3.5 text-green" /> : <Copy className="h-3.5 w-3.5" />}
-          {copied ? 'Copied' : 'Copy'}
-        </button>
-      </div>
-    </Card>
+    <p className="flex flex-wrap items-center gap-2 px-1 text-xs text-muted-foreground">
+      <span>
+        Researcher ID <span className="data font-medium">#{id}</span> — only needed to request
+        the maintainer role.
+      </span>
+      <button
+        onClick={() =>
+          navigator.clipboard?.writeText(`#${id}`).then(() => {
+            setCopied(true)
+            setTimeout(() => setCopied(false), 1500)
+          })
+        }
+        className="inline-flex items-center gap-1 rounded border border-line px-1.5 py-0.5 hover:border-green"
+      >
+        {copied ? <Check className="h-3 w-3 text-green" /> : <Copy className="h-3 w-3" />}
+        {copied ? 'Copied' : 'Copy'}
+      </button>
+    </p>
   )
 }
 

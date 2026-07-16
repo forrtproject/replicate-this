@@ -45,6 +45,9 @@ export const user = pgTable(
     notificationEmail: text('notification_email').notNull().default(''),
     // Which notification categories to email (EMAIL_PREF_KEYS → boolean).
     emailPrefs: jsonb('email_prefs').notNull().default({}),
+    // False until the user finishes (or skips) the post-signup walkthrough. Drives
+    // the one-time redirect to /welcome after a first sign-in.
+    onboarded: boolean('onboarded').notNull().default(false),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
@@ -139,9 +142,13 @@ export const nominations = pgTable('nominations', {
   robustnessChecks: text('robustness_checks').notNull().default(''),
   // For replications: how the new design should differ from the original.
   designDeviations: text('design_deviations').notNull().default(''),
-  // Nominator-set tag: the paper suits a Replication Games event (one-day
-  // team reproduction hackathons run by the Institute for Replication).
-  replicationGames: boolean('replication_games').notNull().default(false),
+  // Nominator-set tag: the paper suits a Replication Workshop event (one-day
+  // team reproduction hackathons run by the Institute for Replication). The
+  // physical column is still `replication_games` — only the code name changed.
+  replicationWorkshop: boolean('replication_games').notNull().default(false),
+  // Nominator-set flag: the study is experimental research. Gates the
+  // "Rx — Experimental Research" (ReScience X) target-journal tag.
+  experimentalResearch: boolean('experimental_research').notNull().default(false),
   // Locked Slack channel for the replication team, created on approval when
   // the Slack integration is configured. Empty = no channel.
   slackChannelId: text('slack_channel_id').notNull().default(''),
@@ -251,6 +258,29 @@ export const subscriptions = pgTable(
       .defaultNow(),
   },
   (t) => [primaryKey({ columns: [t.nominationId, t.userUid] })],
+)
+
+// Opt-in email sharing between teammates on a nomination. A row means `sharer`
+// has revealed their notification email to `recipient` on this nomination.
+// Directional and per-recipient: sharing with the whole current team inserts one
+// row per teammate, and a later joiner gets no access until explicitly shared with.
+export const teamEmailShares = pgTable(
+  'team_email_shares',
+  {
+    nominationId: uuid('nomination_id')
+      .notNull()
+      .references(() => nominations.id, { onDelete: 'cascade' }),
+    sharerUid: text('sharer_uid')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    recipientUid: text('recipient_uid')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.nominationId, t.sharerUid, t.recipientUid] })],
 )
 
 // Progress updates posted by the replication team (nominator, contributors,
