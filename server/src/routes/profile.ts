@@ -5,6 +5,7 @@ import { db, schema } from '@/db'
 import {
   PROFILE_LINK_KEYS,
   EMAIL_PREF_KEYS,
+  resolveEmailPrefs,
   type ProfileLinks,
   type EmailPrefs,
 } from '@/types'
@@ -83,7 +84,8 @@ profileRouter.get('/', async (c) => {
     image: row.image ?? '',
     links: (row.links ?? {}) as ProfileLinks,
     notificationEmail: row.notificationEmail,
-    emailPrefs: (row.emailPrefs ?? {}) as EmailPrefs,
+    // Accounts that never touched the settings read as fully opted in.
+    emailPrefs: resolveEmailPrefs(row.emailPrefs),
     onboarded: row.onboarded,
   })
 })
@@ -132,15 +134,16 @@ profileRouter.post('/onboarded', async (c) => {
   return c.json({ ok: true })
 })
 
-// Opt-in email notifications: an address plus per-category preferences.
-// Clearing the address turns all email off; in-app notifications are unaffected.
+// Email notifications: the address (required) plus per-category preferences.
+// Unchecking every category stops the emails; in-app notifications are unaffected.
 profileRouter.patch('/email', async (c) => {
   const user = requireUser(c)
   const body = await c.req.json().catch(() => ({}))
 
   const email = String(body.email ?? '').trim()
-  if (email && (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
-    throw new HttpError(400, 'Enter a valid email address (or leave it empty to opt out).')
+  if (!email) throw new HttpError(400, 'A notification email address is required.')
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new HttpError(400, 'Enter a valid email address.')
   }
 
   const rawPrefs = (body.prefs ?? {}) as Record<string, unknown>

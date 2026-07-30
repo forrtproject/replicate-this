@@ -8,7 +8,6 @@ import {
   useSendInquiry,
   useContributors,
   useShareEmail,
-  useUnshareEmail,
   type Contributor,
 } from './api'
 import { researcherLabel } from '@/features/nominations/format'
@@ -39,12 +38,15 @@ export function ContributionPanel({ nomination: n }: { nomination: NominationDet
   const contributors = team?.contributors
   const viewerOnTeam = team?.viewerOnTeam ?? false
   const shareEmail = useShareEmail(n.id)
-  const unshareEmail = useUnshareEmail(n.id)
 
   // Teammates the viewer could still share their email with (on the team, not self,
   // not already shared with).
   const unsharedTeammates =
     contributors?.filter((ct) => ct.uid && !ct.isSelf && !ct.youSharedWithThem) ?? []
+  // Only draw the divider under the roster when there's something to put in it:
+  // the share-with-everyone button, or the prompt to add an address first.
+  const showShareRow =
+    viewerOnTeam && (!team?.viewerHasEmail || unsharedTeammates.length > 0)
 
   return (
     <div className="space-y-6 rounded-lg border border-border bg-card p-4">
@@ -55,55 +57,60 @@ export function ContributionPanel({ nomination: n }: { nomination: NominationDet
             Replication team ({contributors.length})
           </h2>
           <ul className="space-y-2">
-            {contributors.map((ct) => (
-              <li key={ct.token} className="flex gap-2.5 text-sm">
-                <AvatarBubble
-                  image={ct.image}
-                  name={ct.name}
-                  className="mt-0.5 h-8 w-8 shrink-0 text-base"
-                />
-                <div className="min-w-0 flex-1">
-                  <span className="flex flex-wrap items-center gap-x-2">
-                    <span className="font-medium">{researcherLabel(ct.name, ct.token)}</span>
-                    <ContactLinks links={ct.links} />
-                    <span className="text-xs text-muted-foreground">
-                      · joined{' '}
-                      {new Date(ct.createdAt).toLocaleDateString(undefined, {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                      })}
+            {contributors.map((ct) => {
+              // A member with no pitch and no email row is a single line — centre it
+              // against the avatar instead of leaving a gap beneath the name.
+              const hasDetail = Boolean(ct.message) || (viewerOnTeam && !ct.isSelf)
+              return (
+                <li
+                  key={ct.token}
+                  className={`flex gap-2.5 text-sm ${hasDetail ? '' : 'items-center'}`}
+                >
+                  <AvatarBubble
+                    image={ct.image}
+                    name={ct.name}
+                    className={`${hasDetail ? 'mt-0.5 ' : ''}h-8 w-8 shrink-0 text-base`}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <span className="flex flex-wrap items-center gap-x-2">
+                      <span className="font-medium">{researcherLabel(ct.name, ct.token)}</span>
+                      <ContactLinks links={ct.links} />
+                      <span className="text-xs text-muted-foreground">
+                        · joined{' '}
+                        {new Date(ct.createdAt).toLocaleDateString(undefined, {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </span>
                     </span>
-                  </span>
-                  {ct.message && (
-                    <p className="mt-0.5 text-xs text-muted-foreground">“{ct.message}”</p>
-                  )}
-                  {viewerOnTeam && !ct.isSelf && (
-                    <TeammateEmail
-                      ct={ct}
-                      onShare={() => shareEmail.mutate({ recipientUid: ct.uid })}
-                      onUnshare={() => unshareEmail.mutate({ recipientUid: ct.uid })}
-                      busy={shareEmail.isPending || unshareEmail.isPending}
-                    />
-                  )}
-                </div>
-              </li>
-            ))}
+                    {ct.message && (
+                      <p className="mt-0.5 text-xs text-muted-foreground">“{ct.message}”</p>
+                    )}
+                    {viewerOnTeam && !ct.isSelf && (
+                      <TeammateEmail
+                        ct={ct}
+                        onShare={() => shareEmail.mutate({ recipientUid: ct.uid })}
+                        busy={shareEmail.isPending}
+                      />
+                    )}
+                  </div>
+                </li>
+              )
+            })}
           </ul>
 
-          {viewerOnTeam && (
+          {showShareRow && (
             <div className="mt-3 border-t border-border pt-3">
               {team?.viewerHasEmail ? (
-                unsharedTeammates.length > 0 && (
-                  <button
-                    onClick={() => shareEmail.mutate({ all: true })}
-                    disabled={shareEmail.isPending}
-                    className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted disabled:opacity-60"
-                  >
-                    <Mail className="h-3.5 w-3.5" />
-                    Share my email with the whole team
-                  </button>
-                )
+                <button
+                  onClick={() => shareEmail.mutate({ all: true })}
+                  disabled={shareEmail.isPending}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted disabled:opacity-60"
+                >
+                  <Mail className="h-3.5 w-3.5" />
+                  Share my email with the whole team
+                </button>
               ) : (
                 <p className="text-xs text-muted-foreground">
                   Add a notification email in your{' '}
@@ -122,8 +129,7 @@ export function ContributionPanel({ nomination: n }: { nomination: NominationDet
       <section className={showRoster && contributors?.length ? 'border-t border-border pt-4' : ''}>
         <h2 className="mb-1 text-sm font-semibold">Replicate this study</h2>
         <p className="mb-3 text-xs text-muted-foreground">
-          Signal your intent to run a replication. Contributions are accepted
-          automatically — no approval needed.
+          Signal your intent to run a replication.
         </p>
 
         {isOwner ? (
@@ -223,17 +229,15 @@ export function ContributionPanel({ nomination: n }: { nomination: NominationDet
 
 /**
  * Per-teammate email row: shows the email they've shared with you (if any) and
- * a control to share yours with them (or revoke it).
+ * a control to share yours with them.
  */
 function TeammateEmail({
   ct,
   onShare,
-  onUnshare,
   busy,
 }: {
   ct: Contributor
   onShare: () => void
-  onUnshare: () => void
   busy: boolean
 }) {
   return (
@@ -249,13 +253,9 @@ function TeammateEmail({
         <span className="text-muted-foreground/70">Email not shared with you</span>
       )}
       {ct.youSharedWithThem ? (
-        <button
-          onClick={onUnshare}
-          disabled={busy}
-          className="inline-flex items-center gap-1 text-green underline-offset-2 hover:underline disabled:opacity-60"
-        >
-          <Check className="h-3 w-3" /> You shared your email — undo
-        </button>
+        <span className="inline-flex items-center gap-1 text-green">
+          <Check className="h-3 w-3" /> You shared your email
+        </span>
       ) : (
         <button
           onClick={onShare}

@@ -202,7 +202,8 @@ contributionsRouter.delete('/:nominationId', async (c) => {
 // Share your notification email with teammates on this nomination. Body:
 //   { all: true }            → share with everyone currently on the team, or
 //   { recipientUid: "..." }  → share with one specific teammate.
-// Directional: it grants that person visibility of your email; it doesn't reveal theirs.
+// Directional: it grants that person visibility of your email; it doesn't reveal
+// theirs. There is no revoke — withdrawing from the nomination clears the shares.
 contributionsRouter.post('/:nominationId/share-email', async (c) => {
   const user = requireUser(c)
   const nominationId = c.req.param('nominationId')
@@ -235,25 +236,4 @@ contributionsRouter.post('/:nominationId/share-email', async (c) => {
       .onConflictDoNothing()
   }
   return c.json({ ok: true, shared: recipients.length })
-})
-
-// Revoke a previously shared email. Body: { recipientUid } or { all: true }.
-contributionsRouter.delete('/:nominationId/share-email', async (c) => {
-  const user = requireUser(c)
-  const nominationId = c.req.param('nominationId')
-  const body = await c.req.json().catch(() => ({}))
-
-  const base = and(
-    eq(schema.teamEmailShares.nominationId, nominationId),
-    eq(schema.teamEmailShares.sharerUid, user.id),
-  )
-  const recipientUid = String(body.recipientUid ?? '')
-  await db
-    .delete(schema.teamEmailShares)
-    .where(
-      body.all === true
-        ? base
-        : and(base, eq(schema.teamEmailShares.recipientUid, recipientUid)),
-    )
-  return c.json({ ok: true })
 })

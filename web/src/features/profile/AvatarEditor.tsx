@@ -1,9 +1,11 @@
-import { useRef, useState } from 'react'
-import { Upload, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Upload, X, ChevronDown, Smile } from 'lucide-react'
 import { ApiError } from '@/lib/api'
+import { EMOJI_GROUPS } from './emoji'
 import { useUpdateAvatar } from './api'
 
-const PRESET_EMOJI = ['🔬', '🧪', '🧬', '🔭', '📊', '📈', '🧠', '⚗️', '🦠', '📚', '🤖', '🌌']
+// A handful of the catalogue shown inline, so the common picks are one click away.
+const QUICK_EMOJI = ['🔬', '🧪', '🧬', '🔭', '📊', '📈', '🧠', '⚗️', '🦠', '📚', '🤖', '🌌']
 
 /** True when the stored avatar value is an inline image rather than an emoji. */
 export function isImageAvatar(image: string | undefined): boolean {
@@ -104,6 +106,11 @@ export function AvatarEditor({ current, name }: { current: string; name?: string
     })
   }
 
+  function pick(value: string) {
+    setEmoji(value)
+    save(value)
+  }
+
   async function onFile(file: File | undefined) {
     if (!file) return
     setError('')
@@ -152,15 +159,12 @@ export function AvatarEditor({ current, name }: { current: string; name?: string
 
       <div>
         <p className="mb-1.5 text-xs text-muted-foreground">Or pick an emoji</p>
-        <div className="flex flex-wrap gap-1.5">
-          {PRESET_EMOJI.map((e) => (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {QUICK_EMOJI.map((e) => (
             <button
               key={e}
               type="button"
-              onClick={() => {
-                setEmoji(e)
-                save(e)
-              }}
+              onClick={() => pick(e)}
               className={`rounded-full ring-offset-2 ring-offset-card transition-shadow hover:ring-2 hover:ring-green ${
                 emoji === e ? 'ring-2 ring-green' : ''
               }`}
@@ -169,26 +173,88 @@ export function AvatarEditor({ current, name }: { current: string; name?: string
               <AvatarBubble image={e} className="h-9 w-9 text-lg" />
             </button>
           ))}
-        </div>
-        <div className="mt-2 flex items-center gap-2">
-          <input
-            value={emoji}
-            onChange={(e) => setEmoji(e.target.value)}
-            placeholder="Type any emoji"
-            className="input max-w-40"
-          />
-          <button
-            type="button"
-            onClick={() => save(emoji.trim())}
-            disabled={update.isPending || !emoji.trim()}
-            className="rounded-md bg-green px-3 py-2 text-sm font-medium text-white hover:bg-forest disabled:opacity-60"
-          >
-            {update.isPending ? 'Saving…' : 'Use emoji'}
-          </button>
+          <EmojiPicker selected={emoji} onSelect={pick} />
         </div>
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
+    </div>
+  )
+}
+
+/** Dropdown over the full emoji catalogue, grouped by theme. */
+function EmojiPicker({
+  selected,
+  onSelect,
+}: {
+  selected: string
+  onSelect: (emoji: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const wrapRef = useRef<HTMLDivElement>(null)
+
+  // Close on an outside click or Escape, like any other menu on the page.
+  useEffect(() => {
+    if (!open) return
+    function onPointerDown(e: PointerEvent) {
+      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false)
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [open])
+
+  return (
+    <div ref={wrapRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-2 text-sm font-medium hover:border-green"
+      >
+        <Smile className="h-4 w-4" />
+        More emojis
+        <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <div
+          role="dialog"
+          aria-label="Choose an emoji"
+          className="absolute left-0 z-30 mt-1.5 max-h-80 w-76 overflow-y-auto rounded-lg border border-line bg-card p-3 shadow-lg"
+        >
+          {EMOJI_GROUPS.map((group) => (
+            <div key={group.label} className="mb-3 last:mb-0">
+              <p className="mb-1.5 text-xs font-medium text-muted-foreground">{group.label}</p>
+              <div className="grid grid-cols-8 gap-1">
+                {group.emojis.map((e) => (
+                  <button
+                    key={e}
+                    type="button"
+                    onClick={() => {
+                      onSelect(e)
+                      setOpen(false)
+                    }}
+                    aria-label={`Use ${e}`}
+                    className={`flex h-8 w-8 items-center justify-center rounded-md text-xl leading-none hover:bg-muted ${
+                      selected === e ? 'bg-green-tint ring-1 ring-green' : ''
+                    }`}
+                  >
+                    {e}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

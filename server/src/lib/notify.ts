@@ -3,7 +3,7 @@ import { db, schema } from '@/db'
 import { config } from '@/lib/env'
 import { sendEmail } from '@/lib/mailer'
 import { loadReviewNomination, buildReviewEmail, type ReviewNomination } from '@/lib/review-email'
-import type { EmailPrefKey, EmailPrefs } from '@/types'
+import { resolveEmailPrefs, type EmailPrefKey } from '@/types'
 
 type NotificationInput = {
   userUid: string
@@ -12,8 +12,8 @@ type NotificationInput = {
 }
 
 /**
- * Which opt-in email category each notification type belongs to. Types not
- * listed here are in-app only.
+ * Which email category each notification type belongs to. Types not listed here
+ * are in-app only.
  */
 const TYPE_CATEGORY: Record<string, EmailPrefKey> = {
   // Things happening to your own nominations.
@@ -62,7 +62,7 @@ export async function notify(notifications: NotificationInput[]): Promise<void> 
   await db.insert(schema.notifications).values(
     notifications.map((n) => ({ userUid: n.userUid, type: n.type, data: n.data ?? {} })),
   )
-  // Emails are strictly opt-in and best-effort — never fail the request.
+  // Email delivery is best-effort — never fail the request over it.
   try {
     await emailOptedInRecipients(notifications)
   } catch (err) {
@@ -70,7 +70,7 @@ export async function notify(notifications: NotificationInput[]): Promise<void> 
   }
 }
 
-/** Emails each recipient who volunteered an address and opted into the category. */
+/** Emails each recipient who has an address and hasn't opted out of the category. */
 async function emailOptedInRecipients(notifications: NotificationInput[]): Promise<void> {
   const emailable = notifications.filter((n) => TYPE_CATEGORY[n.type])
   if (emailable.length === 0) return
@@ -94,7 +94,7 @@ async function emailOptedInRecipients(notifications: NotificationInput[]): Promi
   for (const n of emailable) {
     const u = byUid.get(n.userUid)
     if (!u || u.deleted || !u.notificationEmail) continue
-    const prefs = (u.emailPrefs ?? {}) as EmailPrefs
+    const prefs = resolveEmailPrefs(u.emailPrefs)
     if (!prefs[TYPE_CATEGORY[n.type]]) continue
 
     if (n.type === 'new_nomination' || n.type === 'nomination_edited') {
@@ -122,7 +122,7 @@ async function emailOptedInRecipients(notifications: NotificationInput[]): Promi
     if (nominationId) lines.push(`View it: ${config.webOrigin}/nominations/${nominationId}`)
     lines.push(
       '',
-      `You asked for these emails — manage or turn them off any time: ${config.webOrigin}/profile`,
+      `Manage which emails you get, or turn them off: ${config.webOrigin}/profile`,
     )
     await sendEmail({
       to: u.notificationEmail,

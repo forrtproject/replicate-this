@@ -40,10 +40,12 @@ export const user = pgTable(
     // Optional, user-chosen public contact links (orcid, github, twitter, …).
     // Opt-in only — never populated from the provider.
     links: jsonb('links').notNull().default({}),
-    // Opt-in address for email notifications. User-volunteered PII — never the
-    // login email (which is a zero-PII dummy). Empty = no emails.
+    // Address for email notifications. Seeded from the provider at sign-up
+    // (blank for ORCID, which exposes none) and editable in the profile — never
+    // the login email, which stays a pseudonymous dummy.
     notificationEmail: text('notification_email').notNull().default(''),
-    // Which notification categories to email (EMAIL_PREF_KEYS → boolean).
+    // Which notification categories to email (EMAIL_PREF_KEYS → boolean). All on
+    // for a new account; `{}` means never configured and is also read as all-on.
     emailPrefs: jsonb('email_prefs').notNull().default({}),
     // False until the user finishes (or skips) the post-signup walkthrough. Drives
     // the one-time redirect to /welcome after a first sign-in.

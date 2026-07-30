@@ -1,10 +1,10 @@
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { ExternalLink, ChevronUp, Pencil, Bell, BellOff } from 'lucide-react'
+import { ExternalLink, Pencil, Bell, BellOff } from 'lucide-react'
 import { useNomination, useToggleSubscription } from '@/features/nominations/api'
 import { useSession } from '@/lib/auth-client'
 import { StatusControls } from '@/features/admin/StatusControls'
 import { UpdatesSection } from '@/features/updates/UpdatesSection'
-import { VoteButton } from '@/features/nominations/VoteButton'
+import { CommunityInterest } from '@/features/nominations/CommunityInterest'
 import { PredictionBar } from '@/features/nominations/PredictionBar'
 import { StatusBadge } from '@/features/nominations/StatusBadge'
 import { VerificationBanner } from '@/features/nominations/VerificationBadge'
@@ -105,26 +105,10 @@ export function NominationDetailPage() {
       {/* Two clearly-separated engagement panels */}
       <div className="my-6 grid gap-4 sm:grid-cols-2">
         {/* Priority (upvotes) */}
-        <div className="rounded-lg border border-line bg-card p-4">
-          <p className="eyebrow">Community interest</p>
-          <p className="mb-3 mt-1 text-xs text-muted-foreground">
-            How many researchers would like to see this revisited.
-          </p>
-          <div className="flex items-center gap-3">
-            <VoteButton nominationId={n.id} upvotes={n.upvotes} userUpvoted={n.userUpvoted} />
-            <p className="text-sm text-muted-foreground">
-              <span className="data font-semibold text-ink">{n.upvotes}</span>{' '}
-              {n.upvotes === 1 ? 'researcher would' : 'researchers would'} like a second look.
-              <br />
-              <span className="inline-flex items-center gap-1 text-xs">
-                <ChevronUp className="h-3 w-3" /> Add your vote.
-              </span>
-            </p>
-          </div>
-        </div>
+        <CommunityInterest nomination={n} />
 
         {/* Forecast (yes/no prediction) */}
-        <div className="rounded-lg border border-line bg-card p-4">
+        <div className="flex flex-col rounded-lg border border-line bg-card p-4">
           <p className="eyebrow">Community forecast</p>
           <p className="mb-3 mt-1 text-xs text-muted-foreground">
             {predictionsTotal === 0

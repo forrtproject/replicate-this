@@ -26,7 +26,8 @@ export function SignInPage() {
     <div className="mx-auto max-w-sm px-4 py-16">
       <h1 className="text-center font-display text-3xl font-bold">Sign in</h1>
       <p className="mb-8 mt-2 text-center text-sm text-muted-foreground">
-        No personal data is stored. We use privacy-preserving pseudonymous identifiers.
+        You appear across the site under a pseudonym, never your provider name. We use your
+        sign-in address for notifications — you choose which ones in your profile.
       </p>
 
       {isLoading && <p className="text-center text-sm text-muted-foreground">Loading…</p>}

@@ -163,7 +163,7 @@ export function buildReviewEmail(
     `Reject: ${reject}`,
     `Open the moderation queue: ${adminQueue}`,
     '',
-    `You asked for these emails — manage or turn them off any time: ${config.webOrigin}/profile`,
+    `Manage which emails you get, or turn them off: ${config.webOrigin}/profile`,
   ].join('\n')
 
   const btn = (href: string, label: string, bg: string) =>
@@ -184,7 +184,7 @@ export function buildReviewEmail(
     </p>
     <hr style="margin:22px 0;border:none;border-top:1px solid #e3e6de;">
     <p style="margin:0;font-size:12px;color:#6b7263;">
-      You asked for these emails — <a href="${escapeHtml(`${config.webOrigin}/profile`)}" style="color:#1a7f4e;">manage or turn them off</a> any time.
+      <a href="${escapeHtml(`${config.webOrigin}/profile`)}" style="color:#1a7f4e;">Manage which emails you get</a>, or turn them off.
     </p>
   </div>
 </div>`

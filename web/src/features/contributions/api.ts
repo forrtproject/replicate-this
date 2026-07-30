@@ -54,16 +54,6 @@ export function useShareEmail(nominationId: string) {
   })
 }
 
-/** Revoke a previously shared email (one teammate, or all). */
-export function useUnshareEmail(nominationId: string) {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (input: { recipientUid?: string; all?: boolean }) =>
-      api.delete<{ ok: true }>(`/contributions/${nominationId}/share-email`, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['contributors', nominationId] }),
-  })
-}
-
 export function useMyContributions() {
   return useQuery({
     queryKey: ['contributions', 'mine'],
@@ -96,6 +86,9 @@ export function useContribute(nominationId: string) {
       )
       qc.invalidateQueries({ queryKey: ['contributions', 'mine'] })
       qc.invalidateQueries({ queryKey: ['contributors', nominationId] })
+      // Joining also auto-subscribes you and can flip the study to in progress,
+      // neither of which the patch above knows about — refetch the real row.
+      qc.invalidateQueries({ queryKey: nominationKeys.detail(nominationId) })
     },
   })
 }
@@ -123,6 +116,8 @@ export function useWithdrawContribution(nominationId: string) {
       )
       qc.invalidateQueries({ queryKey: ['contributions', 'mine'] })
       qc.invalidateQueries({ queryKey: ['contributors', nominationId] })
+      // Leaving can revert the study to open and drops your email shares.
+      qc.invalidateQueries({ queryKey: nominationKeys.detail(nominationId) })
     },
   })
 }

@@ -11,9 +11,8 @@ part of science. Everyone who takes part agrees to uphold this code.
   contributing to a healthier scientific record.
 - **Be constructive and specific.** Frame concerns as questions worth answering,
   and be precise about what a second look would add.
-- **Respect privacy.** This platform stores no personal data by design. Do not
-  attempt to identify, contact, or expose other users outside the channels they
-  have chosen to share.
+- **Respect privacy.** Do not attempt to identify, contact, or expose other users
+  outside the channels they have chosen to share.
 
 ## Not permitted
 

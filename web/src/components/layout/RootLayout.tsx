@@ -90,7 +90,6 @@ export function RootLayout() {
             <Link to="/code-of-conduct" className="hover:text-green">
               Code of Conduct
             </Link>
-            <span>No personal data is stored.</span>
           </nav>
         </div>
       </footer>

@@ -35,8 +35,8 @@ export const AVAILABILITY_KEYS = [
 ] as const
 export type AvailabilityKey = (typeof AVAILABILITY_KEYS)[number]
 
-// Email notification categories a user can opt into (all off by default).
-// 'admin' is only meaningful for maintainers.
+// Email notification categories. Every category is on by default — users
+// uncheck what they don't want. 'admin' is only meaningful for maintainers.
 export const EMAIL_PREF_KEYS = [
   'my_nominations',
   'contributions',
@@ -45,6 +45,23 @@ export const EMAIL_PREF_KEYS = [
 ] as const
 export type EmailPrefKey = (typeof EMAIL_PREF_KEYS)[number]
 export type EmailPrefs = Partial<Record<EmailPrefKey, boolean>>
+
+/** Every category on — what a new account starts with. */
+export function defaultEmailPrefs(): Record<EmailPrefKey, boolean> {
+  return Object.fromEntries(EMAIL_PREF_KEYS.map((k) => [k, true])) as Record<
+    EmailPrefKey,
+    boolean
+  >
+}
+
+/**
+ * Stored preferences, with a never-configured account ({}) read as all-on.
+ * Saving always writes every key, so an explicit opt-out is never overridden.
+ */
+export function resolveEmailPrefs(raw: unknown): EmailPrefs {
+  const prefs = (raw ?? {}) as EmailPrefs
+  return Object.keys(prefs).length === 0 ? defaultEmailPrefs() : prefs
+}
 
 // Optional public contact links a user may choose to display.
 export const PROFILE_LINK_KEYS = [

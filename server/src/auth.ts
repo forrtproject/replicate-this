@@ -2,23 +2,60 @@ import { randomUUID } from 'node:crypto'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { genericOAuth } from 'better-auth/plugins'
+import { eq } from 'drizzle-orm'
 import { db, schema } from '@/db'
 import { config } from '@/lib/env'
 import { deterministicEmail } from '@/lib/crypto'
 import { generateUniquePseudonym } from '@/lib/pseudonym'
+import { defaultEmailPrefs } from '@/types'
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 /**
- * Zero-PII: replace the OAuth profile with a stripped user. `basis` is the value
- * the dummy email is derived from — the real email for Google/GitHub (so the same
+ * Real provider emails, waiting to be written to `notification_email` on the row
+ * they belong to. `mapProfileToUser` is the only place the address is visible,
+ * but the user row doesn't exist yet there — so we park it here, keyed by the
+ * dummy email (which is derived from it, so both sides agree), and the
+ * user-create hook picks it up. Entries are consumed once and expire quickly:
+ * a returning user never reaches the create hook, so their entry is dropped.
+ */
+const SIGNUP_EMAIL_TTL_MS = 10 * 60_000
+const signupEmails = new Map<string, { email: string; at: number }>()
+
+function rememberSignupEmail(key: string, email: string): void {
+  const now = Date.now()
+  for (const [k, v] of signupEmails) {
+    if (now - v.at > SIGNUP_EMAIL_TTL_MS) signupEmails.delete(k)
+  }
+  signupEmails.set(key, { email, at: now })
+}
+
+/** Pops the address captured at sign-in, or '' if there wasn't a usable one. */
+function takeSignupEmail(key: string): string {
+  const hit = signupEmails.get(key)
+  signupEmails.delete(key)
+  if (!hit || Date.now() - hit.at > SIGNUP_EMAIL_TTL_MS) return ''
+  return hit.email
+}
+
+/**
+ * Replace the OAuth profile with a stripped user. `basis` is the value the dummy
+ * login email is derived from — the real email for Google/GitHub (so the same
  * person links across providers), or the ORCID iD when no email is exposed.
  * Runs in mapProfileToUser, i.e. BEFORE Better Auth's existing-user lookup, so the
  * dummy email is what it matches on — which is what makes account linking work.
+ *
+ * When the provider gave us a real address we keep it for notifications (see
+ * `rememberSignupEmail`); the login email itself stays a dummy either way.
  */
 function anonymize(basis: string | null | undefined) {
+  const email = deterministicEmail(basis || randomUUID(), config.emailPepper)
+  const real = basis?.trim().toLowerCase() ?? ''
+  if (EMAIL_RE.test(real)) rememberSignupEmail(email, real)
   return {
     // Placeholder — the user.create.before hook replaces it with a random pseudonym.
     name: 'Anonymous Researcher',
-    email: deterministicEmail(basis || randomUUID(), config.emailPepper),
+    email,
     emailVerified: true,
     image: null,
   }
@@ -88,14 +125,20 @@ export const auth = betterAuth({
   }),
 
   /**
-   * Defense-in-depth: mapProfileToUser already stripped PII, but ensure nothing
-   * identifying slips through on any other creation path. Idempotent — never
-   * re-hashes an email that is already a @privacy.forrt.org dummy. `id` is left
-   * untouched (Better Auth's own id is non-identifying and it looks users up by it).
+   * The login email is always a dummy, on every creation path. Idempotent —
+   * never re-hashes an email that is already a @privacy.forrt.org dummy. `id` is
+   * left untouched (Better Auth's own id is non-identifying and it looks users
+   * up by it).
    *
    * The name is a randomly generated pseudonym (e.g. "BrightQuasar42") — never
    * the provider profile name. Name changes go through PATCH /api/profile/name
    * (which enforces uniqueness), so Better Auth's own update path drops them.
+   *
+   * `after` seeds the notification settings a new account starts with: the
+   * address from the provider (blank for ORCID, which exposes none — those users
+   * enter one in their profile) and every email category switched on. Written
+   * directly rather than through `before`, since these are our own columns and
+   * not part of Better Auth's user model.
    */
   databaseHooks: {
     user: {
@@ -111,6 +154,16 @@ export const auth = betterAuth({
             image: null,
           },
         }),
+        after: async (user) => {
+          await db
+            .update(schema.user)
+            .set({
+              notificationEmail: takeSignupEmail(user.email),
+              emailPrefs: defaultEmailPrefs(),
+              updatedAt: new Date(),
+            })
+            .where(eq(schema.user.id, user.id))
+        },
       },
       update: {
         before: async (user) => {

@@ -12,6 +12,7 @@ import {
 } from '@/features/profile/api'
 import { AvatarEditor } from '@/features/profile/AvatarEditor'
 import { ApiError } from '@/lib/api'
+import { isValidEmail } from '@/lib/utils'
 import {
   PROFILE_LINKS,
   EMAIL_PREF_OPTIONS,
@@ -246,7 +247,7 @@ function EmailNotificationsCard({ isMaintainer }: { isMaintainer: boolean }) {
   return (
     <Card
       title="Email notifications"
-      hint="Entirely optional — everything also arrives as an in-app notification. We never email your login address; add an address here only if you want emails, and clear it any time to stop them."
+      hint="Where we email you about activity on the site. We take this from your sign-in — change it to any address you prefer. Everything also arrives as an in-app notification, so uncheck anything you'd rather not hear about by email."
     >
       {isLoading || !profile ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
@@ -277,7 +278,7 @@ function EmailPrefsEditor({
   const [error, setError] = useState('')
 
   const options = EMAIL_PREF_OPTIONS.filter((o) => !o.maintainerOnly || isMaintainer)
-  const emailSet = email.trim().length > 0
+  const emailValid = isValidEmail(email)
 
   function save() {
     setError('')
@@ -300,14 +301,15 @@ function EmailPrefsEditor({
         <span className="mb-1 block text-muted-foreground">Notification email</span>
         <input
           type="email"
+          required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@university.edu (leave empty for no emails)"
+          placeholder="you@university.edu"
           className="input max-w-80"
         />
       </label>
 
-      <fieldset className={emailSet ? '' : 'opacity-50'}>
+      <fieldset>
         <legend className="mb-1.5 text-sm text-muted-foreground">Email me about</legend>
         <div className="space-y-1.5">
           {options.map((o) => (
@@ -315,7 +317,6 @@ function EmailPrefsEditor({
               <input
                 type="checkbox"
                 checked={prefs[o.key] === true}
-                disabled={!emailSet}
                 onChange={(e) => setPrefs((p) => ({ ...p, [o.key]: e.target.checked }))}
                 className="mt-0.5 accent-primary"
               />
@@ -332,7 +333,8 @@ function EmailPrefsEditor({
       <div className="flex items-center gap-2">
         <button
           onClick={save}
-          disabled={update.isPending}
+          disabled={update.isPending || !emailValid}
+          title={emailValid ? undefined : 'Enter a valid email address first.'}
           className="rounded-md bg-green px-3 py-2 text-sm font-medium text-white hover:bg-forest disabled:opacity-60"
         >
           {update.isPending ? 'Saving…' : 'Save email settings'}

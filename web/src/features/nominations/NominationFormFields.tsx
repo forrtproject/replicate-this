@@ -6,7 +6,6 @@ import {
 } from '@/types'
 import { DefinedTerm } from './VerificationBadge'
 import { JournalTags } from './JournalTags'
-import { ReplicationWorkshopInfo, REPLICATION_WORKSHOP_URL } from './ReplicationWorkshopTag'
 
 /** The nomination fields shared by the submit and edit forms. */
 export interface NominationFormValues {
@@ -217,19 +216,10 @@ export function NominationFormFields({
             />
             <span>
               <label htmlFor="replication-workshop" className="cursor-pointer">
-                Replication Workshop suitability
-              </label>{' '}
-              <ReplicationWorkshopInfo />
+                Workshop Suitability
+              </label>
               <span className="block text-xs text-muted-foreground">
-                This paper could be reproduced by a team in a one-day Replication Workshop event.{' '}
-                <a
-                  href={REPLICATION_WORKSHOP_URL}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-green underline"
-                >
-                  Learn more
-                </a>
+                This paper could be reproduced by a team in a one-day workshop.
               </span>
             </span>
           </div>
@@ -241,15 +231,9 @@ export function NominationFormFields({
               onChange={(e) => set({ experimentalResearch: e.target.checked })}
               className="mt-0.5 accent-primary"
             />
-            <span>
-              <label htmlFor="experimental-research" className="cursor-pointer">
-                Experimental research
-              </label>
-              <span className="block text-xs text-muted-foreground">
-                This study is experimental. Enables the{' '}
-                <span className="font-medium">Rx — Experimental Research</span> target journal.
-              </span>
-            </span>
+            <label htmlFor="experimental-research" className="cursor-pointer">
+              Experimental research
+            </label>
           </div>
         </div>
       </fieldset>

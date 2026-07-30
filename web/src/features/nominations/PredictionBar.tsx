@@ -48,28 +48,50 @@ export function PredictionBar({
     setPrediction.mutate(next, { onSettled: () => setOptimistic(null) })
   }
 
+  // Plain-language read of the split, so the numbers don't have to be decoded.
+  const consensus =
+    total === 0
+      ? 'Predictions are anonymous and you can change yours any time.'
+      : yesPct >= 65
+        ? 'Most expect this to replicate.'
+        : yesPct <= 35
+          ? 'Most expect this not to replicate.'
+          : 'Researchers are split on this one.'
+
   return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>Will it replicate?</span>
-        <span>
-          <span className="data">{total}</span>{' '}
-          {total === 1 ? 'prediction' : 'predictions'}
-        </span>
+    <div className="flex flex-1 flex-col">
+      <div className="space-y-1.5">
+        {/* h-7 matches the interest panel's label row, so both bars land on one line. */}
+        <div className="flex h-7 items-baseline justify-between text-xs text-muted-foreground">
+          <span>Will it replicate?</span>
+          <span>
+            <span className="data">{total}</span>{' '}
+            {total === 1 ? 'prediction' : 'predictions'}
+          </span>
+        </div>
+
+        <div className="flex h-2.5 overflow-hidden rounded-full bg-muted" aria-hidden>
+          <div className="bg-green transition-all" style={{ width: `${yesPct}%` }} />
+          <div className="bg-amber transition-all" style={{ width: `${100 - yesPct}%` }} />
+        </div>
+
+        <div className="flex gap-2">
+          <PredictButton active={mine === true} onClick={() => choose(true)}>
+            Yes {total > 0 && <span className="data">· {yesPct}%</span>}
+          </PredictButton>
+          <PredictButton active={mine === false} onClick={() => choose(false)}>
+            No {total > 0 && <span className="data">· {100 - yesPct}%</span>}
+          </PredictButton>
+        </div>
       </div>
 
-      <div className="flex h-2.5 overflow-hidden rounded-full bg-muted" aria-hidden>
-        <div className="bg-green transition-all" style={{ width: `${yesPct}%` }} />
-        <div className="bg-amber transition-all" style={{ width: `${100 - yesPct}%` }} />
-      </div>
-
-      <div className="flex gap-2">
-        <PredictButton active={mine === true} onClick={() => choose(true)}>
-          Yes {total > 0 && <span className="data">· {yesPct}%</span>}
-        </PredictButton>
-        <PredictButton active={mine === false} onClick={() => choose(false)}>
-          No {total > 0 && <span className="data">· {100 - yesPct}%</span>}
-        </PredictButton>
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-1 pt-4 text-xs text-muted-foreground">
+        <span>{consensus}</span>
+        {mine !== null && (
+          <span>
+            Your call: <span className="font-medium text-ink">{mine ? 'Yes' : 'No'}</span>
+          </span>
+        )}
       </div>
     </div>
   )
