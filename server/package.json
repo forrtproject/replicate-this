@@ -16,6 +16,7 @@
     "db:seed": "tsx src/db/seed.ts",
     "db:demo": "tsx src/db/demo.ts",
     "export:data": "tsx src/scripts/export-data.ts",
+    "import:issues": "tsx src/scripts/import-github-issues.ts",
     "slack:backfill": "tsx src/scripts/backfill-slack-channels.ts",
     "make-admin": "tsx src/db/make-admin.ts"
   },

@@ -13,6 +13,7 @@ import { JournalTags } from '@/features/nominations/JournalTags'
 import { ReplicationWorkshopTag } from '@/features/nominations/ReplicationWorkshopTag'
 import { formatReference, researcherLabel } from '@/features/nominations/format'
 import { ContactLinks } from '@/features/profile/ContactLinks'
+import { RichText } from '@/components/ui/RichText'
 import { ContributionPanel } from '@/features/contributions/ContributionPanel'
 import { CommentsSection } from '@/features/comments/CommentsSection'
 
@@ -126,35 +127,26 @@ export function NominationDetailPage() {
 
       <section className="mb-6">
         <p className="eyebrow mb-1.5">Why revisit this?</p>
-        <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{n.justification}</p>
+        <RichText className="text-[15px] leading-relaxed">{n.justification}</RichText>
       </section>
 
       {(n.dataLocation || n.robustnessChecks || n.designDeviations) && (
         <section className="mb-6 space-y-4 rounded-lg border border-line bg-muted/30 p-4">
           {n.dataLocation && (
             <DetailField label="Data location">
-              {/^https?:\/\//.test(n.dataLocation) ? (
-                <a
-                  href={n.dataLocation}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="break-all text-sm text-green underline"
-                >
-                  {n.dataLocation}
-                </a>
-              ) : (
-                <p className="text-sm">{n.dataLocation}</p>
-              )}
+              {/* Either a bare repository URL or prose citing several — GFM
+                  autolinks both, so no special-casing for the URL-only form. */}
+              <RichText className="text-sm leading-relaxed">{n.dataLocation}</RichText>
             </DetailField>
           )}
           {n.robustnessChecks && (
             <DetailField label="Suggested robustness checks">
-              <p className="whitespace-pre-wrap text-sm leading-relaxed">{n.robustnessChecks}</p>
+              <RichText className="text-sm leading-relaxed">{n.robustnessChecks}</RichText>
             </DetailField>
           )}
           {n.designDeviations && (
             <DetailField label="Suggested deviations from the original design">
-              <p className="whitespace-pre-wrap text-sm leading-relaxed">{n.designDeviations}</p>
+              <RichText className="text-sm leading-relaxed">{n.designDeviations}</RichText>
             </DetailField>
           )}
         </section>

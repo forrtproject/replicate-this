@@ -11,6 +11,7 @@ import { AdminTabs } from '@/features/admin/AdminTabs'
 import { VerificationBadge } from '@/features/nominations/VerificationBadge'
 import { AvailabilityTags } from '@/features/nominations/Availability'
 import { formatReference } from '@/features/nominations/format'
+import { RichText } from '@/components/ui/RichText'
 
 export function AdminPage() {
   return (
@@ -73,7 +74,7 @@ function Row({ nomination: n, tab }: { nomination: AdminNomination; tab: 'pendin
             <AvailabilityTags items={n.availability} links={n.availabilityLinks} />
           </div>
 
-          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">{n.justification}</p>
+          <RichText className="mt-2 text-sm leading-relaxed">{n.justification}</RichText>
 
           {n.dataLocation && (
             <p className="mt-2 text-xs text-muted-foreground">
