@@ -7,6 +7,7 @@ import { db, schema } from '@/db'
 import { config } from '@/lib/env'
 import { deterministicEmail } from '@/lib/crypto'
 import { generateUniquePseudonym } from '@/lib/pseudonym'
+import { stripOAuthTokens } from '@/lib/oauth-tokens'
 import { defaultEmailPrefs } from '@/types'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -171,6 +172,13 @@ export const auth = betterAuth({
           return { data: rest }
         },
       },
+    },
+    // Provider tokens are never written to the database: see
+    // `stripOAuthTokens`. `create` covers first sign-in and account linking,
+    // `update` covers repeat sign-in, which otherwise refreshes them in place.
+    account: {
+      create: { before: async (account) => ({ data: stripOAuthTokens(account) }) },
+      update: { before: async (account) => ({ data: stripOAuthTokens(account) }) },
     },
   },
 

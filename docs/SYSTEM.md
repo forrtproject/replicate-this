@@ -111,12 +111,14 @@ httpOnly, sameSite=lax, secure in prod.
 
 **`account`** — one row per linked OAuth provider: `provider_id`
 (google/github/orcid), `account_id` (the provider's user id), OAuth
-`access_token` / `refresh_token` / `id_token`, `scope`. Accounts resolving to
-the same dummy email are linked automatically.
-> ⚠️ **Known caveat:** Better Auth stores the raw provider tokens here, and a
-> Google `id_token` JWT embeds the real email/name/picture. This is the one
-> place PII can reach the database despite the zero-PII design — the tokens
-> are never used after sign-in and should be scrubbed (open task).
+`scope`. Accounts resolving to the same dummy email are linked automatically.
+The `access_token` / `refresh_token` / `id_token` columns exist because Better
+Auth's account model defines them, and are always null: `account.create.before`
+and `account.update.before` hooks discard the provider tokens before every
+write (`server/src/lib/oauth-tokens.ts`), so neither first sign-in, repeat
+sign-in nor account linking persists one. A Google `id_token` is a JWT carrying
+the real email, name and picture; the app makes no provider calls after
+sign-in, so nothing needs the tokens.
 
 **`verification`** — Better Auth's short-lived OAuth state/PKCE rows.
 
@@ -306,8 +308,7 @@ registry) and `exports/STATS.md` (totals by status/discipline).
   name → "Deleted account"; contributions/comments/votes remain under the
   tombstone so threads stay coherent.
 - **Sessions** store `user_agent` (and have an `ip_address` column).
-- **Known gap:** OAuth `id_token`/`access_token` in the `account` table can
-  embed or fetch real profile data (see § 2 caveat).
+- **OAuth tokens** are discarded at sign-in and never stored (see § 2).
 
 ---
 
