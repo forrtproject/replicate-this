@@ -101,7 +101,7 @@ dev DBs are typically synced with `db:push`).
 | `role` | text | `user` \| `maintainer`. Never settable by the client; granted via the admin UI (guardrails: no self-change, never zero maintainers). |
 | `deleted` | boolean | Soft-delete tombstone: login severed, PII cleared, name becomes "Deleted account"; the user's content remains attributed to that tombstone. |
 | `links` | jsonb | **Opt-in** public contact links: `orcid` (checksum-validated, canonicalised), `github`, `twitter`, `linkedin`, `website` (http(s)-validated, ≤ 300 chars). |
-| `notification_email` | text | **Opt-in, user-volunteered** address for email notifications. Empty = no emails. The only real email the system ever stores, by explicit choice. |
+| `notification_email` | text | Address for email notifications. Prefilled with the provider email at first Google/GitHub sign-in (`rememberSignupEmail` in `auth.ts`), empty for ORCID; the user can change or clear it. Empty = no emails. The only real email the system stores. |
 | `email_prefs` | jsonb | Which categories to email: `my_nominations`, `contributions`, `watched`, `admin` (maintainers only). All off by default. |
 | `created_at`, `updated_at` | timestamp | |
 
@@ -243,8 +243,8 @@ everything except `/api/auth/*` (Better Auth) and `/api/email-actions/*`
 ## 5. Notifications & email
 
 Every event lands in the **in-app inbox** (`notifications` table). Email is
-**strictly opt-in** twice over: the user must volunteer a `notification_email`
-*and* enable the category. Sending is best-effort (Postmark; disabled when
+**opt-in** per category: a `notification_email` must be present (prefilled from
+Google/GitHub at sign-up, or entered by the user) *and* the category enabled. Sending is best-effort (Postmark; disabled when
 `POSTMARK_API_TOKEN` is blank) and never fails the request.
 
 | Category (pref) | Types |
@@ -300,8 +300,9 @@ registry) and `exports/STATS.md` (totals by status/discipline).
   no image (`server/src/auth.ts`). Google/GitHub sign-in requests only
   openid/email scopes; ORCID only `openid`.
 - **Public attribution** is pseudonym + 8-char token only.
-- **User-volunteered PII** is the only PII by design: optional contact links
-  and the optional notification email — both user-entered, both removable.
+- **Stored PII** is limited to the optional contact links (user-entered) and
+  the notification email (prefilled from the Google/GitHub profile at sign-up,
+  empty for ORCID) — both removable by the user.
 - **Transient PII:** the Slack-account email (§ 6) is forwarded to Slack's API
   and never persisted.
 - **Account deletion** is a soft delete: credentials severed, PII cleared,
