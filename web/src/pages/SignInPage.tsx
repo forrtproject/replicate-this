@@ -2,6 +2,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { signIn, authClient } from '@/lib/auth-client'
 import { api } from '@/lib/api'
+import { withBase } from '@/lib/config'
 
 interface EnabledProviders {
   google: boolean
@@ -11,9 +12,10 @@ interface EnabledProviders {
 
 export function SignInPage() {
   const [params] = useSearchParams()
-  // Absolute URL on the web origin: Better Auth runs on a different port (:8787),
-  // so a relative path would otherwise resolve against the auth server.
-  const callbackURL = `${window.location.origin}${params.get('redirect') ?? '/dashboard'}`
+  // Absolute URL on the web origin: Better Auth runs on another origin, so a
+  // relative path would otherwise resolve against the auth server. React Router
+  // strips the base path from the redirect, so put it back.
+  const callbackURL = `${window.location.origin}${withBase(params.get('redirect') ?? '/dashboard')}`
 
   const { data: providers, isLoading } = useQuery({
     queryKey: ['providers'],
