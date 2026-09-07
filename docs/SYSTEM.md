@@ -101,7 +101,7 @@ dev DBs are typically synced with `db:push`).
 | `role` | text | `user` \| `maintainer`. Never settable by the client; granted via the admin UI (guardrails: no self-change, never zero maintainers). |
 | `deleted` | boolean | Soft-delete tombstone: login severed, PII cleared, name becomes "Deleted account"; the user's content remains attributed to that tombstone. |
 | `links` | jsonb | **Opt-in** public contact links: `orcid` (checksum-validated, canonicalised), `github`, `twitter`, `linkedin`, `website` (http(s)-validated, ≤ 300 chars). |
-| `notification_email` | text | **Opt-in, user-volunteered** address for email notifications. Empty = no emails. The only real email the system ever stores, by explicit choice. |
+| `notification_email` | text | Address for email notifications. Prefilled with the provider email at first Google/GitHub sign-in (`rememberSignupEmail` in `auth.ts`), empty for ORCID; the user can change or clear it. Empty = no emails. The only real email the system stores. |
 | `email_prefs` | jsonb | Which categories to email: `my_nominations`, `contributions`, `watched`, `admin` (maintainers only). All off by default. |
 | `created_at`, `updated_at` | timestamp | |
 
@@ -111,12 +111,14 @@ httpOnly, sameSite=lax, secure in prod.
 
 **`account`** — one row per linked OAuth provider: `provider_id`
 (google/github/orcid), `account_id` (the provider's user id), OAuth
-`access_token` / `refresh_token` / `id_token`, `scope`. Accounts resolving to
-the same dummy email are linked automatically.
-> ⚠️ **Known caveat:** Better Auth stores the raw provider tokens here, and a
-> Google `id_token` JWT embeds the real email/name/picture. This is the one
-> place PII can reach the database despite the zero-PII design — the tokens
-> are never used after sign-in and should be scrubbed (open task).
+`scope`. Accounts resolving to the same dummy email are linked automatically.
+The `access_token` / `refresh_token` / `id_token` columns exist because Better
+Auth's account model defines them, and are always null: `account.create.before`
+and `account.update.before` hooks discard the provider tokens before every
+write (`server/src/lib/oauth-tokens.ts`), so neither first sign-in, repeat
+sign-in nor account linking persists one. A Google `id_token` is a JWT carrying
+the real email, name and picture; the app makes no provider calls after
+sign-in, so nothing needs the tokens.
 
 **`verification`** — Better Auth's short-lived OAuth state/PKCE rows.
 
@@ -241,8 +243,8 @@ everything except `/api/auth/*` (Better Auth) and `/api/email-actions/*`
 ## 5. Notifications & email
 
 Every event lands in the **in-app inbox** (`notifications` table). Email is
-**strictly opt-in** twice over: the user must volunteer a `notification_email`
-*and* enable the category. Sending is best-effort (Postmark; disabled when
+**opt-in** per category: a `notification_email` must be present (prefilled from
+Google/GitHub at sign-up, or entered by the user) *and* the category enabled. Sending is best-effort (Postmark; disabled when
 `POSTMARK_API_TOKEN` is blank) and never fails the request.
 
 | Category (pref) | Types |
@@ -298,16 +300,16 @@ registry) and `exports/STATS.md` (totals by status/discipline).
   no image (`server/src/auth.ts`). Google/GitHub sign-in requests only
   openid/email scopes; ORCID only `openid`.
 - **Public attribution** is pseudonym + 8-char token only.
-- **User-volunteered PII** is the only PII by design: optional contact links
-  and the optional notification email — both user-entered, both removable.
+- **Stored PII** is limited to the optional contact links (user-entered) and
+  the notification email (prefilled from the Google/GitHub profile at sign-up,
+  empty for ORCID) — both removable by the user.
 - **Transient PII:** the Slack-account email (§ 6) is forwarded to Slack's API
   and never persisted.
 - **Account deletion** is a soft delete: credentials severed, PII cleared,
   name → "Deleted account"; contributions/comments/votes remain under the
   tombstone so threads stay coherent.
 - **Sessions** store `user_agent` (and have an `ip_address` column).
-- **Known gap:** OAuth `id_token`/`access_token` in the `account` table can
-  embed or fetch real profile data (see § 2 caveat).
+- **OAuth tokens** are discarded at sign-in and never stored (see § 2).
 
 ---
 
