@@ -49,6 +49,20 @@ try {
                 end as can_write_drizzle_schema`,
       )
       console.error('This connection reports:', rows[0])
+
+      // Objects left behind by an earlier run as another role are the usual
+      // cause, and they surface one at a time — list them all in one go.
+      const { rows: foreign } = await pool.query(
+        `select n.nspname || '.' || c.relname as object, pg_get_userbyid(c.relowner) as owner
+           from pg_class c join pg_namespace n on n.oid = c.relnamespace
+          where n.nspname in ('public', 'drizzle')
+            and c.relkind in ('r', 'v', 'm', 'S')
+            and pg_get_userbyid(c.relowner) <> current_user
+          order by 1`,
+      )
+      if (foreign.length > 0) {
+        console.error('Objects not owned by this role:', foreign)
+      }
     } catch (probe) {
       console.error('Could not query the connection for details:', probe)
     }
