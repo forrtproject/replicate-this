@@ -152,7 +152,7 @@ export function buildReviewEmail(
   const subject = `${heading}: ${n.metadata.title || n.doi}`
   const approve = reviewUrl(n.id, adminUid, 'approve')
   const reject = reviewUrl(n.id, adminUid, 'reject')
-  const adminQueue = `${config.webOrigin}/admin`
+  const adminQueue = `${config.webAppUrl}/admin`
 
   const text = [
     `${heading}.`,
@@ -163,7 +163,7 @@ export function buildReviewEmail(
     `Reject: ${reject}`,
     `Open the moderation queue: ${adminQueue}`,
     '',
-    `Manage which emails you get, or turn them off: ${config.webOrigin}/profile`,
+    `Manage which emails you get, or turn them off: ${config.webAppUrl}/profile`,
   ].join('\n')
 
   const btn = (href: string, label: string, bg: string) =>
@@ -184,7 +184,7 @@ export function buildReviewEmail(
     </p>
     <hr style="margin:22px 0;border:none;border-top:1px solid #e3e6de;">
     <p style="margin:0;font-size:12px;color:#6b7263;">
-      <a href="${escapeHtml(`${config.webOrigin}/profile`)}" style="color:#1a7f4e;">Manage which emails you get</a>, or turn them off.
+      <a href="${escapeHtml(`${config.webAppUrl}/profile`)}" style="color:#1a7f4e;">Manage which emails you get</a>, or turn them off.
     </p>
   </div>
 </div>`

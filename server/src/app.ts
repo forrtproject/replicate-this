@@ -33,6 +33,12 @@ export function createApp() {
   // Better Auth owns everything under /api/auth/*.
   app.on(['GET', 'POST'], '/api/auth/*', (c) => auth.handler(c.req.raw))
 
+  // This host serves only the API. Anyone (or anything) landing on the root
+  // gets a pointer rather than a bare 404, and crawlers are turned away so the
+  // API domain never shows up in search results.
+  app.get('/', (c) => c.text('Replicate This API. The site is at ' + config.webAppUrl + '\n'))
+  app.get('/robots.txt', (c) => c.text('User-agent: *\nDisallow: /\n'))
+
   app.get('/api/health', (c) => c.json({ ok: true }))
 
   // Which OAuth providers are configured (so the UI hides dead buttons).

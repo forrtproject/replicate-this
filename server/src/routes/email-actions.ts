@@ -51,7 +51,7 @@ function message(title: string, detail: string, status = 200) {
   )
 }
 
-const queueLink = `<a href="${escapeHtml(`${config.webOrigin}/admin`)}" style="color:#1a7f4e;">moderation queue</a>`
+const queueLink = `<a href="${escapeHtml(`${config.webAppUrl}/admin`)}" style="color:#1a7f4e;">moderation queue</a>`
 
 /**
  * Validates the token and re-checks the acting user. Returns the payload and
