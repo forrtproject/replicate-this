@@ -119,10 +119,10 @@ async function emailOptedInRecipients(notifications: NotificationInput[]): Promi
     const subject = SUBJECTS[n.type] ?? 'New activity on Replicate This'
     const nominationId = n.data?.nominationId
     const lines = [subject + '.']
-    if (nominationId) lines.push(`View it: ${config.webOrigin}/nominations/${nominationId}`)
+    if (nominationId) lines.push(`View it: ${config.webAppUrl}/nominations/${nominationId}`)
     lines.push(
       '',
-      `Manage which emails you get, or turn them off: ${config.webOrigin}/profile`,
+      `Manage which emails you get, or turn them off: ${config.webAppUrl}/profile`,
     )
     await sendEmail({
       to: u.notificationEmail,
