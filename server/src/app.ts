@@ -30,6 +30,13 @@ export function createApp() {
     }),
   )
 
+  // Cloudflare serves its own robots.txt for this host, which can shadow the
+  // route below — a response header cannot be intercepted the same way.
+  app.use('*', async (c, next) => {
+    await next()
+    c.header('X-Robots-Tag', 'noindex, nofollow')
+  })
+
   // Better Auth owns everything under /api/auth/*.
   app.on(['GET', 'POST'], '/api/auth/*', (c) => auth.handler(c.req.raw))
 
