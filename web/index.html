@@ -8,6 +8,28 @@
       content="A community-driven registry for nominating research papers that merit independent replication."
     />
     <title>Replicate This — Replication Registry</title>
+    <script>
+      // Restores the route that 404.html folded into a /?/path query string,
+      // before React Router reads the URL.
+      (function () {
+        var l = window.location;
+        if (l.search[1] !== "/") return;
+        var decoded = l.search
+          .slice(1)
+          .split("&")
+          .map(function (s) {
+            return s.replace(/~and~/g, "&");
+          })
+          .join("?");
+        var path = decoded.split("?")[0];
+        var query = decoded.split("?")[1] || "";
+        history.replaceState(
+          null,
+          "",
+          l.pathname.slice(0, -1) + path + (query ? "?" + query : "") + l.hash,
+        );
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

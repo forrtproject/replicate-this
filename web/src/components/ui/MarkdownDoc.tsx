@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { assetUrl } from '@/lib/config'
 
 /**
  * Fetches a markdown file (served from /public) and renders it. The source
@@ -12,7 +13,7 @@ export function MarkdownDoc({ src }: { src: string }) {
 
   useEffect(() => {
     let active = true
-    fetch(src)
+    fetch(assetUrl(src))
       .then((r) => (r.ok ? r.text() : Promise.reject()))
       .then((t) => active && setContent(t))
       .catch(() => active && setFailed(true))
