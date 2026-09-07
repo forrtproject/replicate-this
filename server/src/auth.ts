@@ -109,6 +109,9 @@ const orcidConfig = enabledProviders.orcid
     ]
   : []
 
+const crossSite =
+  new URL(config.betterAuthUrl).host !== new URL(config.webOrigin).host
+
 export const auth = betterAuth({
   baseURL: config.betterAuthUrl,
   secret: config.betterAuthSecret,
@@ -220,7 +223,11 @@ export const auth = betterAuth({
     useSecureCookies: config.isProd,
     defaultCookieAttributes: {
       httpOnly: true,
-      sameSite: 'lax',
+      // The web app and the API are separate hosts in production (Pages on
+      // forrt.org, API elsewhere), so the session cookie is cross-site and a
+      // Lax cookie would never be sent. SameSite=None requires Secure, hence
+      // the isProd guard — same-host dev stays on Lax.
+      sameSite: config.isProd && crossSite ? 'none' : 'lax',
     },
   },
 })

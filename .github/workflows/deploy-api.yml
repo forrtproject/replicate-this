@@ -1,0 +1,81 @@
+name: Deploy API to aaPanel
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'server/**'
+      - '.github/workflows/deploy-api.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: "deploy-api"
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: server
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      # Only what the API needs at runtime — no src/, no web/, no dev deps.
+      # node_modules is built on the server by deploy-post.sh.
+      - name: Stage release
+        run: |
+          mkdir -p release
+          cp -r dist drizzle release/
+          cp package.json package-lock.json ecosystem.config.cjs deploy-post.sh release/
+
+      - name: Install sshpass
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sshpass
+
+      # --delete prunes files dropped from the build; .env and node_modules live
+      # only on the server, and excluding them protects them from that prune.
+      - name: Upload release with rsync
+        run: |
+          sshpass -p "$SERVER_PASSWORD" rsync -az --delete \
+            --exclude='.env' \
+            --exclude='node_modules' \
+            --no-perms --no-owner --no-group \
+            -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
+            ./release/ \
+            $SERVER_USER@$SERVER_HOST:$SERVER_PATH
+        env:
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_PATH: ${{ secrets.SERVER_PATH }}
+          SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
+
+      - name: Install deps, migrate, restart
+        run: |
+          sshpass -p "$SERVER_PASSWORD" ssh \
+            -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+            $SERVER_USER@$SERVER_HOST 'cd '"$SERVER_PATH"' && ./deploy-post.sh'
+        env:
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_PATH: ${{ secrets.SERVER_PATH }}
+          SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}

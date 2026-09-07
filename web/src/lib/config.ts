@@ -5,7 +5,7 @@
  */
 export const apiOrigin = (import.meta.env.VITE_API_ORIGIN ?? '').replace(/\/$/, '')
 
-/** Resolves a root-relative /public path against the deployed base path. */
-export function assetUrl(path: string) {
+/** Resolves a root-relative path (public file or route) against the base path. */
+export function withBase(path: string) {
   return import.meta.env.BASE_URL.replace(/\/$/, '') + (path.startsWith('/') ? path : `/${path}`)
 }
