@@ -212,6 +212,13 @@ export const auth = betterAuth({
       enabled: true,
       trustedProviders: ['google', 'github', 'orcid'],
     },
+    // Better Auth double-checks the OAuth state against a cookie it sets on the
+    // API domain during sign-in. Cross-site that is a third-party cookie, which
+    // many browsers refuse to store, and the callback then fails with
+    // state_mismatch. The state itself is a single-use random value held in the
+    // verification table — the cookie is only defence in depth, so drop it when
+    // the two are on different sites.
+    skipStateCookieCheck: crossSite,
   },
 
   socialProviders,
