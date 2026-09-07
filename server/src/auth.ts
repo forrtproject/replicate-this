@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
-import { genericOAuth } from 'better-auth/plugins'
+import { genericOAuth, bearer, oauthPopup } from 'better-auth/plugins'
 import { eq } from 'drizzle-orm'
 import { db, schema } from '@/db'
 import { config } from '@/lib/env'
@@ -212,11 +212,25 @@ export const auth = betterAuth({
       enabled: true,
       trustedProviders: ['google', 'github', 'orcid'],
     },
+    // Better Auth double-checks the OAuth state against a cookie it sets on the
+    // API domain during sign-in. Cross-site that is a third-party cookie, which
+    // many browsers refuse to store, and the callback then fails with
+    // state_mismatch. The state itself is a single-use random value held in the
+    // verification table — the cookie is only defence in depth, so drop it when
+    // the two are on different sites.
+    skipStateCookieCheck: crossSite,
   },
 
   socialProviders,
 
-  plugins: orcidConfig.length ? [genericOAuth({ config: orcidConfig })] : [],
+  plugins: [
+    ...(orcidConfig.length ? [genericOAuth({ config: orcidConfig })] : []),
+    // Cross-site, the session cookie is third-party and current browsers drop
+    // it, so the SPA never sees a session however well the callback goes. The
+    // popup flow posts the session token back to the opener instead, and bearer
+    // lets the SPA present it as an Authorization header.
+    ...(crossSite ? [oauthPopup(), bearer()] : []),
+  ],
 
   advanced: {
     cookiePrefix: 'replicate-this',

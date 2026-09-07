@@ -15,19 +15,58 @@ try {
 } catch (error) {
   // This runs mid-deploy and is read in CI logs, where a driver stack trace
   // buries the one line that says what to fix.
-  const { code } = (error as { cause?: { code?: string } }).cause ?? {}
-  const { hostname, port, pathname } = new URL(config.databaseUrl)
+  const { code, message } = (error as { cause?: { code?: string; message?: string } }).cause ?? {}
+  const { hostname, port, pathname, username } = new URL(config.databaseUrl)
   const target = `${hostname}:${port || '5432'}`
-  const hint =
-    code === 'ECONNREFUSED'
-      ? `nothing is listening at ${target} — is PostgreSQL running?`
-      : code === '28P01'
-        ? `password rejected at ${target}`
-        : code === '3D000'
-          ? `database "${pathname.slice(1)}" does not exist at ${target}`
-          : null
+  const database = pathname.slice(1)
+  const hints: Record<string, string> = {
+    ECONNREFUSED: `nothing is listening at ${target} — is PostgreSQL running?`,
+    '28P01': `password rejected at ${target}`,
+    '3D000': `database "${database}" does not exist at ${target}`,
+    // Postgres names the exact object it refused — database or schema — which
+    // matters: owning the database does not grant rights inside a schema that
+    // another role owns.
+    '42501': `${message ?? 'permission denied'} (role "${username}" on "${database}") — that object needs to be owned by the role, see docs/DEPLOYMENT.md`,
+  }
+  const hint = code ? hints[code] : undefined
 
-  if (hint === null) throw error
+  if (hint === undefined) throw error
   console.error(`Migration failed: ${hint}\nCheck DATABASE_URL in .env.`)
+
+  // A privilege error where the grants look right usually means this connection
+  // is not reaching the cluster you granted on. Ask it who it actually is.
+  if (code === '42501') {
+    try {
+      const { rows } = await pool.query(
+        `select current_user, current_database(), inet_server_port() as port,
+                has_database_privilege(current_user, current_database(), 'CREATE') as can_create_schema,
+                has_schema_privilege(current_user, 'public', 'CREATE') as can_create_tables,
+                case when to_regnamespace('drizzle') is null then null else
+                  pg_get_userbyid((select nspowner from pg_namespace where nspname = 'drizzle'))
+                end as drizzle_schema_owner,
+                case when to_regnamespace('drizzle') is null then null else
+                  has_schema_privilege(current_user, 'drizzle', 'CREATE')
+                end as can_write_drizzle_schema`,
+      )
+      console.error('This connection reports:', rows[0])
+
+      // Objects left behind by an earlier run as another role are the usual
+      // cause, and they surface one at a time — list them all in one go.
+      const { rows: foreign } = await pool.query(
+        `select n.nspname || '.' || c.relname as object, pg_get_userbyid(c.relowner) as owner
+           from pg_class c join pg_namespace n on n.oid = c.relnamespace
+          where n.nspname in ('public', 'drizzle')
+            and c.relkind in ('r', 'v', 'm', 'S')
+            and pg_get_userbyid(c.relowner) <> current_user
+          order by 1`,
+      )
+      if (foreign.length > 0) {
+        console.error('Objects not owned by this role:', foreign)
+      }
+    } catch (probe) {
+      console.error('Could not query the connection for details:', probe)
+    }
+  }
+
   process.exit(1)
 }

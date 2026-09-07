@@ -1,3 +1,4 @@
+import { getStoredPopupToken } from 'better-auth/client/plugins'
 import { apiOrigin } from './config'
 
 /**
@@ -18,10 +19,15 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  // Cross-origin the session cookie is dropped by the browser, so the token the
+  // sign-in popup handed back is what actually authenticates these calls.
+  const token = getStoredPopupToken()
+
   const res = await fetch(`${apiOrigin}/api${path}`, {
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(init?.headers ?? {}),
     },
     ...init,

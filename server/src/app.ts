@@ -25,10 +25,19 @@ export function createApp() {
     cors({
       origin: config.webOrigin,
       credentials: true,
-      allowHeaders: ['Content-Type'],
+      // Authorization carries the bearer token when the session cookie cannot
+      // cross sites — see the oauthPopup/bearer plugins in auth.ts.
+      allowHeaders: ['Content-Type', 'Authorization'],
       allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     }),
   )
+
+  // Cloudflare serves its own robots.txt for this host, which can shadow the
+  // route below — a response header cannot be intercepted the same way.
+  app.use('*', async (c, next) => {
+    await next()
+    c.header('X-Robots-Tag', 'noindex, nofollow')
+  })
 
   // Better Auth owns everything under /api/auth/*.
   app.on(['GET', 'POST'], '/api/auth/*', (c) => auth.handler(c.req.raw))

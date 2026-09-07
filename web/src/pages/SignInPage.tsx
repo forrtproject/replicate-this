@@ -1,6 +1,7 @@
-import { useSearchParams } from 'react-router-dom'
+import { useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { signIn, authClient } from '@/lib/auth-client'
+import { signIn, authClient, usePopupSignIn } from '@/lib/auth-client'
 import { api } from '@/lib/api'
 import { withBase } from '@/lib/config'
 
@@ -16,6 +17,32 @@ export function SignInPage() {
   // relative path would otherwise resolve against the auth server. React Router
   // strips the base path from the redirect, so put it back.
   const callbackURL = `${window.location.origin}${withBase(params.get('redirect') ?? '/dashboard')}`
+
+  const navigate = useNavigate()
+  const [error, setError] = useState<string | null>(null)
+  const target = params.get('redirect') ?? '/dashboard'
+
+  /**
+   * Cross-origin the session cookie never reaches the SPA, so sign-in runs in a
+   * popup that returns a token. Same-origin keeps the plain redirect flow.
+   */
+  async function start(provider: { provider: string } | { providerId: string }) {
+    if (!usePopupSignIn) {
+      if ('provider' in provider) {
+        await signIn.social({ provider: provider.provider, callbackURL })
+      } else {
+        await authClient.signIn.oauth2({ providerId: provider.providerId, callbackURL })
+      }
+      return
+    }
+    setError(null)
+    const { error: popupError } = await authClient.signIn.popup({ ...provider, callbackURL })
+    if (popupError) {
+      setError(popupError.message || 'Sign-in was cancelled.')
+      return
+    }
+    navigate(target, { replace: true })
+  }
 
   const { data: providers, isLoading } = useQuery({
     queryKey: ['providers'],
@@ -41,21 +68,25 @@ export function SignInPage() {
         </p>
       )}
 
+      {error && (
+        <p className="mb-3 rounded-md border border-red-200 bg-red-50 p-3 text-center text-sm text-red-800">
+          {error}
+        </p>
+      )}
+
       <div className="space-y-3">
         {providers?.google && (
-          <ProviderButton onClick={() => signIn.social({ provider: 'google', callbackURL })}>
+          <ProviderButton onClick={() => start({ provider: 'google' })}>
             Continue with Google
           </ProviderButton>
         )}
         {providers?.github && (
-          <ProviderButton onClick={() => signIn.social({ provider: 'github', callbackURL })}>
+          <ProviderButton onClick={() => start({ provider: 'github' })}>
             Continue with GitHub
           </ProviderButton>
         )}
         {providers?.orcid && (
-          <ProviderButton
-            onClick={() => authClient.signIn.oauth2({ providerId: 'orcid', callbackURL })}
-          >
+          <ProviderButton onClick={() => start({ providerId: 'orcid' })}>
             Continue with ORCID
           </ProviderButton>
         )}
