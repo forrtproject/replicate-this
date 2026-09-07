@@ -16,18 +16,20 @@ try {
   // This runs mid-deploy and is read in CI logs, where a driver stack trace
   // buries the one line that says what to fix.
   const { code } = (error as { cause?: { code?: string } }).cause ?? {}
-  const { hostname, port, pathname } = new URL(config.databaseUrl)
+  const { hostname, port, pathname, username } = new URL(config.databaseUrl)
   const target = `${hostname}:${port || '5432'}`
-  const hint =
-    code === 'ECONNREFUSED'
-      ? `nothing is listening at ${target} — is PostgreSQL running?`
-      : code === '28P01'
-        ? `password rejected at ${target}`
-        : code === '3D000'
-          ? `database "${pathname.slice(1)}" does not exist at ${target}`
-          : null
+  const database = pathname.slice(1)
+  const hints: Record<string, string> = {
+    ECONNREFUSED: `nothing is listening at ${target} — is PostgreSQL running?`,
+    '28P01': `password rejected at ${target}`,
+    '3D000': `database "${database}" does not exist at ${target}`,
+    // Migrations create the drizzle schema and then tables in public, so the
+    // role needs to own the database, not merely connect to it.
+    '42501': `role "${username}" may connect to "${database}" but not create in it — make it the owner (see docs/DEPLOYMENT.md)`,
+  }
+  const hint = code ? hints[code] : undefined
 
-  if (hint === null) throw error
+  if (hint === undefined) throw error
   console.error(`Migration failed: ${hint}\nCheck DATABASE_URL in .env.`)
   process.exit(1)
 }
