@@ -15,7 +15,7 @@ try {
 } catch (error) {
   // This runs mid-deploy and is read in CI logs, where a driver stack trace
   // buries the one line that says what to fix.
-  const { code } = (error as { cause?: { code?: string } }).cause ?? {}
+  const { code, message } = (error as { cause?: { code?: string; message?: string } }).cause ?? {}
   const { hostname, port, pathname, username } = new URL(config.databaseUrl)
   const target = `${hostname}:${port || '5432'}`
   const database = pathname.slice(1)
@@ -23,9 +23,10 @@ try {
     ECONNREFUSED: `nothing is listening at ${target} — is PostgreSQL running?`,
     '28P01': `password rejected at ${target}`,
     '3D000': `database "${database}" does not exist at ${target}`,
-    // Migrations create the drizzle schema and then tables in public, so the
-    // role needs to own the database, not merely connect to it.
-    '42501': `role "${username}" may connect to "${database}" but not create in it — make it the owner (see docs/DEPLOYMENT.md)`,
+    // Postgres names the exact object it refused — database or schema — which
+    // matters: owning the database does not grant rights inside a schema that
+    // another role owns.
+    '42501': `${message ?? 'permission denied'} (role "${username}" on "${database}") — that object needs to be owned by the role, see docs/DEPLOYMENT.md`,
   }
   const hint = code ? hints[code] : undefined
 
@@ -37,10 +38,15 @@ try {
   if (code === '42501') {
     try {
       const { rows } = await pool.query(
-        `select current_user, current_database(), inet_server_addr() as host,
-                inet_server_port() as port,
+        `select current_user, current_database(), inet_server_port() as port,
                 has_database_privilege(current_user, current_database(), 'CREATE') as can_create_schema,
-                has_schema_privilege(current_user, 'public', 'CREATE') as can_create_tables`,
+                has_schema_privilege(current_user, 'public', 'CREATE') as can_create_tables,
+                case when to_regnamespace('drizzle') is null then null else
+                  pg_get_userbyid((select nspowner from pg_namespace where nspname = 'drizzle'))
+                end as drizzle_schema_owner,
+                case when to_regnamespace('drizzle') is null then null else
+                  has_schema_privilege(current_user, 'drizzle', 'CREATE')
+                end as can_write_drizzle_schema`,
       )
       console.error('This connection reports:', rows[0])
     } catch (probe) {
