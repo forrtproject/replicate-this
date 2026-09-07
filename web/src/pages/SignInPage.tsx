@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { signIn, authClient, usePopupSignIn } from '@/lib/auth-client'
+import { signInWithPopup } from '@/lib/popup-sign-in'
 import { api } from '@/lib/api'
 import { withBase } from '@/lib/config'
 
@@ -18,7 +19,6 @@ export function SignInPage() {
   // strips the base path from the redirect, so put it back.
   const callbackURL = `${window.location.origin}${withBase(params.get('redirect') ?? '/dashboard')}`
 
-  const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
   const target = params.get('redirect') ?? '/dashboard'
 
@@ -36,12 +36,14 @@ export function SignInPage() {
       return
     }
     setError(null)
-    const { error: popupError } = await authClient.signIn.popup({ ...provider, callbackURL })
-    if (popupError) {
-      setError(popupError.message || 'Sign-in was cancelled.')
+    const failure = await signInWithPopup(provider, callbackURL)
+    if (failure) {
+      setError(failure)
       return
     }
-    navigate(target, { replace: true })
+    // Full navigation rather than a client-side one: the session hook has
+    // already cached "signed out", and a reload refetches it with the token.
+    window.location.assign(`${window.location.origin}${withBase(target)}`)
   }
 
   const { data: providers, isLoading } = useQuery({
