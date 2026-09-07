@@ -31,5 +31,22 @@ try {
 
   if (hint === undefined) throw error
   console.error(`Migration failed: ${hint}\nCheck DATABASE_URL in .env.`)
+
+  // A privilege error where the grants look right usually means this connection
+  // is not reaching the cluster you granted on. Ask it who it actually is.
+  if (code === '42501') {
+    try {
+      const { rows } = await pool.query(
+        `select current_user, current_database(), inet_server_addr() as host,
+                inet_server_port() as port,
+                has_database_privilege(current_user, current_database(), 'CREATE') as can_create_schema,
+                has_schema_privilege(current_user, 'public', 'CREATE') as can_create_tables`,
+      )
+      console.error('This connection reports:', rows[0])
+    } catch (probe) {
+      console.error('Could not query the connection for details:', probe)
+    }
+  }
+
   process.exit(1)
 }
