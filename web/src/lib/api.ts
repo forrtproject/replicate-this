@@ -1,3 +1,5 @@
+import { apiOrigin } from './config'
+
 /**
  * Thin fetch wrapper for the Hono API. All privileged logic lives server-side;
  * the SPA only ever talks to /api/* (never to Postgres directly).
@@ -16,7 +18,7 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`/api${path}`, {
+  const res = await fetch(`${apiOrigin}/api${path}`, {
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
