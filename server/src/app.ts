@@ -25,7 +25,9 @@ export function createApp() {
     cors({
       origin: config.webOrigin,
       credentials: true,
-      allowHeaders: ['Content-Type'],
+      // Authorization carries the bearer token when the session cookie cannot
+      // cross sites — see the oauthPopup/bearer plugins in auth.ts.
+      allowHeaders: ['Content-Type', 'Authorization'],
       allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     }),
   )
