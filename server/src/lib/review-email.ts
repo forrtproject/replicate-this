@@ -20,15 +20,16 @@ const AVAILABILITY_LABELS: Record<string, string> = {
 
 const VERIFICATION_LABELS: Record<string, string> = {
   replication: 'Replication — collect new data',
-  reproduction: 'Reproduction — re-analyse the original data/code',
+  reproduction: 'Reproduction — re-run the original data/code and check robustness',
   both: 'Either replication or reproduction',
 }
 
 export interface ReviewNomination {
   id: string
-  doi: string
+  doi: string | null
   metadata: NominationMetadata
   discipline: string
+  disciplineOther: string
   verificationType: string
   availability: string[]
   availabilityLinks: Record<string, string>
@@ -59,6 +60,7 @@ export async function loadReviewNomination(id: string): Promise<ReviewNomination
     doi: n.doi,
     metadata: n.metadata as NominationMetadata,
     discipline: n.discipline,
+    disciplineOther: n.disciplineOther,
     verificationType: n.verificationType,
     availability: (n.availability as string[]) ?? [],
     availabilityLinks: (n.availabilityLinks as Record<string, string>) ?? {},
@@ -98,8 +100,15 @@ export function nominationDetailRows(n: ReviewNomination): DetailRow[] {
       label: 'Journal',
       value: [m.journal, m.publication_date].filter(Boolean).join(', ') || '—',
     },
-    { label: 'DOI', value: n.doi, href: `https://doi.org/${n.doi}` },
-    { label: 'Discipline', value: n.discipline },
+    n.doi
+      ? { label: 'DOI', value: n.doi, href: `https://doi.org/${n.doi}` }
+      : m.url
+        ? { label: 'Link (no DOI)', value: m.url, href: m.url }
+        : { label: 'DOI', value: 'None — reference entered by hand' },
+    {
+      label: 'Discipline',
+      value: n.disciplineOther ? `${n.discipline}: ${n.disciplineOther}` : n.discipline,
+    },
     { label: 'Requested check', value: VERIFICATION_LABELS[n.verificationType] ?? n.verificationType },
     {
       label: 'Openly available',
@@ -149,7 +158,7 @@ export function buildReviewEmail(
   const heading = opts.edited
     ? 'An edited nomination is back in the review queue'
     : 'A new nomination is awaiting review'
-  const subject = `${heading}: ${n.metadata.title || n.doi}`
+  const subject = `${heading}: ${n.metadata.title || n.doi || 'untitled'}`
   const approve = reviewUrl(n.id, adminUid, 'approve')
   const reject = reviewUrl(n.id, adminUid, 'reject')
   const adminQueue = `${config.webAppUrl}/admin`

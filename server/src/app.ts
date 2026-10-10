@@ -13,6 +13,7 @@ import { updatesRouter } from '@/routes/updates'
 import { inquiriesRouter } from '@/routes/inquiries'
 import { notificationsRouter } from '@/routes/notifications'
 import { profileRouter } from '@/routes/profile'
+import { researchersRouter } from '@/routes/researchers'
 import { slackRouter } from '@/routes/slack'
 import { adminRouter } from '@/routes/admin'
 import { emailActionsRouter } from '@/routes/email-actions'
@@ -70,6 +71,7 @@ export function createApp() {
   app.route('/api/inquiries', inquiriesRouter)
   app.route('/api/notifications', notificationsRouter)
   app.route('/api/profile', profileRouter)
+  app.route('/api/researchers', researchersRouter)
   app.route('/api/slack', slackRouter)
   app.route('/api/admin', adminRouter)
 

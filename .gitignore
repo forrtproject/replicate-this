@@ -8,3 +8,6 @@ build/
 *.log
 .vite/
 coverage/
+
+# Database dumps — contain user data and OAuth tokens, never commit
+backups/

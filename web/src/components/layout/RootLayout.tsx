@@ -54,7 +54,7 @@ export function RootLayout() {
             </span>
           </Link>
           <nav className="flex items-center gap-5">
-            <NavItem to="/registry">Registry</NavItem>
+            <NavItem to="/nominations">Nominations</NavItem>
             {session ? (
               <>
                 <NavItem to="/nominate">Nominate</NavItem>
@@ -70,7 +70,7 @@ export function RootLayout() {
                 </button>
               </>
             ) : (
-              <NavItem to="/sign-in">Sign in</NavItem>
+              <NavItem to="/sign-in">Sign in / Register</NavItem>
             )}
           </nav>
         </div>

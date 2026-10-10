@@ -10,7 +10,7 @@ import {
 import { AdminTabs } from '@/features/admin/AdminTabs'
 import { VerificationBadge } from '@/features/nominations/VerificationBadge'
 import { AvailabilityTags } from '@/features/nominations/Availability'
-import { formatReference } from '@/features/nominations/format'
+import { disciplineLabel, formatReference } from '@/features/nominations/format'
 import { RichText } from '@/components/ui/RichText'
 
 export function AdminPage() {
@@ -58,7 +58,7 @@ function Row({ nomination: n, tab }: { nomination: AdminNomination; tab: 'pendin
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <p className="mb-1 text-xs text-muted-foreground">
-            {n.discipline} · Researcher #{n.nominatorUid?.slice(0, 6) ?? '??????'} ·{' '}
+            {disciplineLabel(n)} · Researcher #{n.nominatorUid?.slice(0, 6) ?? '??????'} ·{' '}
             {new Date(n.createdAt).toLocaleDateString()}
             {n.metadataManual && ' · manual reference'}
           </p>
@@ -66,7 +66,7 @@ function Row({ nomination: n, tab }: { nomination: AdminNomination; tab: 'pendin
             {n.metadata.title || n.doi}
           </Link>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            {formatReference(n.metadata)} · {n.doi}
+            {formatReference(n.metadata)} · {n.doi ?? 'no DOI'}
           </p>
 
           <div className="mt-2 flex flex-wrap items-center gap-2">

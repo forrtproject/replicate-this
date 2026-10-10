@@ -31,7 +31,7 @@ export function RequireAuth({
   }
 
   if (role && (session.user as { role?: string }).role !== role) {
-    return <Navigate to="/registry" replace />
+    return <Navigate to="/nominations" replace />
   }
 
   return <>{children}</>

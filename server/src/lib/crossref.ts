@@ -59,12 +59,27 @@ function mapCslJson(msg: Record<string, unknown>): NominationMetadata {
   }
 }
 
+// Successful lookups, briefly: the nomination form previews the reference as
+// the DOI is typed, then submits it, and both resolve the same DOI.
+const CACHE_TTL_MS = 30 * 60_000
+const CACHE_MAX = 500
+const cache = new Map<string, { metadata: NominationMetadata; at: number }>()
+
 /**
  * Resolve DOI metadata. Tries Crossref first (polite pool), then falls back to
  * doi.org content negotiation (covers DataCite, mEDRA, etc.). If both fail, the
  * thrown error has `allowManual = true` so the caller can prompt for manual entry.
  */
 export async function fetchDoiMetadata(doi: string): Promise<NominationMetadata> {
+  const hit = cache.get(doi)
+  if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.metadata
+  const metadata = await resolveDoiMetadata(doi)
+  if (cache.size >= CACHE_MAX) cache.delete(cache.keys().next().value!)
+  cache.set(doi, { metadata, at: Date.now() })
+  return metadata
+}
+
+async function resolveDoiMetadata(doi: string): Promise<NominationMetadata> {
   // 1) Crossref
   try {
     const res = await fetchWithTimeout(

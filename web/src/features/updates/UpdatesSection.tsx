@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { ExternalLink, FileText } from 'lucide-react'
 import { useSession } from '@/lib/auth-client'
-import { researcherLabel } from '@/features/nominations/format'
+import { ResearcherLink } from '@/features/profile/ResearcherLink'
+import { RichText } from '@/components/ui/RichText'
 import { ApiError } from '@/lib/api'
 import type { NominationDetail } from '@/types'
 import { useUpdates, usePostUpdate } from './api'
@@ -60,7 +61,7 @@ export function UpdatesSection({ nomination: n }: { nomination: NominationDetail
         {updates?.map((u) => (
           <li key={u.id} className="border-t border-line pt-3 first:border-t-0 first:pt-0">
             <p className="flex flex-wrap items-center gap-x-2 text-sm">
-              <span className="font-medium">{researcherLabel(u.name, u.token)}</span>
+              <ResearcherLink name={u.name} token={u.token} className="font-medium" />
               <span className="text-xs text-muted-foreground">
                 ·{' '}
                 {new Date(u.createdAt).toLocaleDateString(undefined, {
@@ -70,7 +71,7 @@ export function UpdatesSection({ nomination: n }: { nomination: NominationDetail
                 })}
               </span>
             </p>
-            <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed">{u.content}</p>
+            <RichText className="mt-1 text-sm leading-relaxed">{u.content}</RichText>
             {u.articleUrl && (
               <a
                 href={u.articleUrl}

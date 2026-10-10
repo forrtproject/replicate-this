@@ -1,31 +1,24 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { Dices, Check } from 'lucide-react'
+import { Check } from 'lucide-react'
 import {
   useProfile,
-  useUpdateName,
-  useNameSuggestion,
-  useUpdateLinks,
   useUpdateEmailPrefs,
   useCompleteOnboarding,
 } from '@/features/profile/api'
 import { AvatarEditor } from '@/features/profile/AvatarEditor'
+import { DisplayNameEditor, DISPLAY_NAME_HINT } from '@/features/profile/DisplayNameEditor'
+import { LinksEditor } from '@/features/profile/LinksEditor'
 import { ApiError } from '@/lib/api'
 import { isValidEmail } from '@/lib/utils'
-import {
-  PROFILE_LINKS,
-  EMAIL_PREF_OPTIONS,
-  type EmailPrefs,
-  type ProfileLinkKey,
-  type ProfileLinks,
-} from '@/types'
+import { EMAIL_PREF_OPTIONS, type EmailPrefs, type ProfileLinks } from '@/types'
 
-const STEPS = ['Pseudonym', 'Photo', 'Public profile', 'Notifications'] as const
+const STEPS = ['Name', 'Photo', 'Public profile', 'Notifications'] as const
 
 /**
  * One-time post-signup walkthrough. Guides a new researcher through the four
- * things worth setting up front — pseudonym, avatar, public links, email
+ * things worth setting up front — display name, avatar, public links, email
  * notifications — then marks them onboarded and drops them on the dashboard.
  */
 export function WelcomePage() {
@@ -77,7 +70,7 @@ export function WelcomePage() {
       </ol>
 
       <section className="mt-6 rounded-lg border border-line bg-card p-5">
-        {step === 0 && <PseudonymStep current={profile.name} />}
+        {step === 0 && <NameStep current={profile.name} />}
         {step === 1 && <AvatarEditor current={profile.image} name={profile.name} />}
         {step === 2 && <LinksStep initial={profile.links} />}
         {step === 3 && (
@@ -136,116 +129,23 @@ function StepIntro({ title, hint }: { title: string; hint: string }) {
   )
 }
 
-function PseudonymStep({ current }: { current: string }) {
-  const update = useUpdateName()
-  const suggest = useNameSuggestion()
-  const [name, setName] = useState(current)
-  const [saved, setSaved] = useState(false)
-  const [error, setError] = useState('')
-
-  function save() {
-    setError('')
-    update.mutate(name, {
-      onSuccess: () => {
-        setSaved(true)
-        setTimeout(() => setSaved(false), 1500)
-      },
-      onError: (e) =>
-        setError(e instanceof ApiError ? e.message : 'Could not save your pseudonym.'),
-    })
-  }
-
+function NameStep({ current }: { current: string }) {
   return (
     <div>
-      <StepIntro
-        title="Choose your pseudonym"
-        hint="This is how you appear across the site — no real name needed. We gave you a random one; keep it, edit it, or roll a new suggestion. Pseudonyms are unique."
-      />
-      <div className="flex flex-wrap items-center gap-2">
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          maxLength={30}
-          className="input max-w-64"
-        />
-        <button
-          onClick={save}
-          disabled={update.isPending || name.trim().length < 3 || name === current}
-          className="rounded-md bg-green px-3 py-2 text-sm font-medium text-white hover:bg-forest disabled:opacity-60"
-        >
-          {update.isPending ? 'Saving…' : 'Save'}
-        </button>
-        <button
-          onClick={() =>
-            suggest.mutate(undefined, { onSuccess: (res) => setName(res.name) })
-          }
-          disabled={suggest.isPending}
-          className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-2 text-sm font-medium hover:border-green disabled:opacity-60"
-        >
-          <Dices className="h-4 w-4" />
-          {suggest.isPending ? 'Rolling…' : 'Randomize'}
-        </button>
-        {saved && <span className="text-xs text-green">Saved</span>}
-      </div>
-      {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
+      <StepIntro title="Your display name" hint={DISPLAY_NAME_HINT} />
+      <DisplayNameEditor current={current} />
     </div>
   )
 }
 
 function LinksStep({ initial }: { initial: ProfileLinks }) {
-  const update = useUpdateLinks()
-  const [links, setLinks] = useState<ProfileLinks>(initial)
-  const [saved, setSaved] = useState(false)
-  const [error, setError] = useState('')
-
-  function save() {
-    setError('')
-    const cleaned: ProfileLinks = {}
-    for (const { key } of PROFILE_LINKS) {
-      const v = links[key]?.trim()
-      if (v) cleaned[key] = v
-    }
-    update.mutate(cleaned, {
-      onSuccess: () => {
-        setSaved(true)
-        setTimeout(() => setSaved(false), 1500)
-      },
-      onError: (e) => setError(e instanceof ApiError ? e.message : 'Could not save links.'),
-    })
-  }
-
   return (
     <div>
       <StepIntro
         title="Add public links (optional)"
-        hint="Shown on your nominations and contributions so collaborators can find and cite you. Add only what you’re happy to share."
+        hint="Shown on your public profile, nominations and contributions so collaborators can find and credit you. Add only what you’re happy to share."
       />
-      <div className="space-y-2.5">
-        {PROFILE_LINKS.map(({ key, label, placeholder }) => (
-          <label key={key} className="grid grid-cols-[7rem_1fr] items-center gap-3 text-sm">
-            <span className="text-muted-foreground">{label}</span>
-            <input
-              value={links[key] ?? ''}
-              onChange={(e) =>
-                setLinks((prev) => ({ ...prev, [key as ProfileLinkKey]: e.target.value }))
-              }
-              placeholder={placeholder}
-              className="input"
-            />
-          </label>
-        ))}
-      </div>
-      {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
-      <div className="mt-3 flex items-center gap-2">
-        <button
-          onClick={save}
-          disabled={update.isPending}
-          className="rounded-md bg-green px-3 py-2 text-sm font-medium text-white hover:bg-forest disabled:opacity-60"
-        >
-          {update.isPending ? 'Saving…' : 'Save links'}
-        </button>
-        {saved && <span className="text-xs text-green">Saved</span>}
-      </div>
+      <LinksEditor initial={initial} />
     </div>
   )
 }

@@ -10,7 +10,7 @@ import {
   useShareEmail,
   type Contributor,
 } from './api'
-import { researcherLabel } from '@/features/nominations/format'
+import { ResearcherLink } from '@/features/profile/ResearcherLink'
 import { ContactLinks } from '@/features/profile/ContactLinks'
 import { AvatarBubble } from '@/features/profile/AvatarEditor'
 // Slack integration is on hold — the SlackJoinPanel and its backend are kept
@@ -73,7 +73,7 @@ export function ContributionPanel({ nomination: n }: { nomination: NominationDet
                   />
                   <div className="min-w-0 flex-1">
                     <span className="flex flex-wrap items-center gap-x-2">
-                      <span className="font-medium">{researcherLabel(ct.name, ct.token)}</span>
+                      <ResearcherLink name={ct.name} token={ct.token} className="font-medium" />
                       <ContactLinks links={ct.links} />
                       <span className="text-xs text-muted-foreground">
                         · joined{' '}

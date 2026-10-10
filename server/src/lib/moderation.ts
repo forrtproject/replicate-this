@@ -45,7 +45,7 @@ export async function ensureSlackChannel(nominationId: string): Promise<void> {
       .limit(1)
     if (!n || n.slackChannelId) return
 
-    const title = (n.metadata as NominationMetadata).title || n.doi
+    const title = (n.metadata as NominationMetadata).title || n.doi || nominationId
     let name = channelNameFor(title)
     let channelId: string
     try {

@@ -17,9 +17,11 @@ export const PUBLIC_STATUSES = [
 
 export interface NominationSummary {
   id: string
-  doi: string
+  doi: string | null
   metadata: NominationMetadata
   discipline: string
+  // The nominator's own wording when discipline is 'Other'.
+  disciplineOther: string
   verificationType: string
   availability: string[]
   availabilityLinks: Record<string, string>
@@ -110,10 +112,11 @@ const JOINS = (viewer: string | null) => sql`
 
 interface Row extends Record<string, unknown> {
   id: string
-  doi: string
+  doi: string | null
   metadata: NominationMetadata
   metadata_manual: boolean
   discipline: string
+  discipline_other: string
   verification_type: string
   availability: string[]
   availability_links: Record<string, string> | null
@@ -149,6 +152,7 @@ function toSummary(r: Row): NominationSummary {
     doi: r.doi,
     metadata: r.metadata,
     discipline: r.discipline,
+    disciplineOther: r.discipline_other ?? '',
     verificationType: r.verification_type,
     availability: Array.isArray(r.availability) ? r.availability : [],
     availabilityLinks: r.availability_links ?? {},
@@ -174,15 +178,22 @@ function toSummary(r: Row): NominationSummary {
   }
 }
 
-/** Public registry list, with per-viewer vote/prediction state when signed in. */
-export async function listPublicNominations(viewer: string | null): Promise<NominationSummary[]> {
+/**
+ * Public registry list, with per-viewer vote/prediction state when signed in.
+ * `nominatorUid` narrows it to one researcher's nominations (public profiles).
+ */
+export async function listPublicNominations(
+  viewer: string | null,
+  nominatorUid?: string,
+): Promise<NominationSummary[]> {
   const res = await db.execute<Row>(sql`
-    select n.id, n.doi, n.metadata, n.discipline, n.verification_type, n.availability,
+    select n.id, n.doi, n.metadata, n.discipline, n.discipline_other, n.verification_type, n.availability,
            n.availability_links, n.replication_games, n.experimental_research, n.status,
            n.last_activity_at, n.created_at, ${AGG(viewer)}
     from nominations n
     ${JOINS(viewer)}
     where n.status in ${sql`(${sql.join(PUBLIC_STATUSES.map((s) => sql`${s}`), sql`, `)})`}
+      ${nominatorUid ? sql`and n.nominator_uid = ${nominatorUid}` : sql``}
     order by upvotes desc, n.last_activity_at desc
   `)
   return res.rows.map(toSummary)
@@ -194,7 +205,7 @@ export async function getNominationDetail(
   viewer: string | null,
 ): Promise<NominationDetail | null> {
   const res = await db.execute<Row>(sql`
-    select n.id, n.doi, n.metadata, n.metadata_manual, n.discipline, n.verification_type,
+    select n.id, n.doi, n.metadata, n.metadata_manual, n.discipline, n.discipline_other, n.verification_type,
            n.availability, n.availability_links, n.replication_games, n.experimental_research,
            n.justification, n.data_location, n.robustness_checks, n.design_deviations,
            n.slack_channel_name, n.status, n.last_activity_at, n.created_at, ${AGG(viewer)}

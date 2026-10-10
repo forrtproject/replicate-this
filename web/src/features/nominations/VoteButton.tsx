@@ -25,7 +25,7 @@ export function VoteButton({ nominationId, upvotes, userUpvoted, variant = 'tile
 
   function handleClick() {
     if (!session) {
-      navigate('/sign-in?redirect=/registry')
+      navigate('/sign-in?redirect=/nominations')
       return
     }
     setOptimistic({ on: !on, n: count + (on ? -1 : 1) })

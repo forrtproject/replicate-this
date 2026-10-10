@@ -35,10 +35,54 @@ nominationsRouter.get('/mine', async (c) => {
   return c.json({ nominations: rows })
 })
 
-function isValidMetadata(m: unknown): m is NominationMetadata {
-  if (!m || typeof m !== 'object') return false
-  const v = m as Record<string, unknown>
-  return typeof v.title === 'string' && v.title.trim().length > 0
+// Live DOI check for the nomination form: resolves the reference so the
+// nominator can see the title before submitting, and flags duplicates early.
+nominationsRouter.get('/lookup', async (c) => {
+  requireUser(c)
+  const raw = String(c.req.query('doi') ?? '').trim()
+  if (!raw) throw new HttpError(400, 'DOI is required.')
+  const doi = normalizeDoi(raw)
+  if (!/^10\.\d{4,9}\/\S+$/.test(doi)) {
+    return c.json({ error: 'That doesn’t look like a DOI — they start with “10.”', allowManual: false }, 422)
+  }
+  const existingId = await findActiveNominationByDoi(doi)
+  try {
+    const metadata = await fetchDoiMetadata(doi)
+    return c.json({ doi, metadata, existingId })
+  } catch (err) {
+    if (err instanceof DoiLookupError) {
+      return c.json({ error: err.message, allowManual: err.allowManual, existingId }, 422)
+    }
+    throw err
+  }
+})
+
+/** A live (not rejected) nomination of this DOI, if any — DOIs can only be re-nominated after a rejection. */
+async function findActiveNominationByDoi(doi: string): Promise<string | null> {
+  const [row] = await db
+    .select({ id: schema.nominations.id })
+    .from(schema.nominations)
+    .where(and(eq(schema.nominations.doi, doi), ne(schema.nominations.status, 'rejected')))
+    .limit(1)
+  return row?.id ?? null
+}
+
+/** A hand-entered reference: a title is required, a link must be http(s). */
+function parseManualMetadata(m: unknown): NominationMetadata {
+  const v = (m && typeof m === 'object' ? m : {}) as Record<string, unknown>
+  const title = String(v.title ?? '').trim()
+  if (!title) throw new HttpError(400, 'Please enter the paper’s title.')
+  const url = String(v.url ?? '').trim()
+  if (url && !/^https?:\/\/.+/i.test(url)) {
+    throw new HttpError(400, 'The link to the paper must be a full http(s) URL.')
+  }
+  return {
+    title,
+    authors: Array.isArray(v.authors) ? v.authors.map(String).filter(Boolean) : [],
+    journal: String(v.journal ?? '').trim(),
+    publication_date: String(v.publication_date ?? '').trim(),
+    ...(url ? { url } : {}),
+  }
 }
 
 /**
@@ -47,9 +91,9 @@ function isValidMetadata(m: unknown): m is NominationMetadata {
  */
 function parseNominationFields(body: Record<string, unknown>) {
   const discipline = String(body.discipline ?? '')
+  const disciplineOther = discipline === 'Other' ? String(body.disciplineOther ?? '').trim() : ''
   const verificationType = String(body.verificationType ?? 'replication')
   const justification = String(body.justification ?? '').trim()
-  const journalOverride = String(body.journal ?? '').trim()
   const dataLocation = String(body.dataLocation ?? '').trim()
   const robustnessChecks = String(body.robustnessChecks ?? '').trim()
   const designDeviations = String(body.designDeviations ?? '').trim()
@@ -76,6 +120,12 @@ function parseNominationFields(body: Record<string, unknown>) {
   if (!DISCIPLINES.includes(discipline as never)) {
     throw new HttpError(400, 'Please choose a valid discipline.')
   }
+  if (discipline === 'Other' && disciplineOther.length < 2) {
+    throw new HttpError(400, 'Please specify the discipline.')
+  }
+  if (disciplineOther.length > 80) {
+    throw new HttpError(400, 'Please keep the discipline under 80 characters.')
+  }
   if (!VERIFICATION_TYPES.includes(verificationType as never)) {
     throw new HttpError(400, 'Please choose replication, reproduction, or both.')
   }
@@ -85,9 +135,9 @@ function parseNominationFields(body: Record<string, unknown>) {
 
   return {
     discipline,
+    disciplineOther,
     verificationType,
     justification,
-    journalOverride,
     dataLocation,
     robustnessChecks,
     designDeviations,
@@ -98,68 +148,48 @@ function parseNominationFields(body: Record<string, unknown>) {
   }
 }
 
-// Submit a nomination.
+// Submit a nomination. Normally by DOI, with the reference resolved from
+// Crossref/doi.org (or entered by hand when that fails). Papers without a DOI
+// (`noDoi: true`) always carry a hand-entered reference.
 nominationsRouter.post('/', async (c) => {
   const user = requireUser(c)
   const body = await c.req.json().catch(() => ({}))
 
+  const noDoi = body.noDoi === true
   const rawDoi = String(body.doi ?? '').trim()
-  const manual = body.metadata as NominationMetadata | undefined
-  const {
-    discipline,
-    verificationType,
-    justification,
-    journalOverride,
-    dataLocation,
-    robustnessChecks,
-    designDeviations,
-    replicationWorkshop,
-    experimentalResearch,
-    availability,
-    availabilityLinks,
-  } = parseNominationFields(body)
+  const fields = parseNominationFields(body)
 
-  if (!rawDoi) throw new HttpError(400, 'DOI is required.')
-
-  const doi = normalizeDoi(rawDoi)
-
-  // Reject duplicates unless the prior nomination was itself rejected.
-  const existing = await db
-    .select({ id: schema.nominations.id })
-    .from(schema.nominations)
-    .where(and(eq(schema.nominations.doi, doi), ne(schema.nominations.status, 'rejected')))
-    .limit(1)
-  if (existing[0]) {
-    return c.json(
-      { error: 'This study has already been nominated.', existingId: existing[0].id },
-      409,
-    )
-  }
-
-  // Metadata: manual entry wins; otherwise resolve via Crossref/doi.org.
+  let doi: string | null = null
   let metadata: NominationMetadata
   let metadataManual = false
-  if (isValidMetadata(manual)) {
-    metadata = {
-      title: manual.title.trim(),
-      authors: Array.isArray(manual.authors) ? manual.authors : [],
-      journal: manual.journal ?? '',
-      publication_date: manual.publication_date ?? '',
-    }
+
+  if (noDoi) {
+    metadata = parseManualMetadata(body.metadata)
     metadataManual = true
   } else {
-    try {
-      metadata = await fetchDoiMetadata(doi)
-    } catch (err) {
-      if (err instanceof DoiLookupError) {
-        return c.json({ error: err.message, allowManual: err.allowManual }, 422)
+    if (!rawDoi) throw new HttpError(400, 'DOI is required.')
+    doi = normalizeDoi(rawDoi)
+
+    const existingId = await findActiveNominationByDoi(doi)
+    if (existingId) {
+      return c.json({ error: 'This study has already been nominated.', existingId }, 409)
+    }
+
+    // Metadata: manual entry wins; otherwise resolve via Crossref/doi.org.
+    if (body.metadata) {
+      metadata = parseManualMetadata(body.metadata)
+      metadataManual = true
+    } else {
+      try {
+        metadata = await fetchDoiMetadata(doi)
+      } catch (err) {
+        if (err instanceof DoiLookupError) {
+          return c.json({ error: err.message, allowManual: err.allowManual }, 422)
+        }
+        throw err
       }
-      throw err
     }
   }
-
-  // An explicit journal entry overrides whatever the lookup returned.
-  if (journalOverride) metadata = { ...metadata, journal: journalOverride }
 
   const [inserted] = await db
     .insert(schema.nominations)
@@ -167,16 +197,17 @@ nominationsRouter.post('/', async (c) => {
       doi,
       metadata,
       metadataManual,
-      discipline,
-      verificationType,
-      availability,
-      availabilityLinks,
-      justification,
-      dataLocation,
-      robustnessChecks,
-      designDeviations,
-      replicationWorkshop,
-      experimentalResearch,
+      discipline: fields.discipline,
+      disciplineOther: fields.disciplineOther,
+      verificationType: fields.verificationType,
+      availability: fields.availability,
+      availabilityLinks: fields.availabilityLinks,
+      justification: fields.justification,
+      dataLocation: fields.dataLocation,
+      robustnessChecks: fields.robustnessChecks,
+      designDeviations: fields.designDeviations,
+      replicationWorkshop: fields.replicationWorkshop,
+      experimentalResearch: fields.experimentalResearch,
       nominatorUid: user.id,
       status: 'pending',
     })
@@ -216,11 +247,11 @@ nominationsRouter.patch('/:id', async (c) => {
   const body = await c.req.json().catch(() => ({}))
   const fields = parseNominationFields(body)
 
-  const metadata = existing.metadata as NominationMetadata
   await db
     .update(schema.nominations)
     .set({
       discipline: fields.discipline,
+      disciplineOther: fields.disciplineOther,
       verificationType: fields.verificationType,
       availability: fields.availability,
       availabilityLinks: fields.availabilityLinks,
@@ -230,9 +261,6 @@ nominationsRouter.patch('/:id', async (c) => {
       designDeviations: fields.designDeviations,
       replicationWorkshop: fields.replicationWorkshop,
       experimentalResearch: fields.experimentalResearch,
-      metadata: fields.journalOverride
-        ? { ...metadata, journal: fields.journalOverride }
-        : metadata,
       status: 'pending',
       lastActivityAt: new Date(),
     })

@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { and, desc, eq, inArray, ne, sql } from 'drizzle-orm'
+import { and, desc, eq, inArray, isNull, ne, sql } from 'drizzle-orm'
 import { db, schema } from '@/db'
 import { notify, notifySubscribers } from '@/lib/notify'
 import { approveNomination, rejectNomination, ensureSlackChannel } from '@/lib/moderation'
@@ -226,11 +226,17 @@ adminRouter.get('/comments', async (c) => {
       authorUid: schema.comments.authorUid,
       authorName: schema.user.name,
       metadata: schema.nominations.metadata,
+      openFlags: sql<number>`(select count(*)::int from comment_flags f where f.comment_id = ${schema.comments.id} and f.resolved_at is null)`,
+      flagReasons: sql<string[]>`coalesce((select array_agg(f.reason) from comment_flags f where f.comment_id = ${schema.comments.id} and f.resolved_at is null and f.reason <> ''), '{}')`,
     })
     .from(schema.comments)
     .innerJoin(schema.nominations, eq(schema.nominations.id, schema.comments.nominationId))
     .innerJoin(schema.user, eq(schema.user.id, schema.comments.authorUid))
-    .orderBy(desc(schema.comments.createdAt))
+    // Flagged comments first, so the queue surfaces what needs a decision.
+    .orderBy(
+      desc(sql`exists (select 1 from comment_flags f where f.comment_id = ${schema.comments.id} and f.resolved_at is null)`),
+      desc(schema.comments.createdAt),
+    )
     .limit(100)
 
   return c.json({
@@ -243,6 +249,8 @@ adminRouter.get('/comments', async (c) => {
       createdAt: r.createdAt,
       authorToken: r.authorUid.slice(0, 8),
       authorName: r.authorName,
+      openFlags: r.openFlags,
+      flagReasons: r.flagReasons,
     })),
   })
 })
@@ -260,6 +268,12 @@ adminRouter.post('/comments/:id/hide', async (c) => {
     .where(eq(schema.comments.id, id))
     .returning({ nominationId: schema.comments.nominationId })
   if (!updated) throw new HttpError(404, 'Comment not found.')
+
+  // A maintainer decision — hide, or keep (hidden: false) — settles open flags.
+  await db
+    .update(schema.commentFlags)
+    .set({ resolvedAt: new Date() })
+    .where(and(eq(schema.commentFlags.commentId, id), isNull(schema.commentFlags.resolvedAt)))
 
   await db.insert(schema.moderationLogs).values({
     adminUid: admin.id,

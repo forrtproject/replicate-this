@@ -19,6 +19,11 @@ export function researcherLabel(
   return token ? `Researcher #${token.slice(0, 6)}` : 'Anonymous Researcher'
 }
 
+/** The discipline as shown on chips: the nominator's own wording for "Other". */
+export function disciplineLabel(n: { discipline: string; disciplineOther?: string }): string {
+  return n.discipline === 'Other' && n.disciplineOther ? n.disciplineOther : n.discipline
+}
+
 export function formatReference(m: NominationMetadata): string {
   const year = formatYear(m.publication_date)
   return [formatAuthors(m.authors), m.journal, year && `(${year})`]

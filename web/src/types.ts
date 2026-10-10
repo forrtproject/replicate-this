@@ -23,15 +23,37 @@ export type AvailabilityKey =
   | 'preregistration'
   | 'open_access'
 
-export type ProfileLinkKey = 'orcid' | 'github' | 'twitter' | 'linkedin' | 'website'
+export type ProfileLinkKey =
+  | 'orcid'
+  | 'website'
+  | 'bluesky'
+  | 'mastodon'
+  | 'github'
+  | 'scholar'
+  | 'osf'
+  | 'linkedin'
+  | 'twitter'
 export type ProfileLinks = Partial<Record<ProfileLinkKey, string>>
 
-export const PROFILE_LINKS: { key: ProfileLinkKey; label: string; placeholder: string }[] = [
-  { key: 'orcid', label: 'ORCID iD', placeholder: '0000-0002-1825-0097' },
-  { key: 'github', label: 'GitHub', placeholder: 'https://github.com/username' },
-  { key: 'twitter', label: 'Twitter / X', placeholder: 'https://x.com/username' },
+export interface ProfileLinkOption {
+  key: ProfileLinkKey
+  label: string
+  placeholder: string
+  /** Primary links always get a field; the rest are added from the logo row. */
+  primary?: boolean
+}
+
+/** Display order everywhere: ORCID and website first, then the extra profiles. */
+export const PROFILE_LINKS: ProfileLinkOption[] = [
+  { key: 'orcid', label: 'ORCID iD', placeholder: '0000-0002-1825-0097', primary: true },
+  { key: 'website', label: 'Website', placeholder: 'https://example.org', primary: true },
+  { key: 'bluesky', label: 'Bluesky', placeholder: '@you.bsky.social' },
+  { key: 'mastodon', label: 'Mastodon', placeholder: '@you@fediscience.org' },
+  { key: 'github', label: 'GitHub', placeholder: 'username or https://github.com/username' },
+  { key: 'scholar', label: 'Google Scholar', placeholder: 'https://scholar.google.com/citations?user=…' },
+  { key: 'osf', label: 'OSF', placeholder: 'https://osf.io/abcde/' },
   { key: 'linkedin', label: 'LinkedIn', placeholder: 'https://linkedin.com/in/username' },
-  { key: 'website', label: 'Website', placeholder: 'https://example.org' },
+  { key: 'twitter', label: 'X / Twitter', placeholder: '@username' },
 ]
 
 export type EmailPrefKey = 'my_nominations' | 'contributions' | 'watched' | 'admin'
@@ -87,13 +109,18 @@ export interface NominationMetadata {
   authors: string[]
   journal: string
   publication_date: string
+  // Link to the paper — only for hand-entered references without a DOI.
+  url?: string
 }
 
 export interface NominationSummary {
   id: string
-  doi: string
+  // Null for papers without a DOI (reference entered by hand).
+  doi: string | null
   metadata: NominationMetadata
   discipline: string
+  // The nominator's wording when discipline is 'Other'.
+  disciplineOther: string
   verificationType: VerificationType
   availability: AvailabilityKey[]
   availabilityLinks: Partial<Record<AvailabilityKey, string>>

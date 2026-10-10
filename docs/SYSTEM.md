@@ -45,10 +45,14 @@ stateDiagram-v2
 
 Rules enforced in code:
 
-- **Submission** (`server/src/routes/nominations.ts`): DOI required and
-  deduplicated — a DOI can only be re-nominated if the previous nomination was
-  `rejected`. Reference metadata is fetched from Crossref, falling back to
-  doi.org content negotiation, falling back to manual entry (`metadataManual`).
+- **Submission** (`server/src/routes/nominations.ts`): by DOI, deduplicated —
+  a DOI can only be re-nominated if the previous nomination was `rejected`. The
+  form previews the resolved reference as the DOI is typed
+  (`GET /api/nominations/lookup`). Reference metadata is fetched from Crossref,
+  falling back to doi.org content negotiation, falling back to manual entry
+  (`metadataManual`). Papers with no DOI (`noDoi: true`) are submitted with a
+  hand-entered reference (title required, optional link) and a null `doi`.
+  Choosing the "Other" discipline requires a free-text `disciplineOther`.
   Justification must be ≥ 20 characters.
 - **Approval** (`server/src/lib/moderation.ts`): flips `pending → approved`,
   logs to `moderation_logs`, notifies the nominator and subscribers, and — when
@@ -89,18 +93,18 @@ dev DBs are typically synced with `db:push`).
 
 ### Auth tables (Better Auth)
 
-**`user`** — one row per account, pseudonymous by design (see § 7):
+**`user`** — one row per account; the login identity is a dummy by design (see § 7):
 
 | Column | Type | What it stores |
 |---|---|---|
 | `id` | text PK | Better Auth's random, non-identifying id. First 8 chars double as the public "researcher token" (`#eFpGkVB`). |
-| `name` | text | Random pseudonym (e.g. `BrightQuasar42`), never the OAuth profile name. User-editable; unique case-insensitively among non-deleted users. |
+| `name` | text | Display name. Starts as the OAuth profile name (we encourage real names), or a random pseudonym (e.g. `BrightQuasar42`) when the provider gives none or it is taken past `Name 9`. User-editable, with a Randomize button suggesting pseudonyms; unique case-insensitively among non-deleted users. |
 | `email` | text unique | **Not a real email** — deterministic dummy `<hmac>@privacy.forrt.org` derived from the provider email (or ORCID iD) with `EMAIL_PEPPER`. Exists only so one person links across providers. |
 | `email_verified` | boolean | Always true (providers verified the underlying address). |
 | `image` | text | Always null (stripped). |
 | `role` | text | `user` \| `maintainer`. Never settable by the client; granted via the admin UI (guardrails: no self-change, never zero maintainers). |
 | `deleted` | boolean | Soft-delete tombstone: login severed, PII cleared, name becomes "Deleted account"; the user's content remains attributed to that tombstone. |
-| `links` | jsonb | **Opt-in** public contact links: `orcid` (checksum-validated, canonicalised), `github`, `twitter`, `linkedin`, `website` (http(s)-validated, ≤ 300 chars). |
+| `links` | jsonb | **Opt-in** public profile links, each normalised to one canonical URL (`server/src/lib/profile-links.ts`): `orcid` (checksum-validated; bare iD or URL stored identically), `website`, `bluesky`, `mastodon`, `github`, `scholar`, `osf`, `linkedin`, `twitter` (handles such as `@you.bsky.social` or `@you@instance` expand to profile URLs; ≤ 300 chars). |
 | `notification_email` | text | Address for email notifications. Prefilled with the provider email at first Google/GitHub sign-in (`rememberSignupEmail` in `auth.ts`), empty for ORCID; the user can change or clear it. Empty = no emails. The only real email the system stores. |
 | `email_prefs` | jsonb | Which categories to email: `my_nominations`, `contributions`, `watched`, `admin` (maintainers only). All off by default. |
 | `created_at`, `updated_at` | timestamp | |
@@ -129,11 +133,12 @@ sign-in, so nothing needs the tokens.
 | Column | Type | What it stores |
 |---|---|---|
 | `id` | uuid PK | |
-| `doi` | text unique | Normalised DOI. Immutable after submission. |
-| `metadata` | jsonb | Cached reference: `title`, `authors[]`, `journal`, `publication_date`. From Crossref/doi.org, or manual entry. Journal may be overridden by the submitter. |
-| `metadata_manual` | boolean | True when the reference was hand-entered (DOI lookup failed). |
+| `doi` | text unique, nullable | Normalised DOI. Null for papers without one. Immutable after submission. |
+| `metadata` | jsonb | Cached reference: `title`, `authors[]`, `journal`, `publication_date`, plus `url` for DOI-less papers. From Crossref/doi.org, or manual entry. |
+| `metadata_manual` | boolean | True when the reference was hand-entered (no DOI, or DOI lookup failed). |
 | `discipline` | text | One of: Psychology, Medicine, Economics, Biology, Physics, Sociology, Education, Linguistics, Marketing, Neuroscience, Other. |
-| `verification_type` | text | `replication` (new data) \| `reproduction` (re-analyse original data/code) \| `both` (either / not sure). |
+| `discipline_other` | text | The nominator's wording when `discipline` is Other ("please specify"); shown in place of "Other". |
+| `verification_type` | text | `replication` (new data) \| `reproduction` (re-run the original data/code, and/or vary the analysis to check robustness; for simulation studies, the code) \| `both` (either / not sure). |
 | `availability` | jsonb string[] | What the nominator says is open: `open_data`, `open_code`, `open_materials`, `preregistration`, `open_access`. |
 | `availability_links` | jsonb | Optional http(s) URL per availability key (e.g. `{ open_data: "https://osf.io/…" }`). |
 | `justification` | text | Why this paper deserves a second look (≥ 20 chars). |
@@ -152,17 +157,27 @@ sign-in, so nothing needs the tokens.
 `user_uid`); row presence = an upvote; toggled on/off. Login required, no
 account-age gate. Milestone counts trigger one-time admin alerts.
 
-**`predictions`** — "will it replicate?" forecasts. PK (`nomination_id`,
-`user_uid`) + `will_replicate` boolean. Shown as an aggregate yes/no
-distribution; changeable or clearable by the voter.
+**`predictions`** — yes/no forecasts. PK (`nomination_id`, `user_uid`) +
+`will_replicate` boolean (read as "yes"). The question shown follows the
+verification type: "Will it replicate?", "Will the results prove robust?"
+(reproductions) or "Will the finding hold up?" (both). Shown as an aggregate
+yes/no distribution; changeable or clearable by the voter.
 
 **`contributions`** — auto-accepted intent to replicate. PK (`nomination_id`,
 `contributor_uid`) + unique `id`, optional `message` (pitch: expertise, lab,
-timeline). The public roster shows pseudonym + token + message.
+timeline). The public roster shows display name + token + message.
 
 **`comments`** — public, Reddit-style threaded discussion: `parent_id`
-(null = top-level), `author_uid`, `content`, `hidden` (maintainer moderation —
-kept for audit, not shown publicly).
+(null = top-level), `author_uid`, `content` (rendered as a safe Markdown
+subset), `hidden` (maintainer moderation — kept for audit, not shown publicly).
+
+**`comment_likes`** — PK (`comment_id`, `user_uid`); row presence = a like,
+toggled on/off.
+
+**`comment_flags`** — user reports of a comment against the Code of Conduct.
+PK (`comment_id`, `user_uid`) + optional `reason`, `resolved_at`. A first flag
+alerts maintainers; flagged comments sort first in the comment moderation
+queue, and hiding or keeping the comment resolves its flags.
 
 **`subscriptions`** — GitHub-style "watch". PK (`nomination_id`, `user_uid`).
 Subscribers get notifications for comments, updates, contributors, and status
@@ -223,16 +238,17 @@ everything except `/api/auth/*` (Better Auth) and `/api/email-actions/*`
 | Router | Endpoints |
 |---|---|
 | `/api/auth/*` | Better Auth: sign-in (Google, GitHub, ORCID), session, sign-out. |
-| `/api/nominations` | `GET /` public list · `GET /mine` · `GET /:id` detail · `GET /:id/contributors` · `POST /` submit · `PATCH /:id` edit |
+| `/api/nominations` | `GET /` public list · `GET /mine` · `GET /lookup?doi=` live reference preview + duplicate check · `GET /:id` detail · `GET /:id/contributors` · `POST /` submit · `PATCH /:id` edit |
 | `/api/votes` | `POST /:id/toggle` upvote |
 | `/api/predictions` | `PUT /:id` set/clear yes-no prediction |
 | `/api/contributions` | `POST /:id` join · `DELETE /:id` withdraw · `GET /mine` |
-| `/api/comments` | `GET /:id` threaded list · `POST /:id` comment/reply (no user deletion; maintainers hide via admin) |
+| `/api/comments` | `GET /:id` threaded list (with like counts) · `POST /:id` comment/reply · `POST /:commentId/like` toggle · `POST /:commentId/flag` report (no user deletion; maintainers hide via admin) |
+| `/api/researchers` | `GET /:token` public profile by 8-char researcher token: name, avatar, links, public nominations and contributions |
 | `/api/subscriptions` | `POST /:id/toggle` watch |
 | `/api/updates` | `GET /:id` timeline · `POST /:id` post update (+ completion request) |
 | `/api/inquiries` | `POST /:id` message the team |
 | `/api/notifications` | inbox list / mark read |
-| `/api/profile` | get/update pseudonym (uniqueness-checked), contact links (ORCID checksum-validated), notification email + prefs; account deletion (soft) |
+| `/api/profile` | get/update display name (uniqueness-checked), profile links (normalised, ORCID checksum-validated), notification email + prefs; account deletion (soft) |
 | `/api/slack` | `POST /nominations/:id/join` — invite the signed-in team member into the study's locked channel (§ 6) |
 | `/api/admin` | moderation queue, approve/reject/undo, lifecycle status, user list + role management, comment moderation |
 | `/api/email-actions` | one-click approve/reject from maintainer review emails, authenticated by a signed token (HMAC, 14-day expiry) instead of a session |
@@ -246,6 +262,9 @@ Every event lands in the **in-app inbox** (`notifications` table). Email is
 **opt-in** per category: a `notification_email` must be present (prefilled from
 Google/GitHub at sign-up, or entered by the user) *and* the category enabled. Sending is best-effort (Postmark; disabled when
 `POSTMARK_API_TOKEN` is blank) and never fails the request.
+
+New accounts get an in-app `welcome` notification (no email) pointing to open
+studies; migration `0017` backfilled it for existing accounts.
 
 | Category (pref) | Types |
 |---|---|
@@ -264,7 +283,8 @@ expiry, `server/src/lib/email-actions.ts`).
 
 ### DOI / reference lookup
 Crossref first, then doi.org content negotiation, then manual entry
-(`server/src/lib/crossref.ts`). The journal can be overridden by the submitter.
+(`server/src/lib/crossref.ts`). Successful lookups are cached in memory for 30
+minutes, since the form previews a DOI and then submits it.
 
 ### Slack (community discussion channels)
 - **On approval**, a **locked (private) channel** is created in the community
@@ -293,16 +313,20 @@ registry) and `exports/STATS.md` (totals by status/discipline).
 
 ---
 
-## 7. Privacy model (zero-PII)
+## 7. Privacy model (minimal PII)
 
 - **At sign-in**, `mapProfileToUser` + a `user.create.before` hook replace the
-  OAuth profile before any write: random pseudonym, deterministic dummy email,
-  no image (`server/src/auth.ts`). Google/GitHub sign-in requests only
-  openid/email scopes; ORCID only `openid`.
-- **Public attribution** is pseudonym + 8-char token only.
-- **Stored PII** is limited to the optional contact links (user-entered) and
-  the notification email (prefilled from the Google/GitHub profile at sign-up,
-  empty for ORCID) — both removable by the user.
+  OAuth profile before any write: deterministic dummy email, no image
+  (`server/src/auth.ts`). We encourage real names, so a new account's display
+  name starts as the provider's profile name (Google `profile` scope, GitHub
+  name, ORCID given/family name), falling back to a random pseudonym. Google
+  sign-in requests openid/email/profile; ORCID only `openid`.
+- **Public attribution** is display name + 8-char token; names link to a public
+  profile page at `/researchers/:token`.
+- **Stored PII** is limited to the display name (provider name unless changed),
+  the optional profile links (user-entered) and the notification email
+  (prefilled from the Google/GitHub profile at sign-up, empty for ORCID) — all
+  changeable or removable by the user.
 - **Transient PII:** the Slack-account email (§ 6) is forwarded to Slack's API
   and never persisted.
 - **Account deletion** is a soft delete: credentials severed, PII cleared,

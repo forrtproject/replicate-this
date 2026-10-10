@@ -1,39 +1,36 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Copy, Check, Dices } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Copy, Check } from 'lucide-react'
 import { useSession, signOut } from '@/lib/auth-client'
-import {
-  useProfile,
-  useUpdateLinks,
-  useUpdateName,
-  useNameSuggestion,
-  useUpdateEmailPrefs,
-  useDeleteAccount,
-} from '@/features/profile/api'
+import { useProfile, useUpdateEmailPrefs, useDeleteAccount } from '@/features/profile/api'
 import { AvatarEditor } from '@/features/profile/AvatarEditor'
+import { DisplayNameEditor, DISPLAY_NAME_HINT } from '@/features/profile/DisplayNameEditor'
+import { LinksEditor } from '@/features/profile/LinksEditor'
 import { ApiError } from '@/lib/api'
 import { isValidEmail } from '@/lib/utils'
-import {
-  PROFILE_LINKS,
-  EMAIL_PREF_OPTIONS,
-  type EmailPrefs,
-  type ProfileLinkKey,
-  type ProfileLinks,
-} from '@/types'
+import { EMAIL_PREF_OPTIONS, type EmailPrefs } from '@/types'
 
 export function ProfilePage() {
   const { data: session } = useSession()
   const researcherId = session?.user?.id?.slice(0, 6) ?? ''
+  const token = session?.user?.id?.slice(0, 8) ?? ''
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 px-4 py-10">
-      <div>
-        <p className="eyebrow">Your account</p>
-        <h1 className="mt-1 font-display text-3xl font-semibold">Profile</h1>
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <p className="eyebrow">Your account</p>
+          <h1 className="mt-1 font-display text-3xl font-semibold">Profile</h1>
+        </div>
+        {token && (
+          <Link to={`/researchers/${token}`} className="text-sm text-green hover:underline">
+            View your public profile →
+          </Link>
+        )}
       </div>
 
       <AvatarCard />
-      <PseudonymCard />
+      <DisplayNameCard />
       <LinksCard />
       <EmailNotificationsCard
         isMaintainer={(session?.user as { role?: string } | undefined)?.role === 'maintainer'}
@@ -97,78 +94,16 @@ function ResearcherIdFooter({ id }: { id: string }) {
   )
 }
 
-function PseudonymCard() {
+function DisplayNameCard() {
   const { data: profile, isLoading } = useProfile()
   return (
-    <Card
-      title="Pseudonym"
-      hint="How you appear on your nominations, comments and contributions. You got a random one at sign-up — change it to anything that isn’t taken, or use Randomize for a suggestion and hit Save to keep it. Pseudonyms are unique across the site."
-    >
+    <Card title="Display name" hint={DISPLAY_NAME_HINT}>
       {isLoading || !profile ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : (
-        <PseudonymEditor current={profile.name} />
+        <DisplayNameEditor current={profile.name} />
       )}
     </Card>
-  )
-}
-
-function PseudonymEditor({ current }: { current: string }) {
-  const update = useUpdateName()
-  const suggest = useNameSuggestion()
-  const [name, setName] = useState(current)
-  const [saved, setSaved] = useState(false)
-  const [error, setError] = useState('')
-
-  function save() {
-    setError('')
-    update.mutate(name, {
-      onSuccess: () => {
-        setSaved(true)
-        setTimeout(() => setSaved(false), 1500)
-      },
-      onError: (e) =>
-        setError(e instanceof ApiError ? e.message : 'Could not save your pseudonym.'),
-    })
-  }
-
-  // Only fills the input — the user still has to hit Save.
-  function roll() {
-    setError('')
-    suggest.mutate(undefined, {
-      onSuccess: (res) => setName(res.name),
-      onError: () => setError('Could not generate a pseudonym. Try again.'),
-    })
-  }
-
-  return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap items-center gap-2">
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          maxLength={30}
-          className="input max-w-64"
-        />
-        <button
-          onClick={save}
-          disabled={update.isPending || name.trim().length < 3 || name === current}
-          className="rounded-md bg-green px-3 py-2 text-sm font-medium text-white hover:bg-forest disabled:opacity-60"
-        >
-          {update.isPending ? 'Saving…' : 'Save'}
-        </button>
-        <button
-          onClick={roll}
-          disabled={suggest.isPending}
-          className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-2 text-sm font-medium hover:border-green disabled:opacity-60"
-        >
-          <Dices className="h-4 w-4" />
-          {suggest.isPending ? 'Rolling…' : 'Randomize'}
-        </button>
-        {saved && <span className="text-xs text-green">Saved</span>}
-      </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
-    </div>
   )
 }
 
@@ -176,8 +111,8 @@ function LinksCard() {
   const { data: profile, isLoading } = useProfile()
   return (
     <Card
-      title="Contact links"
-      hint="Optional public links shown on your nominations and contributions, so others can reach you. Add only what you're happy to share."
+      title="Public profile links"
+      hint="Optional links shown on your public profile, nominations and contributions, so others can find, credit and reach you. Add only what you're happy to share."
     >
       {isLoading || !profile ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
@@ -185,60 +120,6 @@ function LinksCard() {
         <LinksEditor initial={profile.links} />
       )}
     </Card>
-  )
-}
-
-function LinksEditor({ initial }: { initial: ProfileLinks }) {
-  const update = useUpdateLinks()
-  const [links, setLinks] = useState<ProfileLinks>(initial)
-  const [saved, setSaved] = useState(false)
-  const [error, setError] = useState('')
-
-  function set(key: ProfileLinkKey, value: string) {
-    setLinks((prev) => ({ ...prev, [key]: value }))
-  }
-
-  function save() {
-    setError('')
-    const cleaned: ProfileLinks = {}
-    for (const { key } of PROFILE_LINKS) {
-      const v = links[key]?.trim()
-      if (v) cleaned[key] = v
-    }
-    update.mutate(cleaned, {
-      onSuccess: () => {
-        setSaved(true)
-        setTimeout(() => setSaved(false), 1500)
-      },
-      onError: (e) => setError(e instanceof ApiError ? e.message : 'Could not save links.'),
-    })
-  }
-
-  return (
-    <div className="space-y-2.5">
-      {PROFILE_LINKS.map(({ key, label, placeholder }) => (
-        <label key={key} className="grid grid-cols-[7rem_1fr] items-center gap-3 text-sm">
-          <span className="text-muted-foreground">{label}</span>
-          <input
-            value={links[key] ?? ''}
-            onChange={(e) => set(key, e.target.value)}
-            placeholder={placeholder}
-            className="input"
-          />
-        </label>
-      ))}
-      {error && <p className="text-sm text-destructive">{error}</p>}
-      <div className="flex items-center gap-2 pt-1">
-        <button
-          onClick={save}
-          disabled={update.isPending}
-          className="rounded-md bg-green px-3 py-2 text-sm font-medium text-white hover:bg-forest disabled:opacity-60"
-        >
-          {update.isPending ? 'Saving…' : 'Save links'}
-        </button>
-        {saved && <span className="text-xs text-green">Saved</span>}
-      </div>
-    </div>
   )
 }
 
@@ -353,7 +234,7 @@ function DangerZone() {
   async function remove() {
     await del.mutateAsync()
     await signOut()
-    navigate('/registry')
+    navigate('/nominations')
   }
 
   return (

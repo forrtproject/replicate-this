@@ -123,12 +123,17 @@ export const NOMINATION_STATUSES = [
 
 export const nominations = pgTable('nominations', {
   id: uuid('id').primaryKey().defaultRandom(),
-  doi: text('doi').notNull().unique(),
-  // Cached Crossref (or manually entered) reference: title, authors, journal, publication_date.
+  // Normalised DOI. Null for papers that have none — their reference is then
+  // entered by hand (metadataManual) and may carry a `url`. Postgres unique
+  // constraints ignore nulls, so any number of DOI-less nominations can coexist.
+  doi: text('doi').unique(),
+  // Cached Crossref (or manually entered) reference: title, authors, journal, publication_date (+ url).
   metadata: jsonb('metadata').notNull().default({}),
   // true when the submitter entered the reference by hand (Crossref/doi.org failed).
   metadataManual: boolean('metadata_manual').notNull().default(false),
   discipline: text('discipline').notNull(),
+  // Free-text field when discipline is 'Other' ("please specify"); '' otherwise.
+  disciplineOther: text('discipline_other').notNull().default(''),
   // Whether the study needs a replication (new data, same method), a
   // reproduction (re-analyse original data), or the nominator is unsure/both.
   verificationType: text('verification_type').notNull().default('replication'),
@@ -243,6 +248,40 @@ export const comments = pgTable('comments', {
   hidden: boolean('hidden').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
+
+// "Like" on a comment. Presence of a row = a like; toggled on/off.
+export const commentLikes = pgTable(
+  'comment_likes',
+  {
+    commentId: uuid('comment_id')
+      .notNull()
+      .references(() => comments.id, { onDelete: 'cascade' }),
+    userUid: text('user_uid')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.commentId, t.userUid] })],
+)
+
+// A user's report that a comment breaks the Code of Conduct. One per user per
+// comment; maintainers see open flags in the comment moderation queue. Hiding
+// or restoring the comment resolves its flags.
+export const commentFlags = pgTable(
+  'comment_flags',
+  {
+    commentId: uuid('comment_id')
+      .notNull()
+      .references(() => comments.id, { onDelete: 'cascade' }),
+    userUid: text('user_uid')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    reason: text('reason').notNull().default(''),
+    resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.commentId, t.userUid] })],
+)
 
 // GitHub-style "watch": subscribers get in-app notifications for activity on
 // the nomination (comments, progress updates, status changes, new contributors).

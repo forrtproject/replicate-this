@@ -11,7 +11,8 @@ import { VerificationBanner } from '@/features/nominations/VerificationBadge'
 import { AvailabilityList } from '@/features/nominations/Availability'
 import { JournalTags } from '@/features/nominations/JournalTags'
 import { ReplicationWorkshopTag } from '@/features/nominations/ReplicationWorkshopTag'
-import { formatReference, researcherLabel } from '@/features/nominations/format'
+import { disciplineLabel, formatReference } from '@/features/nominations/format'
+import { ResearcherLink } from '@/features/profile/ResearcherLink'
 import { ContactLinks } from '@/features/profile/ContactLinks'
 import { RichText } from '@/components/ui/RichText'
 import { ContributionPanel } from '@/features/contributions/ContributionPanel'
@@ -36,8 +37,8 @@ export function NominationDetailPage() {
         <p className="text-sm text-muted-foreground">
           {(error as Error)?.message ?? 'Nomination not found.'}
         </p>
-        <Link to="/registry" className="mt-2 inline-block text-sm text-green underline">
-          Back to registry
+        <Link to="/nominations" className="mt-2 inline-block text-sm text-green underline">
+          Back to nominations
         </Link>
       </div>
     )
@@ -48,19 +49,21 @@ export function NominationDetailPage() {
   return (
     <article className="mx-auto max-w-3xl px-4 py-10">
       <Link
-        to="/registry"
+        to="/nominations"
         className="text-sm text-muted-foreground hover:text-green"
       >
-        ← Registry
+        ← Nominations
       </Link>
 
       <div className="mb-2 mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        <span className="rounded-full bg-muted px-2 py-0.5 text-ink/70">{n.discipline}</span>
+        <span className="rounded-full bg-muted px-2 py-0.5 text-ink/70">{disciplineLabel(n)}</span>
         <StatusBadge status={n.status} />
         {n.replicationWorkshop && <ReplicationWorkshopTag />}
         <JournalTags nomination={n} />
         {n.nominatorToken && (
-          <span>Nominated by {researcherLabel(n.nominatorName, n.nominatorToken)}</span>
+          <span>
+            Nominated by <ResearcherLink name={n.nominatorName} token={n.nominatorToken} />
+          </span>
         )}
         {n.metadataManual && <span>· manual reference</span>}
         {(n.viewerIsNominator || isMaintainer) &&
@@ -79,19 +82,39 @@ export function NominationDetailPage() {
         {n.metadata.title || n.doi}
       </h1>
       <p className="mt-2 text-sm text-muted-foreground">{formatReference(n.metadata)}</p>
-      <a
-        href={`https://doi.org/${n.doi}`}
-        target="_blank"
-        rel="noreferrer"
-        className="data mt-1 inline-flex items-center gap-1 text-sm text-green hover:underline"
-      >
-        {n.doi} <ExternalLink className="h-3 w-3" />
-      </a>
+      {n.doi ? (
+        <a
+          href={`https://doi.org/${n.doi}`}
+          target="_blank"
+          rel="noreferrer"
+          className="data mt-1 inline-flex items-center gap-1 text-sm text-green hover:underline"
+        >
+          {n.doi} <ExternalLink className="h-3 w-3" />
+        </a>
+      ) : n.metadata.url ? (
+        <a
+          href={n.metadata.url}
+          target="_blank"
+          rel="noreferrer nofollow"
+          className="mt-1 inline-flex items-center gap-1 break-all text-sm text-green hover:underline"
+        >
+          {n.metadata.url} <ExternalLink className="h-3 w-3 flex-shrink-0" />
+        </a>
+      ) : (
+        <p className="mt-1 text-sm text-muted-foreground">No DOI</p>
+      )}
       {Object.keys(n.nominatorLinks).length > 0 && (
         <p className="mt-1 text-sm text-muted-foreground">
           Reach the nominator: <ContactLinks links={n.nominatorLinks} />
         </p>
       )}
+
+      {/* The case for a second look leads the page: it is what a reader most
+          needs in order to decide whether to vote, predict or contribute. */}
+      <section className="mt-6 rounded-lg border-l-4 border-green bg-card px-5 py-4 shadow-sm ring-1 ring-line">
+        <h2 className="font-display text-xl font-semibold text-forest">Why revisit this?</h2>
+        <RichText className="mt-2 text-base leading-relaxed text-ink">{n.justification}</RichText>
+      </section>
 
       {/* What kind of second look would help — prominent, with term tooltips */}
       <div className="mt-5">
@@ -118,17 +141,13 @@ export function NominationDetailPage() {
           </p>
           <PredictionBar
             nominationId={n.id}
+            verificationType={n.verificationType}
             predictYes={n.predictYes}
             predictNo={n.predictNo}
             userPrediction={n.userPrediction}
           />
         </div>
       </div>
-
-      <section className="mb-6">
-        <p className="eyebrow mb-1.5">Why revisit this?</p>
-        <RichText className="text-[15px] leading-relaxed">{n.justification}</RichText>
-      </section>
 
       {(n.dataLocation || n.robustnessChecks || n.designDeviations) && (
         <section className="mb-6 space-y-4 rounded-lg border border-line bg-muted/30 p-4">

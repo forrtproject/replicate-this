@@ -13,14 +13,18 @@ import { AdminPage } from '@/pages/AdminPage'
 import { CommentsModerationPage } from '@/pages/CommentsModerationPage'
 import { UsersPage } from '@/pages/UsersPage'
 import { DocPage } from '@/pages/DocPage'
+import { ResearcherPage } from '@/pages/ResearcherPage'
 import { NotFoundPage } from '@/pages/stubs'
 
 export const router = createBrowserRouter([
   {
     element: <RootLayout />,
     children: [
-      { index: true, element: <Navigate to="/registry" replace /> },
-      { path: 'registry', element: <RegistryPage /> },
+      { index: true, element: <Navigate to="/nominations" replace /> },
+      { path: 'nominations', element: <RegistryPage /> },
+      // Old name for the list; kept so existing links and bookmarks still work.
+      { path: 'registry', element: <Navigate to="/nominations" replace /> },
+      { path: 'researchers/:token', element: <ResearcherPage /> },
       { path: 'nominations/:id', element: <NominationDetailPage /> },
       {
         path: 'nominations/:id/edit',

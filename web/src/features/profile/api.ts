@@ -30,12 +30,25 @@ export function useUpdateLinks() {
   })
 }
 
-/** Set or clear the profile avatar (emoji or inline image data URL; '' clears it). */
+/**
+ * Set or clear the profile avatar (emoji or inline image data URL; '' clears it).
+ * Optimistic: the cached profile changes at once, so the new avatar shows on
+ * click rather than after the save round-trip, and rolls back if it fails.
+ */
 export function useUpdateAvatar() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (image: string) => api.patch<{ image: string }>('/profile/avatar', { image }),
-    onSuccess: () => {
+    onMutate: async (image) => {
+      await qc.cancelQueries({ queryKey: ['profile'] })
+      const previous = qc.getQueryData<Profile>(['profile'])
+      if (previous) qc.setQueryData<Profile>(['profile'], { ...previous, image })
+      return { previous }
+    },
+    onError: (_err, _image, ctx) => {
+      if (ctx?.previous) qc.setQueryData(['profile'], ctx.previous)
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ['profile'] })
       qc.invalidateQueries({ queryKey: nominationKeys.all })
     },

@@ -1,29 +1,83 @@
-import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useMemo } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { ArrowDownUp, SlidersHorizontal, X } from 'lucide-react'
 import { useNominations } from '@/features/nominations/api'
 import { NominationCard } from '@/features/nominations/NominationCard'
-import { DISCIPLINES, type NominationStatus } from '@/types'
+import { matchJournalTags, TARGET_JOURNALS } from '@/features/nominations/journal-tags'
+import { DISCIPLINES, type NominationSummary } from '@/types'
 
-type SortKey = 'top' | 'recent'
+// "Newest" is the default on purpose: ranking by votes first would keep the
+// already-popular nominations on top and make them ever more popular (a
+// Matthew effect), whatever their merits.
+const SORTS = {
+  newest: {
+    label: 'Newest',
+    compare: (a: NominationSummary, b: NominationSummary) =>
+      Date.parse(b.createdAt) - Date.parse(a.createdAt),
+  },
+  wanted: {
+    label: 'Most wanted',
+    compare: (a: NominationSummary, b: NominationSummary) =>
+      b.upvotes - a.upvotes || Date.parse(b.createdAt) - Date.parse(a.createdAt),
+  },
+  active: {
+    label: 'Most active',
+    compare: (a: NominationSummary, b: NominationSummary) =>
+      Date.parse(b.lastActivityAt) - Date.parse(a.lastActivityAt),
+  },
+} as const
+type SortKey = keyof typeof SORTS
 
-const PROCESS = ['Nominate', 'Collaborate', 'Replicate']
+const STATUSES = [
+  ['pending', 'Under Review'],
+  ['approved', 'Open'],
+  ['in_progress', 'In Progress'],
+  ['completed', 'Completed'],
+  ['published', 'Published'],
+] as const
 
 export function RegistryPage() {
   const { data: nominations, isLoading, isError, error } = useNominations()
-  const [discipline, setDiscipline] = useState('All')
-  const [status, setStatus] = useState<NominationStatus | 'all'>('all')
-  const [sort, setSort] = useState<SortKey>('top')
+  // Filters and sort live in the URL, so they survive opening a nomination and
+  // coming back, and a filtered view can be shared as a link.
+  const [params, setParams] = useSearchParams()
+  const discipline = params.get('discipline') ?? ''
+  const status = params.get('status') ?? ''
+  const journal = params.get('journal') ?? ''
+  const sortParam = params.get('sort') ?? ''
+  const sort: SortKey = sortParam in SORTS ? (sortParam as SortKey) : 'newest'
+  const filtering = Boolean(discipline || status || journal)
+
+  function setParam(key: string, value: string) {
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        if (value) next.set(key, value)
+        else next.delete(key)
+        return next
+      },
+      { replace: true, preventScrollReset: true },
+    )
+  }
+
+  function clearFilters() {
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        for (const k of ['discipline', 'status', 'journal']) next.delete(k)
+        return next
+      },
+      { replace: true, preventScrollReset: true },
+    )
+  }
 
   const filtered = useMemo(() => {
     return (nominations ?? [])
-      .filter((n) => discipline === 'All' || n.discipline === discipline)
-      .filter((n) => status === 'all' || n.status === status)
-      .sort((a, b) =>
-        sort === 'top'
-          ? b.upvotes - a.upvotes
-          : new Date(b.lastActivityAt).getTime() - new Date(a.lastActivityAt).getTime(),
-      )
-  }, [nominations, discipline, status, sort])
+      .filter((n) => !discipline || n.discipline === discipline)
+      .filter((n) => !status || n.status === status)
+      .filter((n) => !journal || matchJournalTags(n).some((t) => t.key === journal))
+      .sort(SORTS[sort].compare)
+  }, [nominations, discipline, status, journal, sort])
 
   return (
     <div>
@@ -52,7 +106,7 @@ export function RegistryPage() {
               href="#registry"
               className="rounded-md border border-line bg-card px-5 py-2.5 text-sm font-semibold text-ink transition-colors hover:border-green"
             >
-              Browse the registry
+              Browse nominations
             </a>
             {typeof nominations?.length === 'number' && (
               <span className="ml-1 text-sm text-muted-foreground">
@@ -61,19 +115,6 @@ export function RegistryPage() {
             )}
           </div>
         </div>
-
-        {/* How it works — a short, ordered process */}
-        <div className="border-t border-green/10">
-          <ol className="mx-auto flex max-w-5xl flex-wrap gap-x-8 gap-y-2 px-4 py-3.5 text-sm text-muted-foreground">
-            {PROCESS.map((step, i) => (
-              <li key={step} className="flex items-center gap-2">
-                <span className="font-medium text-green">{i + 1}.</span>
-                <span>{step}</span>
-                {i < PROCESS.length - 1 && <span className="text-green/30">→</span>}
-              </li>
-            ))}
-          </ol>
-        </div>
       </section>
 
       {/* Registry list */}
@@ -81,36 +122,73 @@ export function RegistryPage() {
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="eyebrow">The registry</p>
-            <h2 className="mt-1 font-display text-2xl font-semibold">Open nominations</h2>
+            <h2 className="mt-1 font-display text-2xl font-semibold">Nominations</h2>
           </div>
           <span className="text-sm text-muted-foreground">
             {filtered.length} {filtered.length === 1 ? 'result' : 'results'}
           </span>
         </div>
 
-        <div className="mb-6 flex flex-wrap gap-2">
-          <Filter label="Discipline" value={discipline} onChange={setDiscipline}>
-            <option value="All">All disciplines</option>
-            {DISCIPLINES.map((d) => (
-              <option key={d}>{d}</option>
-            ))}
-          </Filter>
-          <Filter
-            label="Status"
-            value={status}
-            onChange={(v) => setStatus(v as NominationStatus | 'all')}
-          >
-            <option value="all">All statuses</option>
-            <option value="pending">Under Review</option>
-            <option value="approved">Open</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-            <option value="published">Published</option>
-          </Filter>
-          <Filter label="Sort" value={sort} onChange={(v) => setSort(v as SortKey)}>
-            <option value="top">Most wanted</option>
-            <option value="recent">Most active</option>
-          </Filter>
+        {/* Filters (narrow the list) and sort (order it) are separate groups. */}
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-y border-line py-3">
+          <div className="flex flex-wrap items-end gap-2">
+            <span className="mb-1.5 inline-flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <SlidersHorizontal className="h-3.5 w-3.5" /> Filter
+            </span>
+            <Select label="Discipline" value={discipline} onChange={(v) => setParam('discipline', v)}>
+              <option value="">All disciplines</option>
+              {DISCIPLINES.map((d) => (
+                <option key={d}>{d}</option>
+              ))}
+            </Select>
+            <Select label="Status" value={status} onChange={(v) => setParam('status', v)}>
+              <option value="">All statuses</option>
+              {STATUSES.map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </Select>
+            <Select label="Target journal" value={journal} onChange={(v) => setParam('journal', v)}>
+              <option value="">Any target journal</option>
+              {TARGET_JOURNALS.map((j) => (
+                <option key={j.key} value={j.key}>
+                  {j.name}
+                </option>
+              ))}
+            </Select>
+            {filtering && (
+              <button
+                onClick={clearFilters}
+                className="mb-1.5 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-ink"
+              >
+                <X className="h-3.5 w-3.5" /> Clear
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-end gap-2">
+            <span className="mb-1.5 inline-flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              <ArrowDownUp className="h-3.5 w-3.5" /> Sort
+            </span>
+            <div role="radiogroup" aria-label="Sort by" className="inline-flex rounded-md border border-line bg-card p-0.5">
+              {(Object.keys(SORTS) as SortKey[]).map((key) => (
+                <button
+                  key={key}
+                  role="radio"
+                  aria-checked={sort === key}
+                  onClick={() => setParam('sort', key === 'newest' ? '' : key)}
+                  className={`rounded px-2.5 py-1 text-sm transition-colors ${
+                    sort === key
+                      ? 'bg-green-tint font-medium text-forest'
+                      : 'text-muted-foreground hover:text-ink'
+                  }`}
+                >
+                  {SORTS[key].label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {isLoading && <Placeholder>Loading nominations…</Placeholder>}
@@ -131,7 +209,7 @@ export function RegistryPage() {
   )
 }
 
-function Filter({
+function Select({
   label,
   value,
   onChange,
@@ -148,7 +226,9 @@ function Filter({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-md border border-line bg-card px-2.5 py-1.5 text-sm text-ink"
+        className={`rounded-md border bg-card px-2.5 py-1.5 text-sm text-ink ${
+          value ? 'border-green' : 'border-line'
+        }`}
       >
         {children}
       </select>

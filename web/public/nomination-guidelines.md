@@ -9,14 +9,18 @@ Please keep nominations impersonal and focused on the work, never the authors.
 
 ## A good nomination
 
-- **Names the study clearly** — a DOI so everyone is looking at the same paper.
+- **Names the study clearly** — a DOI so everyone is looking at the same paper (or,
+  for the rare paper without one, a full reference and link).
 - **Explains why revisiting is valuable**, in neutral terms. For example:
   - the finding is highly cited or informs practice or policy,
   - it underpins later work that depends on it holding up,
   - the result is surprising, or the evidence base is thin,
   - open data or code make a reproduction feasible.
 - **Says what kind of second look fits** — a *replication* (new data, same method)
-  or a *reproduction* (re-running the original analysis on the original data).
+  or a *reproduction* (re-running the original analysis on the original data, and/or
+  varying how the analysis is done to check the results are robust). For simulation
+  and other computational studies, which have no data of their own, a reproduction
+  re-runs or re-implements the code.
 - **Notes what's openly available** — data, code, materials, preregistration, or an
   open-access version — so others can gauge how feasible the work is.
 
@@ -30,7 +34,7 @@ Please keep nominations impersonal and focused on the work, never the authors.
 
 A maintainer reviews each nomination against the Code of Conduct before it is
 endorsed. Nominations stay visible while under review. Anyone can add their vote,
-predict whether it will replicate, or sign up to help.
+predict whether the finding will hold up, or sign up to help.
 
 > The goal is a shared, collegial record of what the community would like to see
 > revisited — not a leaderboard of blame.

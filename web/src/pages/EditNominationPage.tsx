@@ -38,10 +38,10 @@ export function EditNominationPage() {
       <div className="mx-auto max-w-xl px-4 py-20 text-center">
         <p className="text-sm text-muted-foreground">{blocked}</p>
         <Link
-          to={n ? `/nominations/${n.id}` : '/registry'}
+          to={n ? `/nominations/${n.id}` : '/nominations'}
           className="mt-2 inline-block text-sm text-green underline"
         >
-          {n ? 'Back to nomination' : 'Back to registry'}
+          {n ? 'Back to nomination' : 'Back to nominations'}
         </Link>
       </div>
     )
@@ -55,8 +55,8 @@ function EditForm({ nomination: n }: { nomination: NominationDetail }) {
   const update = useUpdateNomination(n.id)
   const [error, setError] = useState<string | null>(null)
   const [values, setValues] = useState<NominationFormValues>(() => ({
-    journal: n.metadata.journal ?? '',
     discipline: n.discipline,
+    disciplineOther: n.disciplineOther,
     verificationType: n.verificationType,
     justification: n.justification,
     dataLocation: n.dataLocation,
@@ -94,11 +94,11 @@ function EditForm({ nomination: n }: { nomination: NominationDetail }) {
       <h1 className="mb-1 mt-1 font-display text-3xl font-semibold leading-tight">
         {n.metadata.title || n.doi}
       </h1>
-      <p className="data mb-4 text-sm text-muted-foreground">{n.doi}</p>
+      <p className="data mb-4 text-sm text-muted-foreground">{n.doi ?? 'No DOI'}</p>
 
       <p className="mb-6 text-sm text-muted-foreground">
-        The DOI and fetched reference can’t be changed — nominate a new study instead if you
-        picked the wrong paper. Saving your changes sends the nomination back under review.
+        The paper’s reference can’t be changed — nominate a new study instead if you picked
+        the wrong paper. Saving your changes sends the nomination back under review.
       </p>
 
       <form onSubmit={onSubmit} className="space-y-5">

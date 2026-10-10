@@ -60,6 +60,12 @@ const RULES: (JournalTag & { matches: (n: JournalTagInput) => boolean })[] = [
   },
 ]
 
+/** Every target journal, in display order — for the registry's journal filter. */
+export const TARGET_JOURNALS: { key: string; name: string }[] = RULES.map(({ key, name }) => ({
+  key,
+  name,
+}))
+
 /** The target journals this nomination qualifies for, in fixed display order. */
 export function matchJournalTags(n: JournalTagInput): JournalTag[] {
   return RULES.filter((r) => r.matches(n)).map(({ key, name, hint }) => ({ key, name, hint }))

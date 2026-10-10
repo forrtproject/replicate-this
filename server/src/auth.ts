@@ -6,37 +6,49 @@ import { eq } from 'drizzle-orm'
 import { db, schema } from '@/db'
 import { config } from '@/lib/env'
 import { deterministicEmail } from '@/lib/crypto'
-import { generateUniquePseudonym } from '@/lib/pseudonym'
+import { initialDisplayName } from '@/lib/pseudonym'
+import { notify } from '@/lib/notify'
 import { stripOAuthTokens } from '@/lib/oauth-tokens'
 import { defaultEmailPrefs } from '@/types'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 /**
- * Real provider emails, waiting to be written to `notification_email` on the row
- * they belong to. `mapProfileToUser` is the only place the address is visible,
- * but the user row doesn't exist yet there — so we park it here, keyed by the
- * dummy email (which is derived from it, so both sides agree), and the
- * user-create hook picks it up. Entries are consumed once and expire quickly:
- * a returning user never reaches the create hook, so their entry is dropped.
+ * Real provider details (email, profile name), waiting to be written to the row
+ * they belong to. `mapProfileToUser` is the only place they are visible, but the
+ * user row doesn't exist yet there — so we park them here, keyed by the dummy
+ * email (which is derived from the real one, so both sides agree), and the
+ * user-create hooks pick them up. Entries are consumed once and expire quickly:
+ * a returning user never reaches the create hooks, so their entry is dropped.
  */
-const SIGNUP_EMAIL_TTL_MS = 10 * 60_000
-const signupEmails = new Map<string, { email: string; at: number }>()
+const SIGNUP_PROFILE_TTL_MS = 10 * 60_000
+interface SignupProfile {
+  email: string
+  name: string
+  at: number
+}
+const signupProfiles = new Map<string, SignupProfile>()
 
-function rememberSignupEmail(key: string, email: string): void {
+function rememberSignupProfile(key: string, email: string, name: string): void {
   const now = Date.now()
-  for (const [k, v] of signupEmails) {
-    if (now - v.at > SIGNUP_EMAIL_TTL_MS) signupEmails.delete(k)
+  for (const [k, v] of signupProfiles) {
+    if (now - v.at > SIGNUP_PROFILE_TTL_MS) signupProfiles.delete(k)
   }
-  signupEmails.set(key, { email, at: now })
+  signupProfiles.set(key, { email, name, at: now })
 }
 
-/** Pops the address captured at sign-in, or '' if there wasn't a usable one. */
-function takeSignupEmail(key: string): string {
-  const hit = signupEmails.get(key)
-  signupEmails.delete(key)
-  if (!hit || Date.now() - hit.at > SIGNUP_EMAIL_TTL_MS) return ''
-  return hit.email
+/** The details captured at sign-in, without consuming them. */
+function peekSignupProfile(key: string): SignupProfile | null {
+  const hit = signupProfiles.get(key)
+  if (!hit || Date.now() - hit.at > SIGNUP_PROFILE_TTL_MS) return null
+  return hit
+}
+
+/** Pops the details captured at sign-in. */
+function takeSignupProfile(key: string): SignupProfile | null {
+  const hit = peekSignupProfile(key)
+  signupProfiles.delete(key)
+  return hit
 }
 
 /**
@@ -46,15 +58,16 @@ function takeSignupEmail(key: string): string {
  * Runs in mapProfileToUser, i.e. BEFORE Better Auth's existing-user lookup, so the
  * dummy email is what it matches on — which is what makes account linking work.
  *
- * When the provider gave us a real address we keep it for notifications (see
- * `rememberSignupEmail`); the login email itself stays a dummy either way.
+ * When the provider gave us a real address we keep it for notifications, and
+ * the profile name becomes the new account's starting display name (see
+ * `rememberSignupProfile`); the login email itself stays a dummy either way.
  */
-function anonymize(basis: string | null | undefined) {
+function anonymize(basis: string | null | undefined, profileName?: string | null) {
   const email = deterministicEmail(basis || randomUUID(), config.emailPepper)
   const real = basis?.trim().toLowerCase() ?? ''
-  if (EMAIL_RE.test(real)) rememberSignupEmail(email, real)
+  rememberSignupProfile(email, EMAIL_RE.test(real) ? real : '', profileName?.trim() ?? '')
   return {
-    // Placeholder — the user.create.before hook replaces it with a random pseudonym.
+    // Placeholder — the user.create.before hook replaces it with the display name.
     name: 'Anonymous Researcher',
     email,
     emailVerified: true,
@@ -84,15 +97,16 @@ if (enabledProviders.google) {
   socialProviders.google = {
     clientId: config.google.clientId,
     clientSecret: config.google.clientSecret,
-    scope: ['openid', 'email'],
-    mapProfileToUser: (p) => anonymize(p?.email),
+    // `profile` only for the display name suggested at sign-up.
+    scope: ['openid', 'email', 'profile'],
+    mapProfileToUser: (p) => anonymize(p?.email, p?.name),
   }
 }
 if (enabledProviders.github) {
   socialProviders.github = {
     clientId: config.github.clientId,
     clientSecret: config.github.clientSecret,
-    mapProfileToUser: (p) => anonymize(p?.email),
+    mapProfileToUser: (p) => anonymize(p?.email, p?.name),
   }
 }
 
@@ -104,7 +118,11 @@ const orcidConfig = enabledProviders.orcid
         clientSecret: config.orcid.clientSecret,
         discoveryUrl: 'https://orcid.org/.well-known/openid-configuration',
         scopes: ['openid'],
-        mapProfileToUser: (p: any) => anonymize(p?.sub),
+        mapProfileToUser: (p: any) =>
+          anonymize(
+            p?.sub,
+            p?.name || [p?.given_name, p?.family_name].filter(Boolean).join(' '),
+          ),
       },
     ]
   : []
@@ -134,15 +152,17 @@ export const auth = betterAuth({
    * left untouched (Better Auth's own id is non-identifying and it looks users
    * up by it).
    *
-   * The name is a randomly generated pseudonym (e.g. "BrightQuasar42") — never
-   * the provider profile name. Name changes go through PATCH /api/profile/name
+   * The name starts as the provider profile name (we encourage real names),
+   * falling back to a random pseudonym (e.g. "BrightQuasar42") when there is
+   * none or it is unusable. Name changes go through PATCH /api/profile/name
    * (which enforces uniqueness), so Better Auth's own update path drops them.
    *
    * `after` seeds the notification settings a new account starts with: the
    * address from the provider (blank for ORCID, which exposes none — those users
    * enter one in their profile) and every email category switched on. Written
    * directly rather than through `before`, since these are our own columns and
-   * not part of Better Auth's user model.
+   * not part of Better Auth's user model. It also leaves a welcome message in
+   * the in-app inbox.
    */
   databaseHooks: {
     user: {
@@ -150,7 +170,7 @@ export const auth = betterAuth({
         before: async (user) => ({
           data: {
             ...user,
-            name: await generateUniquePseudonym(),
+            name: await initialDisplayName(peekSignupProfile(user.email ?? '')?.name),
             email: user.email?.endsWith('@privacy.forrt.org')
               ? user.email
               : deterministicEmail(user.email || user.id, config.emailPepper),
@@ -162,11 +182,12 @@ export const auth = betterAuth({
           await db
             .update(schema.user)
             .set({
-              notificationEmail: takeSignupEmail(user.email),
+              notificationEmail: takeSignupProfile(user.email)?.email ?? '',
               emailPrefs: defaultEmailPrefs(),
               updatedAt: new Date(),
             })
             .where(eq(schema.user.id, user.id))
+          await notify([{ userUid: user.id, type: 'welcome' }])
         },
       },
       update: {

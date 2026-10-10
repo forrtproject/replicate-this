@@ -145,7 +145,7 @@ emailActionsRouter.post('/review/:token', async (c) => {
     if (result === 'not_pending') return alreadyReviewed(nomination)
     return message(
       'Nomination approved ✓',
-      `“${escapeHtml(nomination.metadata.title || nomination.doi)}” is now open in the public registry. The nominator has been notified.`,
+      `“${escapeHtml(nomination.metadata.title || nomination.doi || 'this nomination')}” is now open in the public registry. The nominator has been notified.`,
     )
   }
 
@@ -157,7 +157,7 @@ emailActionsRouter.post('/review/:token', async (c) => {
     if (result === 'not_pending') return alreadyReviewed(nomination)
     return message(
       'Nomination rejected',
-      `“${escapeHtml(nomination.metadata.title || nomination.doi)}” was rejected. The nominator has been notified with your reason.`,
+      `“${escapeHtml(nomination.metadata.title || nomination.doi || 'this nomination')}” was rejected. The nominator has been notified with your reason.`,
     )
   }
 

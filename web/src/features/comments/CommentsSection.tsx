@@ -1,11 +1,27 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { EyeOff, Eye, Minus, Plus } from 'lucide-react'
+import { EyeOff, Eye, Minus, Plus, ThumbsUp, Flag } from 'lucide-react'
 import { useSession } from '@/lib/auth-client'
+import { cn } from '@/lib/utils'
 import { researcherLabel } from '@/features/nominations/format'
 import { ContactLinks } from '@/features/profile/ContactLinks'
+import { ResearcherLink } from '@/features/profile/ResearcherLink'
 import { useHideComment } from '@/features/admin/api'
-import { useComments, usePostComment, type Comment } from './api'
+import { RichText } from '@/components/ui/RichText'
+import {
+  useComments,
+  usePostComment,
+  useToggleCommentLike,
+  useFlagComment,
+  type Comment,
+} from './api'
+
+const MARKDOWN_HINT = (
+  <>
+    Markdown works: **bold**, *italic*, `code`, lists, &gt; quotes and [links](https://…) —
+    bare URLs are linked too.
+  </>
+)
 
 function timeAgo(iso: string): string {
   const secs = Math.round((Date.now() - new Date(iso).getTime()) / 1000)
@@ -77,6 +93,7 @@ export function CommentsSection({ nominationId }: { nominationId: string }) {
             placeholder="Add to the discussion — keep it constructive and about the work."
             className="input"
           />
+          <p className="mt-1 text-xs text-muted-foreground">{MARKDOWN_HINT}</p>
           <div className="mt-2">
             <button
               onClick={submit}
@@ -136,9 +153,29 @@ function CommentThread({
   const c = node.comment
   const hide = useHideComment()
   const post = usePostComment(nominationId)
+  const like = useToggleCommentLike(nominationId)
+  const flag = useFlagComment(nominationId)
+  const navigate = useNavigate()
   const [collapsed, setCollapsed] = useState(false)
   const [replying, setReplying] = useState(false)
   const [reply, setReply] = useState('')
+  const [flagging, setFlagging] = useState(false)
+  const [flagReason, setFlagReason] = useState('')
+
+  function toggleLike() {
+    if (!signedIn) {
+      navigate(`/sign-in?redirect=/nominations/${nominationId}`)
+      return
+    }
+    like.mutate(c.id)
+  }
+
+  function sendFlag() {
+    flag.mutate(
+      { id: c.id, reason: flagReason.trim() },
+      { onSuccess: () => setFlagging(false) },
+    )
+  }
 
   const deleted = c.name === 'Deleted account'
   const replyCount = countDescendants(node)
@@ -178,9 +215,7 @@ function CommentThread({
               {collapsed ? <Plus className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
             </button>
           )}
-          <span className={deleted ? 'text-muted-foreground' : 'font-medium'}>
-            {researcherLabel(c.name, c.token)}
-          </span>
+          <ResearcherLink name={c.name} token={c.token} className="font-medium" />
           {!deleted && <ContactLinks links={c.links} />}
           <span className="text-xs text-muted-foreground">· {timeAgo(c.createdAt)}</span>
           {c.hidden && <span className="text-xs font-medium text-amber">· hidden</span>}
@@ -198,14 +233,71 @@ function CommentThread({
 
         {!collapsed && (
           <>
-            <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed">{c.content}</p>
-            {signedIn && (
-              <button
-                onClick={() => setReplying((v) => !v)}
-                className="mt-1 text-xs text-muted-foreground hover:text-green"
-              >
-                {replying ? 'Cancel' : 'Reply'}
-              </button>
+            <RichText className="mt-1 text-sm leading-relaxed">{c.content}</RichText>
+            <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              {!c.hidden && (
+                <button
+                  onClick={toggleLike}
+                  disabled={c.isOwn}
+                  aria-pressed={c.viewerLiked}
+                  title={c.isOwn ? 'Likes on your comment' : c.viewerLiked ? 'Unlike' : 'Like'}
+                  className={cn(
+                    'inline-flex items-center gap-1 disabled:cursor-default',
+                    c.viewerLiked ? 'font-medium text-green' : 'enabled:hover:text-green',
+                  )}
+                >
+                  <ThumbsUp className={cn('h-3.5 w-3.5', c.viewerLiked && 'fill-current')} />
+                  {c.likes > 0 ? c.likes : c.isOwn ? '' : 'Like'}
+                </button>
+              )}
+              {signedIn && (
+                <button
+                  onClick={() => setReplying((v) => !v)}
+                  className="hover:text-green"
+                >
+                  {replying ? 'Cancel' : 'Reply'}
+                </button>
+              )}
+              {signedIn && !c.isOwn && !c.hidden && !deleted && (
+                c.viewerFlagged ? (
+                  <span className="inline-flex items-center gap-1 text-amber">
+                    <Flag className="h-3.5 w-3.5" /> Flagged for review
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => setFlagging((v) => !v)}
+                    className="inline-flex items-center gap-1 hover:text-amber"
+                  >
+                    <Flag className="h-3.5 w-3.5" /> {flagging ? 'Cancel' : 'Flag'}
+                  </button>
+                )
+              )}
+            </div>
+            {flagging && !c.viewerFlagged && (
+              <div className="mt-2 space-y-2 rounded-md border border-amber/30 bg-amber/5 p-3">
+                <p className="text-xs text-ink">
+                  Flag this comment for the maintainers if it breaks the Code of Conduct. It
+                  stays visible until a maintainer reviews it; the author isn’t told who
+                  flagged it.
+                </p>
+                <input
+                  value={flagReason}
+                  onChange={(e) => setFlagReason(e.target.value)}
+                  maxLength={1000}
+                  placeholder="What’s wrong with it? (optional)"
+                  className="input"
+                />
+                <button
+                  onClick={sendFlag}
+                  disabled={flag.isPending}
+                  className="rounded-md border border-amber/40 px-3 py-1.5 text-sm font-medium text-amber hover:bg-amber/10 disabled:opacity-60"
+                >
+                  {flag.isPending ? 'Sending…' : 'Send to maintainers'}
+                </button>
+                {flag.isError && (
+                  <p className="text-xs text-destructive">Could not flag this comment. Try again.</p>
+                )}
+              </div>
             )}
             {replying && (
               <div className="mt-2 space-y-2">
@@ -216,6 +308,7 @@ function CommentThread({
                   placeholder={`Reply to ${researcherLabel(c.name, c.token)}…`}
                   className="input"
                 />
+                <p className="text-xs text-muted-foreground">{MARKDOWN_HINT}</p>
                 <button
                   onClick={sendReply}
                   disabled={post.isPending || reply.trim().length < 2}

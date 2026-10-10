@@ -3,65 +3,16 @@ import { Hono } from 'hono'
 import { eq } from 'drizzle-orm'
 import { db, schema } from '@/db'
 import {
-  PROFILE_LINK_KEYS,
   EMAIL_PREF_KEYS,
   resolveEmailPrefs,
   type ProfileLinks,
   type EmailPrefs,
 } from '@/types'
 import { generateUniquePseudonym, pseudonymTaken, validatePseudonym } from '@/lib/pseudonym'
+import { sanitizeLinks, LinkError } from '@/lib/profile-links'
 import { requireUser, HttpError, type AppEnv } from '@/middleware/auth'
 
 export const profileRouter = new Hono<AppEnv>()
-
-/** ISO 7064 MOD 11-2 checksum over the first 15 digits of an ORCID iD. */
-function orcidChecksumValid(id16: string): boolean {
-  let total = 0
-  for (let i = 0; i < 15; i++) total = (total + Number(id16[i])) * 2
-  const result = (12 - (total % 11)) % 11
-  return (result === 10 ? 'X' : String(result)) === id16[15]
-}
-
-/**
- * Accepts an ORCID iD in any common form (bare iD, with/without dashes, or an
- * orcid.org URL) and returns the canonical `https://orcid.org/0000-…` URL.
- */
-function normalizeOrcid(raw: string): string {
-  const compact = raw
-    .trim()
-    .replace(/^https?:\/\/(sandbox\.)?orcid\.org\//i, '')
-    .replace(/[\s-]/g, '')
-    .toUpperCase()
-  if (!/^\d{15}[\dX]$/.test(compact)) {
-    throw new HttpError(400, 'Enter a valid ORCID iD, e.g. 0000-0002-1825-0097.')
-  }
-  if (!orcidChecksumValid(compact)) {
-    throw new HttpError(400, 'That ORCID iD looks mistyped — its checksum is invalid.')
-  }
-  const dashed = compact.replace(/(.{4})(.{4})(.{4})(.{4})/, '$1-$2-$3-$4')
-  return `https://orcid.org/${dashed}`
-}
-
-/** Keep only known keys; ORCID is validated as an iD, the rest as http(s) URLs. */
-function sanitizeLinks(input: unknown): ProfileLinks {
-  const out: ProfileLinks = {}
-  if (!input || typeof input !== 'object') return out
-  for (const key of PROFILE_LINK_KEYS) {
-    const raw = (input as Record<string, unknown>)[key]
-    if (typeof raw !== 'string') continue
-    const value = raw.trim()
-    if (!value) continue
-    if (value.length > 300) throw new HttpError(400, 'Links must be under 300 characters.')
-    if (key === 'orcid') {
-      out.orcid = normalizeOrcid(value)
-    } else if (/^https?:\/\/.+/i.test(value)) {
-      out[key] = value
-    } else {
-      throw new HttpError(400, `The ${key} link must be a full http(s) URL.`)
-    }
-  }
-  return out
-}
 
 // Current user's editable profile.
 profileRouter.get('/', async (c) => {
@@ -161,7 +112,13 @@ profileRouter.patch('/email', async (c) => {
 profileRouter.patch('/', async (c) => {
   const user = requireUser(c)
   const body = await c.req.json().catch(() => ({}))
-  const links = sanitizeLinks(body.links)
+  let links: ProfileLinks
+  try {
+    links = sanitizeLinks(body.links)
+  } catch (err) {
+    if (err instanceof LinkError) throw new HttpError(400, err.message)
+    throw err
+  }
   await db
     .update(schema.user)
     .set({ links, updatedAt: new Date() })

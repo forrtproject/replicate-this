@@ -3,17 +3,24 @@ import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useSession } from '@/lib/auth-client'
 import { useSetPrediction } from './api'
+import { FORECAST_QUESTION } from './verification'
+import type { VerificationType } from '@/types'
 
 interface Props {
   nominationId: string
+  verificationType: VerificationType
   predictYes: number
   predictNo: number
   userPrediction: boolean | null
 }
 
-/** "Will it replicate?" yes/no prediction with a distribution bar. */
+/**
+ * Yes/no forecast with a distribution bar. The question follows the requested
+ * check ("Will it replicate?" / "Will the results prove robust?").
+ */
 export function PredictionBar({
   nominationId,
+  verificationType,
   predictYes,
   predictNo,
   userPrediction,
@@ -48,14 +55,16 @@ export function PredictionBar({
     setPrediction.mutate(next, { onSettled: () => setOptimistic(null) })
   }
 
+  const forecast = FORECAST_QUESTION[verificationType] ?? FORECAST_QUESTION.replication
+
   // Plain-language read of the split, so the numbers don't have to be decoded.
   const consensus =
     total === 0
       ? 'Predictions are anonymous and you can change yours any time.'
       : yesPct >= 65
-        ? 'Most expect this to replicate.'
+        ? forecast.yes
         : yesPct <= 35
-          ? 'Most expect this not to replicate.'
+          ? forecast.no
           : 'Researchers are split on this one.'
 
   return (
@@ -63,7 +72,7 @@ export function PredictionBar({
       <div className="space-y-1.5">
         {/* h-7 matches the interest panel's label row, so both bars land on one line. */}
         <div className="flex h-7 items-baseline justify-between text-xs text-muted-foreground">
-          <span>Will it replicate?</span>
+          <span>{forecast.question}</span>
           <span>
             <span className="data">{total}</span>{' '}
             {total === 1 ? 'prediction' : 'predictions'}

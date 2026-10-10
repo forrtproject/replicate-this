@@ -9,8 +9,8 @@ import { JournalTags } from './JournalTags'
 
 /** The nomination fields shared by the submit and edit forms. */
 export interface NominationFormValues {
-  journal: string
   discipline: string
+  disciplineOther: string
   verificationType: VerificationType
   justification: string
   dataLocation: string
@@ -46,18 +46,6 @@ export function NominationFormFields({
 
   return (
     <>
-      <Field
-        label="Journal"
-        hint="Where the paper was published. We’ll fill this from the DOI if you leave it blank."
-      >
-        <input
-          value={values.journal}
-          onChange={(e) => set({ journal: e.target.value })}
-          placeholder="e.g. American Economic Review"
-          className="input"
-        />
-      </Field>
-
       <Field label="Discipline">
         <select
           value={values.discipline}
@@ -74,17 +62,32 @@ export function NominationFormFields({
         </select>
       </Field>
 
+      {values.discipline === 'Other' && (
+        <Field label="Please specify the discipline">
+          <input
+            value={values.disciplineOther}
+            onChange={(e) => set({ disciplineOther: e.target.value })}
+            required
+            minLength={2}
+            maxLength={80}
+            placeholder="e.g. Political Science"
+            className="input"
+          />
+        </Field>
+      )}
+
       <fieldset>
         <legend className="mb-1 text-sm font-medium">Replication or reproduction?</legend>
         <p className="mb-2 text-xs text-muted-foreground">
-          <DefinedTerm term="Reproduction" /> uses the original data/code;{' '}
-          <DefinedTerm term="Replication" /> collects new data.
+          <DefinedTerm term="Reproduction" /> re-runs the original data or code — including
+          simulation and other computational studies — and/or checks the results are robust
+          to other reasonable analyses; <DefinedTerm term="Replication" /> collects new data.
         </p>
         <div className="space-y-1.5">
           {(
             [
               ['replication', 'Replication — collect new data'],
-              ['reproduction', 'Reproduction — re-analyse the original data/code'],
+              ['reproduction', 'Reproduction — re-run the original data/code, and/or check robustness'],
               ['both', 'Either / not sure'],
             ] as const
           ).map(([value, label]) => (
@@ -119,7 +122,7 @@ export function NominationFormFields({
       {isReproduction && (
         <Field
           label="Data location"
-          hint="Where do the original data/code live? e.g. a Zenodo or OSF link."
+          hint="Where do the original data or code live? e.g. a Zenodo or OSF link. For simulation studies, link the code."
         >
           <input
             value={values.dataLocation}
@@ -159,7 +162,7 @@ export function NominationFormFields({
       <fieldset>
         <legend className="mb-1 text-sm font-medium">
           What’s openly available?{' '}
-          <span className="font-normal text-muted-foreground">(optional)</span>
+          <span className="font-normal text-muted-foreground">(check all that apply)</span>
         </legend>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {AVAILABILITY_OPTIONS.map((o) => {
@@ -203,7 +206,7 @@ export function NominationFormFields({
 
       <fieldset>
         <legend className="mb-1 text-sm font-medium">
-          Tags <span className="font-normal text-muted-foreground">(optional)</span>
+          Tags <span className="font-normal text-muted-foreground">(check all that apply)</span>
         </legend>
         <div className="space-y-2">
           <div className="flex items-start gap-2 text-sm">

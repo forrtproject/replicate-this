@@ -5,10 +5,11 @@ import type { NominationMetadata, NominationStatus } from '@/types'
 
 export interface AdminNomination {
   id: string
-  doi: string
+  doi: string | null
   metadata: NominationMetadata
   metadataManual: boolean
   discipline: string
+  disciplineOther: string
   verificationType: 'replication' | 'reproduction' | 'both'
   availability: import('@/types').AvailabilityKey[]
   availabilityLinks: Partial<Record<import('@/types').AvailabilityKey, string>>
@@ -101,6 +102,9 @@ export interface AdminComment {
   createdAt: string
   authorToken: string
   authorName: string | null
+  // Open (unresolved) user flags, and any reasons given with them.
+  openFlags: number
+  flagReasons: string[]
 }
 
 export function useAdminComments() {

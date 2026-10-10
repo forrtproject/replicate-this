@@ -55,10 +55,12 @@ export function SignInPage() {
 
   return (
     <div className="mx-auto max-w-sm px-4 py-16">
-      <h1 className="text-center font-display text-3xl font-bold">Sign in</h1>
+      <h1 className="text-center font-display text-3xl font-bold">Sign in or register</h1>
       <p className="mb-8 mt-2 text-center text-sm text-muted-foreground">
-        You appear across the site under a pseudonym, never your provider name. We use your
-        sign-in address for notifications — you choose which ones in your profile.
+        New here? Signing in for the first time creates your account — there’s no separate
+        sign-up. We start you off with the name from your provider (you can change it, or
+        pick a pseudonym, in your profile) and use your sign-in address only for the
+        notifications you choose.
       </p>
 
       {isLoading && <p className="text-center text-sm text-muted-foreground">Loading…</p>}

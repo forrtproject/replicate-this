@@ -39,6 +39,9 @@ export function useMarkNotificationRead() {
 }
 
 const LABELS: Record<string, string> = {
+  welcome:
+    'Welcome to Replicate This! Browse open studies looking for contributors, or nominate one you’d like to see revisited.',
+  moderation_comment_flagged: 'A comment was flagged for review',
   new_nomination: 'New nomination awaiting review',
   nomination_approved: 'Your nomination was approved',
   nomination_rejected: 'Your nomination was rejected',
@@ -64,4 +67,11 @@ export function notificationLabel(n: AppNotification): string {
     return `A nomination reached ${n.data.milestone} upvotes`
   }
   return LABELS[n.type] ?? n.type
+}
+
+/** Where clicking a notification goes: its nomination, or a type-specific page. */
+export function notificationHref(n: AppNotification): string | null {
+  if (n.type === 'welcome') return '/nominations?status=approved'
+  if (n.type === 'moderation_comment_flagged') return '/admin/comments'
+  return typeof n.data.nominationId === 'string' ? `/nominations/${n.data.nominationId}` : null
 }

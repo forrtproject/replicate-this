@@ -31,9 +31,11 @@ export function useNomination(id: string) {
 }
 
 export interface SubmitNominationInput {
-  doi: string
-  journal?: string
+  doi?: string
+  // True for a paper without a DOI; `metadata` then carries the reference.
+  noDoi?: boolean
   discipline: string
+  disciplineOther?: string
   verificationType: string
   availability: string[]
   availabilityLinks: Record<string, string>
@@ -56,7 +58,38 @@ export function useSubmitNomination() {
 }
 
 // Everything editable after submission — the DOI and fetched reference are fixed.
-export type UpdateNominationInput = Omit<SubmitNominationInput, 'doi' | 'metadata'>
+export type UpdateNominationInput = Omit<SubmitNominationInput, 'doi' | 'noDoi' | 'metadata'>
+
+/** Looks like a DOI worth resolving: "10.<registrant>/<suffix>", any common prefix stripped. */
+export function doiCandidate(raw: string): string | null {
+  const doi = raw
+    .trim()
+    .replace(/^https?:\/\/(dx\.)?doi\.org\//i, '')
+    .replace(/^doi:\s*/i, '')
+  return /^10\.\d{4,9}\/\S+$/.test(doi) ? doi : null
+}
+
+export interface DoiLookup {
+  doi: string
+  metadata: NominationMetadata
+  existingId: string | null
+}
+
+/**
+ * Resolves a DOI as it is typed so the form can show the paper's title (proof
+ * the DOI is right) and flag an existing nomination before submitting. Errors
+ * are ApiErrors whose `data` may carry `allowManual` / `existingId`.
+ */
+export function useDoiLookup(raw: string) {
+  const doi = doiCandidate(raw)
+  return useQuery({
+    queryKey: ['doi-lookup', doi?.toLowerCase()],
+    queryFn: () => api.get<DoiLookup>(`/nominations/lookup?doi=${encodeURIComponent(doi!)}`),
+    enabled: !!doi,
+    retry: false,
+    staleTime: 10 * 60_000,
+  })
+}
 
 export function useUpdateNomination(id: string) {
   const qc = useQueryClient()

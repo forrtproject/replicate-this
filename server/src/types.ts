@@ -4,6 +4,8 @@ export interface NominationMetadata {
   authors: string[]
   journal: string
   publication_date: string // ISO-ish: "YYYY", "YYYY-MM", or "YYYY-MM-DD"
+  // Link to the paper — only set for hand-entered references without a DOI.
+  url?: string
 }
 
 export const DISCIPLINES = [
@@ -63,13 +65,18 @@ export function resolveEmailPrefs(raw: unknown): EmailPrefs {
   return Object.keys(prefs).length === 0 ? defaultEmailPrefs() : prefs
 }
 
-// Optional public contact links a user may choose to display.
+// Optional public contact links a user may choose to display. ORCID and a
+// personal website are the primary ones; the rest are opt-in extra profiles.
 export const PROFILE_LINK_KEYS = [
   'orcid',
-  'github',
-  'twitter',
-  'linkedin',
   'website',
+  'bluesky',
+  'mastodon',
+  'github',
+  'scholar',
+  'osf',
+  'linkedin',
+  'twitter',
 ] as const
 export type ProfileLinkKey = (typeof PROFILE_LINK_KEYS)[number]
 export type ProfileLinks = Partial<Record<ProfileLinkKey, string>>
