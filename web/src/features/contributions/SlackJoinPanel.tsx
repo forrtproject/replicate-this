@@ -51,7 +51,7 @@ export function SlackJoinPanel({
 
       {joined ? (
         <p className="inline-flex items-center gap-1 text-sm text-primary">
-          <Check className="h-4 w-4" /> You’re in — open Slack and look for{' '}
+          <Check className="h-4 w-4" /> You’re in. Open Slack and look for{' '}
           <span className="font-mono">#{channelName}</span>.
         </p>
       ) : !showForm ? (
@@ -91,8 +91,8 @@ export function SlackJoinPanel({
                 className="inline-flex items-center gap-0.5 font-medium text-green underline"
               >
                 Create your account / join the workspace <ExternalLink className="h-3 w-3" />
-              </a>{' '}
-              — then come back and press the button again; you’ll be added to the channel
+              </a>
+              , then come back and press the button again. You’ll be added to the channel
               automatically.
             </p>
           )}
@@ -107,7 +107,7 @@ export function SlackJoinPanel({
               {join.isPending
                 ? 'Inviting…'
                 : inviteUrl
-                  ? 'I’ve joined — add me to the channel'
+                  ? 'I’ve joined, add me to the channel'
                   : 'Invite me'}
             </button>
             <button

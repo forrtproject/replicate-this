@@ -12,8 +12,10 @@ import { VerificationBadge } from '@/features/nominations/VerificationBadge'
 import { AvailabilityTags } from '@/features/nominations/Availability'
 import { disciplineLabel, formatReference } from '@/features/nominations/format'
 import { RichText } from '@/components/ui/RichText'
+import { usePageTitle } from '@/lib/page-title'
 
 export function AdminPage() {
+  usePageTitle('Moderation queue')
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
       <p className="eyebrow">Maintainers only</p>

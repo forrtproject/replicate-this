@@ -5,6 +5,8 @@ import { signIn, authClient, usePopupSignIn } from '@/lib/auth-client'
 import { signInWithPopup } from '@/lib/popup-sign-in'
 import { api } from '@/lib/api'
 import { withBase } from '@/lib/config'
+import { armPendingAction, disarmPendingAction } from '@/lib/pending-action'
+import { usePageTitle } from '@/lib/page-title'
 
 interface EnabledProviders {
   google: boolean
@@ -13,6 +15,7 @@ interface EnabledProviders {
 }
 
 export function SignInPage() {
+  usePageTitle('Sign in or register')
   const [params] = useSearchParams()
   // Absolute URL on the web origin: Better Auth runs on another origin, so a
   // relative path would otherwise resolve against the auth server. React Router
@@ -27,6 +30,8 @@ export function SignInPage() {
    * popup that returns a token. Same-origin keeps the plain redirect flow.
    */
   async function start(provider: { provider: string } | { providerId: string }) {
+    // A vote or forecast clicked while signed out may now be finished on return.
+    armPendingAction()
     if (!usePopupSignIn) {
       if ('provider' in provider) {
         await signIn.social({ provider: provider.provider, callbackURL })
@@ -38,6 +43,7 @@ export function SignInPage() {
     setError(null)
     const failure = await signInWithPopup(provider, callbackURL)
     if (failure) {
+      disarmPendingAction()
       setError(failure)
       return
     }
@@ -57,7 +63,7 @@ export function SignInPage() {
     <div className="mx-auto max-w-sm px-4 py-16">
       <h1 className="text-center font-display text-3xl font-bold">Sign in or register</h1>
       <p className="mb-8 mt-2 text-center text-sm text-muted-foreground">
-        New here? Signing in for the first time creates your account — there’s no separate
+        New here? Signing in for the first time creates your account, so there’s no separate
         sign-up. We start you off with the name from your provider (you can change it, or
         pick a pseudonym, in your profile) and use your sign-in address only for the
         notifications you choose.

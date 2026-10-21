@@ -6,6 +6,7 @@ import { LinkIcon } from '@/features/profile/LinkIcon'
 import { NominationCard } from '@/features/nominations/NominationCard'
 import { StatusBadge } from '@/features/nominations/StatusBadge'
 import { PROFILE_LINKS, type NominationStatus, type NominationSummary, type ProfileLinks } from '@/types'
+import { usePageTitle } from '@/lib/page-title'
 
 interface Researcher {
   token: string
@@ -25,6 +26,8 @@ export function ResearcherPage() {
     queryKey: ['researchers', token],
     queryFn: () => api.get<Researcher>(`/researchers/${token}`),
   })
+
+  usePageTitle(isLoading ? undefined : (r?.name ?? 'Researcher not found'))
 
   if (isLoading) {
     return <p className="py-20 text-center text-sm text-muted-foreground">Loading…</p>
@@ -85,7 +88,7 @@ export function ResearcherPage() {
         {r.nominations.length === 0 ? (
           <Empty>No public nominations yet.</Empty>
         ) : (
-          <div className="grid gap-3">
+          <div className="grid grid-cols-1 gap-3">
             {r.nominations.map((n) => (
               <NominationCard key={n.id} nomination={n} />
             ))}

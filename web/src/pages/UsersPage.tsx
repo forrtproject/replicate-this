@@ -6,8 +6,10 @@ import { ContactLinks } from '@/features/profile/ContactLinks'
 import { useSession } from '@/lib/auth-client'
 import { ApiError } from '@/lib/api'
 import { cn } from '@/lib/utils'
+import { usePageTitle } from '@/lib/page-title'
 
 export function UsersPage() {
+  usePageTitle('Users')
   const { data: users, isLoading } = useAdminUsers()
   const { data: session } = useSession()
   const setRole = useSetUserRole()
@@ -31,7 +33,8 @@ export function UsersPage() {
       <AdminTabs />
 
       <p className="mb-4 text-sm text-muted-foreground">
-        Everyone is pseudonymous — no names or emails are stored. You can grant or revoke
+        People appear under the display name they chose; login emails are never stored.
+        You can grant or revoke
         the <span className="font-medium text-ink">maintainer</span> role, which unlocks
         this admin area and the moderation queue.
       </p>

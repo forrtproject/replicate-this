@@ -18,8 +18,8 @@ import {
 
 const MARKDOWN_HINT = (
   <>
-    Markdown works: **bold**, *italic*, `code`, lists, &gt; quotes and [links](https://…) —
-    bare URLs are linked too.
+    Markdown works: **bold**, *italic*, `code`, lists, &gt; quotes and [links](https://…).
+    Bare URLs become links too.
   </>
 )
 
@@ -90,7 +90,7 @@ export function CommentsSection({ nominationId }: { nominationId: string }) {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={3}
-            placeholder="Add to the discussion — keep it constructive and about the work."
+            placeholder="Add to the discussion. Keep it constructive and about the work."
             className="input"
           />
           <p className="mt-1 text-xs text-muted-foreground">{MARKDOWN_HINT}</p>

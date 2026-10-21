@@ -24,6 +24,14 @@ defaults:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      # Origin of the Hono API server. The Pages site is static, so this is
+      # baked into the bundle at build time. The VITE_API_ORIGIN Actions
+      # variable (Settings > Secrets and variables > Actions > Variables)
+      # overrides it.
+      # TEMPORARY: falls back to the interim API host while the permanent one
+      # is set up. Remove the fallback once the variable points there.
+      VITE_API_ORIGIN: ${{ vars.VITE_API_ORIGIN || 'https://api-replicate-this.keeganvaz.in' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,14 +46,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # An empty value silently builds a bundle that calls the Pages origin
-      # itself (forrt.org/api), which 404s. Catch it before it ships.
+      # A malformed override would build a bundle that calls the wrong host
+      # (or forrt.org/api itself, which 404s). Catch it before it ships.
       - name: Check API origin
         run: |
-          if [ -z "$VITE_API_ORIGIN" ]; then
-            echo "VITE_API_ORIGIN is not set. Add it under Settings > Secrets and variables > Actions > Variables (not Secrets), e.g. https://api-replicate-this.keeganvaz.in" >&2
-            exit 1
-          fi
+          echo "Building against API origin: $VITE_API_ORIGIN"
           case "$VITE_API_ORIGIN" in
             https://*) ;;
             *) echo "VITE_API_ORIGIN must start with https:// — got a value that does not." >&2; exit 1 ;;
@@ -53,15 +58,9 @@ jobs:
           case "$VITE_API_ORIGIN" in
             */api|*/api/) echo "VITE_API_ORIGIN is the API origin only — drop the /api suffix, the app appends it." >&2; exit 1 ;;
           esac
-        env:
-          VITE_API_ORIGIN: ${{ vars.VITE_API_ORIGIN }}
 
       - name: Build
         run: npm run build
-        env:
-          # Origin of the Hono API server; the Pages site is static, so this is
-          # baked into the bundle at build time.
-          VITE_API_ORIGIN: ${{ vars.VITE_API_ORIGIN }}
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

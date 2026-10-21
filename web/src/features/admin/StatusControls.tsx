@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ShieldCheck } from 'lucide-react'
 import { ApiError } from '@/lib/api'
 import type { NominationStatus } from '@/types'
+import { STATUS_LABELS } from '@/features/nominations/status'
 import { useSetStatus } from './api'
 
 interface Action {
@@ -11,19 +12,19 @@ interface Action {
 }
 
 // Maintainers may advance the lifecycle or step back (revert). Completion is
-// approved here — the server refuses it until the team has posted a progress
+// approved here; the server refuses it until the team has posted a progress
 // update linking the research article.
 const ACTIONS: Partial<Record<NominationStatus, Action[]>> = {
   approved: [{ status: 'in_progress', label: 'Mark in progress' }],
   in_progress: [
     { status: 'completed', label: 'Approve completion' },
-    { status: 'approved', label: 'Revert to Open', revert: true },
+    { status: 'approved', label: `Revert to ${STATUS_LABELS.approved}`, revert: true },
   ],
   completed: [
     { status: 'published', label: 'Mark published' },
-    { status: 'in_progress', label: 'Revert to In Progress', revert: true },
+    { status: 'in_progress', label: `Revert to ${STATUS_LABELS.in_progress}`, revert: true },
   ],
-  published: [{ status: 'completed', label: 'Revert to Completed', revert: true }],
+  published: [{ status: 'completed', label: `Revert to ${STATUS_LABELS.completed}`, revert: true }],
 }
 
 export function StatusControls({

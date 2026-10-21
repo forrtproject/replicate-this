@@ -49,7 +49,7 @@ export function UpdatesSection({ nomination: n }: { nomination: NominationDetail
         Progress updates {updates && updates.length > 0 && `(${updates.length})`}
       </h2>
       <p className="mb-3 text-xs text-muted-foreground">
-        Occasional notes from the replication team on how the work is going.
+        Occasional notes from the study team on how the work is going.
       </p>
 
       {isLoading && <p className="text-sm text-muted-foreground">Loading updates…</p>}
@@ -95,7 +95,7 @@ export function UpdatesSection({ nomination: n }: { nomination: NominationDetail
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 rows={3}
-                placeholder="How is the replication going? Milestones, obstacles, preliminary findings…"
+                placeholder="How is the work going? Milestones, obstacles, preliminary findings…"
                 className="input"
               />
               <div>
@@ -106,7 +106,7 @@ export function UpdatesSection({ nomination: n }: { nomination: NominationDetail
                   className="input"
                 />
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Add this once the work is written up — a maintainer will review it and mark
+                  Add this once the work is written up. A maintainer will review it and mark
                   the study completed.
                 </p>
               </div>
@@ -136,7 +136,7 @@ export function UpdatesSection({ nomination: n }: { nomination: NominationDetail
                 Share an update
               </button>
               <p className="mt-1 text-xs text-muted-foreground">
-                Entirely optional — post only when there’s something worth sharing.
+                Optional. Post when there’s something to share.
               </p>
             </>
           )}

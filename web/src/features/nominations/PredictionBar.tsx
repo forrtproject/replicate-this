@@ -1,9 +1,11 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useSession } from '@/lib/auth-client'
+import { useToast } from '@/lib/toast'
+import { savePendingAction, takePendingAction } from '@/lib/pending-action'
 import { useSetPrediction } from './api'
-import { FORECAST_QUESTION } from './verification'
+import { FORECAST_CONSENSUS_MIN, FORECAST_QUESTION, forecastSummary } from './verification'
 import type { VerificationType } from '@/types'
 
 interface Props {
@@ -27,7 +29,12 @@ export function PredictionBar({
 }: Props) {
   const { data: session } = useSession()
   const navigate = useNavigate()
+  const location = useLocation()
   const setPrediction = useSetPrediction(nominationId)
+  // mutateAsync, not mutate's callbacks: those are skipped if the component
+  // remounts mid-request, which would save the answer without confirming it.
+  const { mutateAsync: savePrediction } = setPrediction
+  const toast = useToast()
   const [optimistic, setOptimistic] = useState<
     { mine: boolean | null; yes: number; no: number } | null
   >(null)
@@ -38,9 +45,35 @@ export function PredictionBar({
   const total = yes + no
   const yesPct = total === 0 ? 0 : Math.round((yes / total) * 100)
 
+  // Back from signing in after picking Yes/No while signed out: record that
+  // answer (a set, not a toggle) and say so, with Undo back to what was there.
+  useEffect(() => {
+    if (!session) return
+    const pending = takePendingAction('predict', nominationId, location.pathname)
+    if (!pending) return
+    const label = pending.value ? 'Yes' : 'No'
+    savePrediction(pending.value)
+      .then((res) =>
+        toast(
+          res.previous === pending.value
+            ? { message: `Your prediction was already ${label}.` }
+            : {
+                message: `Your prediction was saved: ${label}.`,
+                action: {
+                  label: 'Undo',
+                  onAction: () => void savePrediction(res.previous).catch(() => {}),
+                },
+              },
+        ),
+      )
+      .catch(() => toast({ message: 'Your prediction couldn’t be saved. Please try again.' }))
+  }, [session, nominationId, location.pathname, savePrediction, toast])
+
   function choose(value: boolean) {
+    // Signed out: remember the answer, sign in, and record it on return.
     if (!session) {
-      navigate(`/sign-in?redirect=/nominations/${nominationId}`)
+      savePendingAction({ kind: 'predict', nominationId, value }, location.pathname)
+      navigate(`/sign-in?redirect=${encodeURIComponent(location.pathname + location.search)}`)
       return
     }
     // null clears it when re-clicking the current choice
@@ -56,16 +89,10 @@ export function PredictionBar({
   }
 
   const forecast = FORECAST_QUESTION[verificationType] ?? FORECAST_QUESTION.replication
-
-  // Plain-language read of the split, so the numbers don't have to be decoded.
-  const consensus =
-    total === 0
-      ? 'Predictions are anonymous and you can change yours any time.'
-      : yesPct >= 65
-        ? forecast.yes
-        : yesPct <= 35
-          ? forecast.no
-          : 'Researchers are split on this one.'
+  // Plain-language read of the split, worded for how many responses there are.
+  const consensus = forecastSummary(verificationType, yes, no)
+  // With only a handful of responses a percentage overstates them: show counts.
+  const few = total < FORECAST_CONSENSUS_MIN
 
   return (
     <div className="flex flex-1 flex-col">
@@ -79,17 +106,22 @@ export function PredictionBar({
           </span>
         </div>
 
+        {/* Empty until someone predicts; otherwise a zero-response bar reads as all "No". */}
         <div className="flex h-2.5 overflow-hidden rounded-full bg-muted" aria-hidden>
-          <div className="bg-green transition-all" style={{ width: `${yesPct}%` }} />
-          <div className="bg-amber transition-all" style={{ width: `${100 - yesPct}%` }} />
+          {total > 0 && (
+            <>
+              <div className="bg-green transition-all" style={{ width: `${yesPct}%` }} />
+              <div className="bg-amber transition-all" style={{ width: `${100 - yesPct}%` }} />
+            </>
+          )}
         </div>
 
         <div className="flex gap-2">
           <PredictButton active={mine === true} onClick={() => choose(true)}>
-            Yes {total > 0 && <span className="data">· {yesPct}%</span>}
+            Yes {total > 0 && <span className="data">· {few ? yes : `${yesPct}%`}</span>}
           </PredictButton>
           <PredictButton active={mine === false} onClick={() => choose(false)}>
-            No {total > 0 && <span className="data">· {100 - yesPct}%</span>}
+            No {total > 0 && <span className="data">· {few ? no : `${100 - yesPct}%`}</span>}
           </PredictButton>
         </div>
       </div>

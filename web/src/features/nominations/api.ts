@@ -130,6 +130,23 @@ export function useToggleVote(nominationId: string) {
   })
 }
 
+/**
+ * Add or remove the upvote without toggling: used to finish an upvote started
+ * before sign-in, and to undo it, where a toggle could flip the wrong way.
+ * `already` is true when the vote was already in the requested state.
+ */
+export function useSetUpvote(nominationId: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (on: boolean) =>
+      on
+        ? api.put<{ upvoted: boolean; upvotes: number; already: boolean }>(`/votes/${nominationId}`)
+        : api.delete<{ upvoted: boolean; upvotes: number; already: boolean }>(`/votes/${nominationId}`),
+    onSuccess: (res) =>
+      patchAggregate(qc, nominationId, { userUpvoted: res.upvoted, upvotes: res.upvotes }),
+  })
+}
+
 export function useToggleSubscription(nominationId: string) {
   const qc = useQueryClient()
   return useMutation({
@@ -149,7 +166,13 @@ export function useSetPrediction(nominationId: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (willReplicate: boolean | null) =>
-      api.put<{ prediction: boolean | null; predictYes: number; predictNo: number }>(
+      api.put<{
+        prediction: boolean | null
+        // What it was before this change, so the change can be undone.
+        previous: boolean | null
+        predictYes: number
+        predictNo: number
+      }>(
         `/predictions/${nominationId}`,
         { willReplicate },
       ),

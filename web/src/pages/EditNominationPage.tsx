@@ -8,12 +8,14 @@ import {
 import { useSession } from '@/lib/auth-client'
 import { ApiError } from '@/lib/api'
 import type { NominationDetail } from '@/types'
+import { usePageTitle } from '@/lib/page-title'
 
 const EDITABLE_STATUSES = ['pending', 'approved']
 
 export function EditNominationPage() {
   const { id = '' } = useParams()
   const { data: n, isLoading } = useNomination(id)
+  usePageTitle(isLoading ? undefined : n ? `Edit: ${n.metadata.title || n.doi || 'nomination'}` : 'Nomination not found')
   const { data: session } = useSession()
   const isMaintainer = (session?.user as { role?: string } | undefined)?.role === 'maintainer'
 
@@ -30,7 +32,7 @@ export function EditNominationPage() {
     : !(n.viewerIsNominator || isMaintainer)
       ? 'Only the nominator or a maintainer can edit this nomination.'
       : !EDITABLE_STATUSES.includes(n.status)
-        ? 'This nomination can no longer be edited — replication work has started or it was rejected.'
+        ? 'This nomination can no longer be edited, because work on it has started or it was rejected.'
         : null
 
   if (blocked || !n) {
@@ -97,8 +99,8 @@ function EditForm({ nomination: n }: { nomination: NominationDetail }) {
       <p className="data mb-4 text-sm text-muted-foreground">{n.doi ?? 'No DOI'}</p>
 
       <p className="mb-6 text-sm text-muted-foreground">
-        The paper’s reference can’t be changed — nominate a new study instead if you picked
-        the wrong paper. Saving your changes sends the nomination back under review.
+        The paper’s reference can’t be changed. If you picked the wrong paper, nominate the
+        right one instead. Saving your changes sends the nomination back for review.
       </p>
 
       <form onSubmit={onSubmit} className="space-y-5">

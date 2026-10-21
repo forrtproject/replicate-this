@@ -1,4 +1,4 @@
-# Local development database. Production uses Postgres on the Münster server.
+# Local development database. Production uses the Postgres instance on the API server.
 services:
   db:
     image: postgres:17-alpine

@@ -1,25 +1,25 @@
 import { cn } from '@/lib/utils'
 import type { NominationStatus } from '@/types'
+import { STATUS_LABELS } from './status'
 
-const CONFIG: Record<NominationStatus, { label: string; className: string }> = {
-  pending: { label: 'Under Review', className: 'bg-amber-50 text-amber-700' },
-  approved: { label: 'Open', className: 'bg-green-tint text-forest' },
-  in_progress: { label: 'In Progress', className: 'bg-amber-100 text-amber-800' },
-  completed: { label: 'Completed', className: 'bg-green-tint text-forest' },
-  published: { label: 'Published', className: 'bg-green text-white' },
-  rejected: { label: 'Rejected', className: 'bg-amber/10 text-amber' },
+const STYLES: Record<NominationStatus, string> = {
+  pending: 'bg-amber-50 text-amber-700',
+  approved: 'bg-green-tint text-forest',
+  in_progress: 'bg-amber-100 text-amber-800',
+  completed: 'bg-green-tint text-forest',
+  published: 'bg-green text-white',
+  rejected: 'bg-amber/10 text-amber',
 }
 
 export function StatusBadge({ status }: { status: NominationStatus }) {
-  const { label, className } = CONFIG[status]
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
-        className,
+        'inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium',
+        STYLES[status],
       )}
     >
-      {label}
+      {STATUS_LABELS[status]}
     </span>
   )
 }

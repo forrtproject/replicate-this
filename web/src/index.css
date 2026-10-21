@@ -14,9 +14,9 @@
   --color-muted-foreground: #5f6b66;
   --color-border: #e5e2d9;
   --color-input: #d7d3c8;
-  --color-ring: #059669;
+  --color-ring: #047857;
 
-  --color-primary: #059669;
+  --color-primary: #047857;
   --color-primary-foreground: #ffffff;
 
   --color-secondary: #f1efe8;
@@ -35,7 +35,7 @@
   --color-ink: #17211f;
   --color-paper: #faf9f5;
   --color-forest: #0a5c47;
-  --color-green: #059669;
+  --color-green: #047857; /* 4.97:1 or better on paper, white and tint */
   --color-green-tint: #ecf6f1;
   --color-amber: #b4531a;
   --color-line: #e5e2d9;
@@ -53,6 +53,11 @@ body,
   height: 100%;
 }
 
+/* Keep in-page jumps and keyboard focus clear of the sticky header (57px). */
+html {
+  scroll-padding-top: 4.5rem;
+}
+
 body {
   margin: 0;
   background-color: var(--color-paper);
@@ -60,6 +65,15 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+/* Tailwind v4 gives buttons the default arrow cursor; show the hand on every
+   clickable button, as links already do. Disabled ones keep the arrow. */
+@layer base {
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
 }
 
 h1,
@@ -85,8 +99,14 @@ h3 {
   border: 1px solid var(--color-input);
   background: var(--color-card);
   padding: 0.5rem 0.625rem;
-  font-size: 0.875rem;
+  /* 16px on phones: iOS Safari zooms into any field set smaller when tapped. */
+  font-size: 1rem;
   color: var(--color-ink);
+}
+@media (min-width: 640px) {
+  .input {
+    font-size: 0.875rem;
+  }
 }
 .input:focus {
   outline: 2px solid var(--color-ring);
@@ -107,7 +127,8 @@ h3 {
 }
 .markdown h1,
 .markdown h2,
-.markdown h3 {
+.markdown h3,
+.markdown h4 {
   font-family: var(--font-display);
   font-weight: 600;
   line-height: 1.25;
@@ -121,6 +142,10 @@ h3 {
 }
 .markdown h3 {
   font-size: 1.02rem;
+}
+/* Only reached by documents embedded with headings shifted down a level. */
+.markdown h4 {
+  font-size: 0.95rem;
 }
 .markdown p {
   margin: 0.75em 0;

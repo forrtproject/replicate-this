@@ -15,6 +15,7 @@ import {
 import { StatusBadge } from '@/features/nominations/StatusBadge'
 import { VerificationBadge } from '@/features/nominations/VerificationBadge'
 import type { NominationSummary, NominationStatus } from '@/types'
+import { usePageTitle } from '@/lib/page-title'
 
 interface MyNomination {
   id: string
@@ -34,6 +35,7 @@ function useMyNominations() {
 }
 
 export function DashboardPage() {
+  usePageTitle('Dashboard')
   const { data: session } = useSession()
   const nominations = useMyNominations()
   const contributions = useMyContributions()
@@ -171,13 +173,13 @@ function GetStarted() {
       to: '/nominations?status=approved',
       icon: Compass,
       title: 'Find a study to work on',
-      body: 'Open nominations are waiting for a team. Join one and coordinate in its Slack channel.',
+      body: 'Studies marked “Looking for contributors” are waiting for a team. Join one and contact the other members from its page.',
     },
     {
       to: '/nominate',
       icon: FilePlus2,
       title: 'Nominate a study',
-      body: 'Know a finding that deserves a second look? Add it in a couple of minutes.',
+      body: 'Add a finding that deserves a second look. It takes a couple of minutes.',
     },
     {
       to: '/profile',
@@ -190,7 +192,7 @@ function GetStarted() {
     <section className="rounded-xl border border-green/30 bg-green-tint p-5">
       <p className="eyebrow">Get started</p>
       <h2 className="mt-1 font-display text-xl font-semibold">
-        Welcome! Here’s where you can make a difference.
+        Three ways to start
       </h2>
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         {steps.map(({ to, icon: Icon, title, body }) => (
@@ -231,7 +233,7 @@ function LookingForContributors() {
       </div>
       {suggestions.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          No open studies need a team right now — check back soon, or{' '}
+          No open studies need a team right now. Check back soon, or{' '}
           <Link to="/nominate" className="text-green underline">
             nominate one
           </Link>

@@ -5,7 +5,7 @@ part of science. Everyone who takes part agrees to uphold this code.
 
 ## Our commitments
 
-- **Focus on the work, not the people.** Discuss findings, methods, and evidence —
+- **Focus on the work, not the people.** Discuss findings, methods, and evidence,
   never the character, competence, or motives of researchers.
 - **Assume good faith.** Original authors, nominators, and replicators are all
   contributing to a healthier scientific record.

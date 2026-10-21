@@ -1,3 +1,4 @@
+import { cloneElement, useId } from 'react'
 import {
   DISCIPLINES,
   AVAILABILITY_OPTIONS,
@@ -46,7 +47,7 @@ export function NominationFormFields({
 
   return (
     <>
-      <Field label="Discipline">
+      <Field label="Discipline" required>
         <select
           value={values.discipline}
           onChange={(e) => set({ discipline: e.target.value })}
@@ -63,7 +64,7 @@ export function NominationFormFields({
       </Field>
 
       {values.discipline === 'Other' && (
-        <Field label="Please specify the discipline">
+        <Field label="Please specify the discipline" required>
           <input
             value={values.disciplineOther}
             onChange={(e) => set({ disciplineOther: e.target.value })}
@@ -79,15 +80,15 @@ export function NominationFormFields({
       <fieldset>
         <legend className="mb-1 text-sm font-medium">Replication or reproduction?</legend>
         <p className="mb-2 text-xs text-muted-foreground">
-          <DefinedTerm term="Reproduction" /> re-runs the original data or code — including
-          simulation and other computational studies — and/or checks the results are robust
-          to other reasonable analyses; <DefinedTerm term="Replication" /> collects new data.
+          <DefinedTerm term="Reproduction" /> re-runs the original data or code (including
+          simulation and other computational studies) and/or checks the results hold up under
+          other reasonable analyses. <DefinedTerm term="Replication" /> collects new data.
         </p>
         <div className="space-y-1.5">
           {(
             [
-              ['replication', 'Replication — collect new data'],
-              ['reproduction', 'Reproduction — re-run the original data/code, and/or check robustness'],
+              ['replication', 'Replication (collect new data)'],
+              ['reproduction', 'Reproduction (re-run the original data or code, and/or check robustness)'],
               ['both', 'Either / not sure'],
             ] as const
           ).map(([value, label]) => (
@@ -108,12 +109,14 @@ export function NominationFormFields({
 
       <Field
         label="Scientific justification"
-        hint="Why is this paper valuable to replicate or reproduce? e.g. highly influential, surprising results, methodologically innovative."
+        required
+        hint="Why is this paper valuable to replicate or reproduce? e.g. highly influential, surprising results, methodologically innovative. At least 20 characters."
       >
         <textarea
           value={values.justification}
           onChange={(e) => set({ justification: e.target.value })}
           required
+          minLength={20}
           rows={4}
           className="input"
         />
@@ -182,8 +185,13 @@ export function NominationFormFields({
                   </span>
                 </label>
                 {checked && (
-                  <div className="mt-1.5 pl-6">
+                  <label className="mt-1.5 block pl-6">
+                    <span className="mb-1 block text-xs font-medium">
+                      Link to {o.label.toLowerCase()}{' '}
+                      <span className="font-normal text-muted-foreground">(optional)</span>
+                    </span>
                     <input
+                      type="url"
                       value={values.availabilityLinks[o.key] ?? ''}
                       onChange={(e) =>
                         set({
@@ -193,10 +201,10 @@ export function NominationFormFields({
                           },
                         })
                       }
-                      placeholder={`Link to ${o.label.toLowerCase()} (optional)`}
+                      placeholder="https://"
                       className="input"
                     />
-                  </div>
+                  </label>
                 )}
               </div>
             )
@@ -255,20 +263,39 @@ export function NominationFormFields({
   )
 }
 
+/**
+ * A labelled form control. The hint is linked as the control's description,
+ * not folded into its label, so screen readers announce a short name ("Title")
+ * followed by the guidance. Expects a single input, select or textarea child.
+ */
 export function Field({
   label,
   hint,
+  required = false,
   children,
 }: {
   label: string
   hint?: string
-  children: React.ReactNode
+  /** Shows "(required)" after the label; the control itself carries `required`. */
+  required?: boolean
+  children: React.ReactElement<{ id?: string; 'aria-describedby'?: string }>
 }) {
+  const id = useId()
+  const hintId = `${id}-hint`
+  const describedBy =
+    [children.props['aria-describedby'], hint && hintId].filter(Boolean).join(' ') || undefined
   return (
-    <label className="block">
-      <span className="mb-1 block text-sm font-medium">{label}</span>
-      {children}
-      {hint && <span className="mt-1 block text-xs text-muted-foreground">{hint}</span>}
-    </label>
+    <div>
+      <label htmlFor={id} className="mb-1 block text-sm font-medium">
+        {label}
+        {required && <span className="font-normal text-muted-foreground"> (required)</span>}
+      </label>
+      {cloneElement(children, { id, 'aria-describedby': describedBy })}
+      {hint && (
+        <p id={hintId} className="mt-1 text-xs text-muted-foreground">
+          {hint}
+        </p>
+      )}
+    </div>
   )
 }

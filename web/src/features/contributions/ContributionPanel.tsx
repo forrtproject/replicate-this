@@ -13,8 +13,9 @@ import {
 import { ResearcherLink } from '@/features/profile/ResearcherLink'
 import { ContactLinks } from '@/features/profile/ContactLinks'
 import { AvatarBubble } from '@/features/profile/AvatarEditor'
-// Slack integration is on hold — the SlackJoinPanel and its backend are kept
+// Slack integration is on hold. The SlackJoinPanel and its backend are kept
 // intact but not rendered. Re-import and restore the block below to re-enable.
+import { APPROACH_COPY } from '@/features/nominations/verification'
 import type { NominationDetail } from '@/types'
 
 export function ContributionPanel({ nomination: n }: { nomination: NominationDetail }) {
@@ -30,9 +31,10 @@ export function ContributionPanel({ nomination: n }: { nomination: NominationDet
   const [inquirySent, setInquirySent] = useState(false)
 
   const isOwner = n.viewerIsNominator
+  const copy = APPROACH_COPY[n.verificationType] ?? APPROACH_COPY.both
   const requireLogin = () => navigate(`/sign-in?redirect=/nominations/${n.id}`)
 
-  // Roster of the replication team, shown once the study is in progress.
+  // Roster of the study team, shown once the study is in progress.
   const showRoster = n.status === 'in_progress' || n.contributions > 0
   const { data: team } = useContributors(n.id, showRoster)
   const contributors = team?.contributors
@@ -50,11 +52,11 @@ export function ContributionPanel({ nomination: n }: { nomination: NominationDet
 
   return (
     <div className="space-y-6 rounded-lg border border-border bg-card p-4">
-      {/* Replication team roster */}
+      {/* Study team roster */}
       {showRoster && contributors && contributors.length > 0 && (
         <section>
           <h2 className="mb-2 text-sm font-semibold">
-            Replication team ({contributors.length})
+            {copy.team} ({contributors.length})
           </h2>
           <ul className="space-y-2">
             {contributors.map((ct) => {
@@ -127,10 +129,8 @@ export function ContributionPanel({ nomination: n }: { nomination: NominationDet
 
       {/* Contribute */}
       <section className={showRoster && contributors?.length ? 'border-t border-border pt-4' : ''}>
-        <h2 className="mb-1 text-sm font-semibold">Replicate this study</h2>
-        <p className="mb-3 text-xs text-muted-foreground">
-          Signal your intent to run a replication.
-        </p>
+        <h2 className="mb-1 text-sm font-semibold">{copy.join}</h2>
+        <p className="mb-3 text-xs text-muted-foreground">{copy.joinHint}</p>
 
         {isOwner ? (
           <p className="text-sm text-muted-foreground">You nominated this study.</p>

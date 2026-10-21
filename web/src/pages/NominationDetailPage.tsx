@@ -1,4 +1,4 @@
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom'
 import { ExternalLink, Pencil, Bell, BellOff } from 'lucide-react'
 import { useNomination, useToggleSubscription } from '@/features/nominations/api'
 import { useSession } from '@/lib/auth-client'
@@ -17,10 +17,12 @@ import { ContactLinks } from '@/features/profile/ContactLinks'
 import { RichText } from '@/components/ui/RichText'
 import { ContributionPanel } from '@/features/contributions/ContributionPanel'
 import { CommentsSection } from '@/features/comments/CommentsSection'
+import { usePageTitle } from '@/lib/page-title'
 
 export function NominationDetailPage() {
   const { id = '' } = useParams()
   const { data: n, isLoading, isError, error } = useNomination(id)
+  usePageTitle(isLoading ? undefined : n ? n.metadata.title || n.doi || 'Nomination' : 'Nomination not found')
   const { data: session } = useSession()
   const isMaintainer = (session?.user as { role?: string } | undefined)?.role === 'maintainer'
 
@@ -48,12 +50,7 @@ export function NominationDetailPage() {
 
   return (
     <article className="mx-auto max-w-3xl px-4 py-10">
-      <Link
-        to="/nominations"
-        className="text-sm text-muted-foreground hover:text-green"
-      >
-        ← Nominations
-      </Link>
+      <BackLink />
 
       <div className="mb-2 mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
         <span className="rounded-full bg-muted px-2 py-0.5 text-ink/70">{disciplineLabel(n)}</span>
@@ -78,7 +75,7 @@ export function NominationDetailPage() {
         <SubscribeButton nomination={n} signedIn={!!session} />
       </div>
 
-      <h1 className="font-display text-4xl font-semibold leading-tight">
+      <h1 className="font-display text-3xl font-semibold leading-tight [overflow-wrap:anywhere] sm:text-4xl">
         {n.metadata.title || n.doi}
       </h1>
       <p className="mt-2 text-sm text-muted-foreground">{formatReference(n.metadata)}</p>
@@ -136,7 +133,7 @@ export function NominationDetailPage() {
           <p className="eyebrow">Community forecast</p>
           <p className="mb-3 mt-1 text-xs text-muted-foreground">
             {predictionsTotal === 0
-              ? 'No predictions yet — be the first.'
+              ? 'No predictions yet. Be the first.'
               : 'What researchers predict the outcome will be.'}
           </p>
           <PredictionBar
@@ -209,6 +206,33 @@ function SubscribeButton({
       {n.userSubscribed ? 'Unsubscribe' : 'Subscribe'}
       <span className="text-muted-foreground">{n.subscribers}</span>
     </button>
+  )
+}
+
+/**
+ * Back to wherever the reader opened this study from. Arriving from a card, the
+ * list's filters and sort travel in router state; going back through history
+ * (rather than linking to a fresh list) also restores the scroll position.
+ * Opened directly, it falls back to the full list.
+ */
+function BackLink() {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const from = (location.state as { from?: string } | null)?.from
+  const toList = !from || from.startsWith('/nominations')
+  return (
+    <Link
+      to={from ?? '/nominations'}
+      onClick={(e) => {
+        if (from && window.history.length > 1) {
+          e.preventDefault()
+          navigate(-1)
+        }
+      }}
+      className="text-sm text-muted-foreground hover:text-green"
+    >
+      ← {toList ? 'Nominations' : 'Back'}
+    </Link>
   )
 }
 

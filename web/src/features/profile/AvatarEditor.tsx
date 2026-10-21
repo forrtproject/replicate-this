@@ -8,7 +8,7 @@ import { useUpdateAvatar } from './api'
 const QUICK_EMOJI = ['🔬', '🧪', '🧬', '🔭', '📊', '📈', '🧠', '⚗️', '🦠', '📚', '🤖', '🌌']
 
 /** True when the stored avatar value is an inline image rather than an emoji. */
-export function isImageAvatar(image: string | undefined): boolean {
+function isImageAvatar(image: string | undefined): boolean {
   return !!image && image.startsWith('data:image/')
 }
 
@@ -169,6 +169,7 @@ export function AvatarEditor({ current, name }: { current: string; name?: string
                 emoji === e ? 'ring-2 ring-green' : ''
               }`}
               aria-label={`Use ${e}`}
+              aria-pressed={emoji === e}
             >
               <AvatarBubble image={e} className="h-9 w-9 text-lg" />
             </button>
@@ -243,6 +244,7 @@ function EmojiPicker({
                       setOpen(false)
                     }}
                     aria-label={`Use ${e}`}
+                    aria-pressed={selected === e}
                     className={`flex h-8 w-8 items-center justify-center rounded-md text-xl leading-none hover:bg-muted ${
                       selected === e ? 'bg-green-tint ring-1 ring-green' : ''
                     }`}

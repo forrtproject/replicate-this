@@ -39,6 +39,13 @@ predictionsRouter.put('/:nominationId', async (c) => {
     eq(schema.predictions.nominationId, nominationId),
     eq(schema.predictions.userUid, user.id),
   )
+  // Returned so the client can offer Undo back to exactly what was there.
+  const [prior] = await db
+    .select({ willReplicate: schema.predictions.willReplicate })
+    .from(schema.predictions)
+    .where(where)
+    .limit(1)
+  const previous = prior ? prior.willReplicate : null
 
   if (value === null) {
     await db.delete(schema.predictions).where(where)
@@ -52,5 +59,5 @@ predictionsRouter.put('/:nominationId', async (c) => {
       })
   }
 
-  return c.json({ prediction: value, ...(await counts(nominationId)) })
+  return c.json({ prediction: value, previous, ...(await counts(nominationId)) })
 })

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react'
 import {
@@ -12,9 +12,12 @@ import {
   type NominationFormValues,
 } from '@/features/nominations/NominationFormFields'
 import { formatReference } from '@/features/nominations/format'
+import { yearError } from '@/features/nominations/reference'
+import { useDebounced } from '@/lib/hooks'
 import { ApiError } from '@/lib/api'
 import { MarkdownDoc } from '@/components/ui/MarkdownDoc'
 import type { NominationMetadata } from '@/types'
+import { usePageTitle } from '@/lib/page-title'
 
 const EMPTY_FORM: NominationFormValues = {
   discipline: '',
@@ -38,23 +41,57 @@ const EMPTY_REFERENCE: NominationMetadata = {
   url: '',
 }
 
-/** Waits for typing to pause before a value is used (here: before DOI lookups). */
-function useDebounced<T>(value: T, ms: number): T {
-  const [debounced, setDebounced] = useState(value)
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(value), ms)
-    return () => clearTimeout(t)
-  }, [value, ms])
-  return debounced
+// An unsent nomination survives an accidental reload, for this tab only.
+const DRAFT_KEY = 'rt:nominate-draft'
+
+interface Draft {
+  doi: string
+  values: NominationFormValues
+  noDoi: boolean
+  manual: NominationMetadata | null
+}
+
+function loadDraft(): Draft | null {
+  try {
+    const raw = sessionStorage.getItem(DRAFT_KEY)
+    if (!raw) return null
+    const draft = JSON.parse(raw) as Draft
+    // A visit where nothing was typed isn't worth "restoring".
+    const v = draft.values
+    const typed =
+      draft.doi.trim() ||
+      draft.manual?.title.trim() ||
+      v.discipline ||
+      v.justification.trim() ||
+      v.dataLocation.trim() ||
+      v.robustnessChecks.trim() ||
+      v.designDeviations.trim() ||
+      v.availability.length > 0
+    return typed ? draft : null
+  } catch {
+    return null
+  }
+}
+
+function clearDraft() {
+  try {
+    sessionStorage.removeItem(DRAFT_KEY)
+  } catch {
+    // Storage unavailable (private mode): nothing was saved.
+  }
 }
 
 export function NominatePage() {
+  usePageTitle('Nominate a study')
   const navigate = useNavigate()
   const submit = useSubmitNomination()
 
-  const [doi, setDoi] = useState('')
-  const [values, setValues] = useState<NominationFormValues>(EMPTY_FORM)
+  const [draft] = useState(loadDraft)
+  const [doi, setDoi] = useState(draft?.doi ?? '')
+  const [values, setValues] = useState<NominationFormValues>(draft?.values ?? EMPTY_FORM)
   const [agreed, setAgreed] = useState(false)
+  const [agreeError, setAgreeError] = useState(false)
+  const [restored, setRestored] = useState(!!draft)
   const [showGuidelines, setShowGuidelines] = useState(true)
 
   const [error, setError] = useState<string | null>(null)
@@ -62,10 +99,37 @@ export function NominatePage() {
 
   // A hand-entered reference: for papers without a DOI, or when a DOI can't be
   // resolved automatically.
-  const [noDoi, setNoDoi] = useState(false)
-  const [manual, setManual] = useState<NominationMetadata | null>(null)
+  const [noDoi, setNoDoi] = useState(draft?.noDoi ?? false)
+  const [manual, setManual] = useState<NominationMetadata | null>(draft?.manual ?? null)
 
-  const lookup = useDoiLookup(useDebounced(noDoi ? '' : doi, 500))
+  const doiRef = useRef<HTMLInputElement>(null)
+  const agreeRef = useRef<HTMLInputElement>(null)
+  const errorRef = useRef<HTMLParagraphElement>(null)
+
+  // Save as the reader types. Agreement to the Code of Conduct is never saved.
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ doi, values, noDoi, manual }))
+    } catch {
+      // Storage unavailable: the form still works, it just isn't saved.
+    }
+  }, [doi, values, noDoi, manual])
+
+  function startOver() {
+    clearDraft()
+    setDoi('')
+    setValues(EMPTY_FORM)
+    setNoDoi(false)
+    setManual(null)
+    setRestored(false)
+    setError(null)
+  }
+
+  const settledDoi = useDebounced(noDoi ? '' : doi, 500)
+  const lookup = useDoiLookup(settledDoi)
+  // Typed something that can't be a DOI: say so once typing pauses.
+  const malformedDoi = settledDoi.trim() !== '' && !doiCandidate(settledDoi)
+  const manualYearError = manual ? yearError(manual.publication_date) : null
   const lookupError = lookup.error instanceof ApiError ? lookup.error : null
   const lookupData = lookupError?.data as { allowManual?: boolean; existingId?: string } | undefined
   const duplicateId = lookup.data?.existingId ?? lookupData?.existingId ?? null
@@ -76,16 +140,33 @@ export function NominatePage() {
     setManual(value ? (manual ?? EMPTY_REFERENCE) : null)
   }
 
+  // The browser has already checked required fields and lengths by the time
+  // this runs. These checks say what is missing beside the field concerned and
+  // move focus there, instead of leaving Submit greyed out with no reason.
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
     setExistingId(null)
+    if (!noDoi && duplicateId) {
+      doiRef.current?.focus()
+      return
+    }
+    if (manualYearError) {
+      document.getElementById('manual-year')?.focus()
+      return
+    }
+    if (!agreed) {
+      setAgreeError(true)
+      agreeRef.current?.focus()
+      return
+    }
     try {
       const { id } = await submit.mutateAsync({
         ...(noDoi ? { noDoi: true } : { doi }),
         ...values,
         metadata: manual ?? undefined,
       })
+      clearDraft()
       navigate(`/nominations/${id}`)
     } catch (err) {
       if (err instanceof ApiError) {
@@ -96,13 +177,15 @@ export function NominatePage() {
       } else {
         setError('Something went wrong. Please try again.')
       }
+      // Move focus to the message so keyboard and screen-reader users land on it.
+      window.requestAnimationFrame(() => errorRef.current?.focus())
     }
   }
 
   return (
     <div className="mx-auto max-w-xl px-4 py-10">
       <p className="eyebrow">Add to the registry</p>
-      <h1 className="mb-4 mt-1 font-display text-3xl font-semibold">Nominate a Study</h1>
+      <h1 className="mb-4 mt-1 font-display text-3xl font-semibold">Nominate a study</h1>
 
       {/* Read before writing: the guidelines and Code of Conduct come first. */}
       <div className="mb-6 rounded-lg border border-line bg-muted/40">
@@ -117,7 +200,7 @@ export function NominatePage() {
         </button>
         {showGuidelines && (
           <div className="max-h-72 overflow-y-auto border-t border-line px-4 py-3">
-            <MarkdownDoc src="/nomination-guidelines.md" />
+            <MarkdownDoc src="/nomination-guidelines.md" nested />
           </div>
         )}
         <p className="flex items-start gap-2 border-t border-line px-4 py-3 text-sm">
@@ -127,21 +210,36 @@ export function NominatePage() {
             <Link to="/code-of-conduct" target="_blank" className="font-medium text-green underline">
               Code of Conduct
             </Link>{' '}
-            or they won’t be approved. Nominations appear right away with an “Under Review”
-            tag; a maintainer reviews them shortly after.
+            or they won’t be approved. Nominations appear right away marked “Pending review”
+            until a maintainer reviews them.
           </span>
         </p>
       </div>
 
       <form onSubmit={onSubmit} className="space-y-5">
+        {restored && (
+          <p className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-line bg-muted/40 px-3 py-2 text-sm">
+            <span>We restored the nomination you were writing in this tab.</span>
+            <button
+              type="button"
+              onClick={startOver}
+              className="font-medium text-green underline hover:text-forest"
+            >
+              Start over
+            </button>
+          </p>
+        )}
         <fieldset className="space-y-3">
           <legend className="mb-1 text-sm font-medium">The paper</legend>
           {!noDoi && (
             <Field
               label="DOI"
-              hint="The paper’s Digital Object Identifier, e.g. 10.1257/aer.20190539 — we look up the reference for you."
+              required
+              hint="The paper’s Digital Object Identifier, e.g. 10.1257/aer.20190539. We look up the reference for you."
             >
               <input
+                ref={doiRef}
+                aria-describedby="doi-status"
                 value={doi}
                 onChange={(e) => {
                   setDoi(e.target.value)
@@ -154,16 +252,29 @@ export function NominatePage() {
             </Field>
           )}
 
-          {!noDoi && doiCandidate(doi) && (
-            <DoiPreview
-              loading={lookup.isFetching}
-              metadata={lookup.data?.metadata}
-              error={lookupError?.message}
-              duplicateId={duplicateId}
-              canEnterManually={!!lookupData?.allowManual && !manual}
-              onEnterManually={() => setManual(EMPTY_REFERENCE)}
-            />
-          )}
+          {/* Always mounted: a live region must exist before its content changes
+              for screen readers to announce the lookup result. */}
+          <div id="doi-status" role="status" aria-live="polite">
+            {!noDoi && malformedDoi && (
+              <p className="flex items-start gap-2 rounded-md border border-amber/30 bg-amber/10 px-3 py-2 text-sm">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber" aria-hidden />
+                <span>
+                  That doesn’t look like a DOI. DOIs start with “10.”, for example
+                  10.1257/aer.20190539. If the paper has none, tick the box below.
+                </span>
+              </p>
+            )}
+            {!noDoi && doiCandidate(doi) && (
+              <DoiPreview
+                loading={lookup.isFetching}
+                metadata={lookup.data?.metadata}
+                error={lookupError?.message}
+                duplicateId={duplicateId}
+                canEnterManually={!!lookupData?.allowManual && !manual}
+                onEnterManually={() => setManual(EMPTY_REFERENCE)}
+              />
+            )}
+          </div>
 
           <label className="flex items-center gap-2 text-sm">
             <input
@@ -172,7 +283,7 @@ export function NominatePage() {
               onChange={(e) => chooseNoDoi(e.target.checked)}
               className="accent-primary"
             />
-            This paper has no DOI — I’ll enter the reference myself
+            Enter the reference manually (the paper has no DOI)
           </label>
 
           {manual && (
@@ -180,9 +291,14 @@ export function NominatePage() {
               <p className="text-xs text-muted-foreground">
                 {noDoi
                   ? 'Enter the reference so others can find the paper.'
-                  : 'We couldn’t resolve that DOI — enter the reference so others can find the paper.'}
+                  : 'We couldn’t look up that DOI. Enter the reference so others can find the paper.'}
               </p>
-              <ManualFields manual={manual} onChange={setManual} withUrl={noDoi} />
+              <ManualFields
+                manual={manual}
+                onChange={setManual}
+                withUrl={noDoi}
+                yearError={manualYearError}
+              />
             </div>
           )}
         </fieldset>
@@ -191,9 +307,15 @@ export function NominatePage() {
 
         <label className="flex items-start gap-2 text-sm">
           <input
+            ref={agreeRef}
             type="checkbox"
             checked={agreed}
-            onChange={(e) => setAgreed(e.target.checked)}
+            onChange={(e) => {
+              setAgreed(e.target.checked)
+              if (e.target.checked) setAgreeError(false)
+            }}
+            aria-invalid={agreeError}
+            aria-describedby={agreeError ? 'agree-error' : undefined}
             className="mt-0.5 accent-primary"
           />
           <span>
@@ -204,9 +326,14 @@ export function NominatePage() {
             , and this nomination is constructive and about the work, not the authors.
           </span>
         </label>
+        {agreeError && (
+          <p id="agree-error" role="alert" className="-mt-3 text-sm text-destructive">
+            Tick this box to confirm you agree to the Code of Conduct.
+          </p>
+        )}
 
         {error && (
-          <p className="text-sm text-destructive">
+          <p ref={errorRef} tabIndex={-1} role="alert" className="text-sm text-destructive focus:outline-none">
             {error}{' '}
             {existingId && (
               <Link to={`/nominations/${existingId}`} className="underline">
@@ -218,7 +345,7 @@ export function NominatePage() {
 
         <button
           type="submit"
-          disabled={submit.isPending || !agreed || (!noDoi && !!duplicateId)}
+          disabled={submit.isPending}
           className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
         >
           {submit.isPending ? 'Submitting…' : 'Submit nomination'}
@@ -256,9 +383,9 @@ function DoiPreview({
       <p className="flex items-start gap-2 rounded-md border border-amber/30 bg-amber/10 px-3 py-2 text-sm">
         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber" />
         <span>
-          This study has already been nominated —{' '}
+          This study has already been nominated.{' '}
           <Link to={`/nominations/${duplicateId}`} className="font-medium text-green underline">
-            add your vote there instead
+            Upvote it there instead
           </Link>
           .
         </span>
@@ -298,61 +425,79 @@ function ManualFields({
   manual,
   onChange,
   withUrl,
+  yearError,
 }: {
   manual: NominationMetadata
   onChange: (m: NominationMetadata) => void
   withUrl: boolean
+  yearError: string | null
 }) {
+  // The raw text, so a just-typed ";" survives until the next author is typed.
+  const [authorsText, setAuthorsText] = useState(manual.authors.join('; '))
+
   return (
     <>
-      <input
-        value={manual.title}
-        onChange={(e) => onChange({ ...manual, title: e.target.value })}
-        placeholder="Title"
-        aria-label="Title"
-        required
-        className="input"
-      />
-      <input
-        value={manual.authors.join('; ')}
-        onChange={(e) =>
-          onChange({
-            ...manual,
-            authors: e.target.value
-              .split(';')
-              .map((s) => s.trim())
-              .filter(Boolean),
-          })
-        }
-        placeholder="Authors (separate with ;)"
-        aria-label="Authors"
-        className="input"
-      />
-      <div className="grid gap-3 sm:grid-cols-[1fr_8rem]">
+      <Field label="Title" required>
         <input
-          value={manual.journal}
-          onChange={(e) => onChange({ ...manual, journal: e.target.value })}
-          placeholder="Journal, book or venue"
-          aria-label="Journal"
+          value={manual.title}
+          onChange={(e) => onChange({ ...manual, title: e.target.value })}
+          required
           className="input"
         />
+      </Field>
+      <Field label="Authors" hint="Separate authors with semicolons, e.g. Smith, J.; Lee, K.">
         <input
-          value={manual.publication_date}
-          onChange={(e) => onChange({ ...manual, publication_date: e.target.value })}
-          placeholder="Year"
-          aria-label="Year"
+          value={authorsText}
+          onChange={(e) => {
+            setAuthorsText(e.target.value)
+            onChange({
+              ...manual,
+              authors: e.target.value
+                .split(';')
+                .map((a) => a.trim())
+                .filter(Boolean),
+            })
+          }}
           className="input"
         />
+      </Field>
+      <div className="grid gap-3 sm:grid-cols-[1fr_9rem]">
+        <Field label="Journal or venue" hint="Journal, book, conference or repository.">
+          <input
+            value={manual.journal}
+            onChange={(e) => onChange({ ...manual, journal: e.target.value })}
+            className="input"
+          />
+        </Field>
+        <label className="block">
+          <span className="mb-1 block text-sm font-medium">Year</span>
+          <input
+            id="manual-year"
+            value={manual.publication_date}
+            onChange={(e) => onChange({ ...manual, publication_date: e.target.value })}
+            inputMode="numeric"
+            maxLength={4}
+            aria-invalid={!!yearError}
+            aria-describedby="year-help"
+            className="input"
+          />
+          <span
+            id="year-help"
+            className={`mt-1 block text-xs ${yearError ? 'text-destructive' : 'text-muted-foreground'}`}
+          >
+            {yearError ?? 'Four digits, e.g. 2015.'}
+          </span>
+        </label>
       </div>
       {withUrl && (
-        <input
-          type="url"
-          value={manual.url ?? ''}
-          onChange={(e) => onChange({ ...manual, url: e.target.value })}
-          placeholder="Link to the paper (https://…)"
-          aria-label="Link to the paper"
-          className="input"
-        />
+        <Field label="Link to the paper" hint="Where readers can find it, starting https://">
+          <input
+            type="url"
+            value={manual.url ?? ''}
+            onChange={(e) => onChange({ ...manual, url: e.target.value })}
+            className="input"
+          />
+        </Field>
       )}
     </>
   )

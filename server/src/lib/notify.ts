@@ -46,7 +46,7 @@ const SUBJECTS: Record<string, string> = {
   nomination_admin_edited: 'A maintainer edited your nomination',
   new_contribution: 'Someone is contributing to your nomination',
   new_inquiry: 'You received a new inquiry',
-  team_member_joined: 'Someone joined a replication team you’re on',
+  team_member_joined: 'Someone joined a study team you’re on',
   watched_comment: 'New comment on a study you subscribe to',
   watched_update: 'New progress update on a study you subscribe to',
   watched_contribution: 'New contributor on a study you subscribe to',

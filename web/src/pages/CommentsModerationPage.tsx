@@ -4,8 +4,10 @@ import { useAdminComments, useHideComment, type AdminComment } from '@/features/
 import { AdminTabs } from '@/features/admin/AdminTabs'
 import { researcherLabel } from '@/features/nominations/format'
 import { RichText } from '@/components/ui/RichText'
+import { usePageTitle } from '@/lib/page-title'
 
 export function CommentsModerationPage() {
+  usePageTitle('Comment moderation')
   const { data: comments, isLoading } = useAdminComments()
 
   return (
@@ -16,7 +18,7 @@ export function CommentsModerationPage() {
 
       <p className="mb-4 text-sm text-muted-foreground">
         Recent comments across all nominations, with any flagged by users first. Hide
-        anything off-topic or against the Code of Conduct — hidden comments disappear from
+        anything off-topic or against the Code of Conduct. Hidden comments disappear from
         the public thread but are kept for the record. Hiding a flagged comment, or
         keeping it, closes its flags.
       </p>

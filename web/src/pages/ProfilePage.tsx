@@ -9,8 +9,10 @@ import { LinksEditor } from '@/features/profile/LinksEditor'
 import { ApiError } from '@/lib/api'
 import { isValidEmail } from '@/lib/utils'
 import { EMAIL_PREF_OPTIONS, type EmailPrefs } from '@/types'
+import { usePageTitle } from '@/lib/page-title'
 
 export function ProfilePage() {
+  usePageTitle('Your profile')
   const { data: session } = useSession()
   const researcherId = session?.user?.id?.slice(0, 6) ?? ''
   const token = session?.user?.id?.slice(0, 8) ?? ''
@@ -46,7 +48,7 @@ function AvatarCard() {
   return (
     <Card
       title="Profile photo"
-      hint="Pick an emoji or upload a picture. It appears on your profile and next to your name on replication teams."
+      hint="Pick an emoji or upload a picture. It appears on your profile and next to your name on study teams."
     >
       {isLoading || !profile ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
@@ -75,8 +77,8 @@ function ResearcherIdFooter({ id }: { id: string }) {
   return (
     <p className="flex flex-wrap items-center gap-2 px-1 text-xs text-muted-foreground">
       <span>
-        Researcher ID <span className="data font-medium">#{id}</span> — only needed to request
-        the maintainer role.
+        Researcher ID <span className="data font-medium">#{id}</span>. You only need it to
+        request the maintainer role.
       </span>
       <button
         onClick={() =>
@@ -128,7 +130,7 @@ function EmailNotificationsCard({ isMaintainer }: { isMaintainer: boolean }) {
   return (
     <Card
       title="Email notifications"
-      hint="Where we email you about activity on the site. We take this from your sign-in — change it to any address you prefer. Everything also arrives as an in-app notification, so uncheck anything you'd rather not hear about by email."
+      hint="Where we email you about activity on the site. We take this from your sign-in; change it to any address you prefer. Everything also arrives as an in-app notification, so uncheck anything you'd rather not hear about by email."
     >
       {isLoading || !profile ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
@@ -182,6 +184,7 @@ function EmailPrefsEditor({
         <span className="mb-1 block text-muted-foreground">Notification email</span>
         <input
           type="email"
+          autoComplete="email"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}

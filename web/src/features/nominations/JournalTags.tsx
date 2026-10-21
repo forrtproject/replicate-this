@@ -7,7 +7,13 @@ import { matchJournalTags, type JournalTagInput } from './journal-tags'
  * be published. Hovering a chip shows the full journal name and why the
  * nomination qualifies.
  */
-export function JournalTags({ nomination }: { nomination: JournalTagInput }) {
+export function JournalTags({
+  nomination,
+  focusable = true,
+}: {
+  nomination: JournalTagInput
+  focusable?: boolean
+}) {
   const tags = matchJournalTags(nomination)
   if (tags.length === 0) return null
   return (
@@ -15,6 +21,7 @@ export function JournalTags({ nomination }: { nomination: JournalTagInput }) {
       {tags.map((t) => (
         <Tooltip
           key={t.key}
+          focusable={focusable}
           content={
             <>
               <span className="font-semibold">{t.name}</span>

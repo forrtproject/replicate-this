@@ -4,7 +4,7 @@ import { ApiError } from '@/lib/api'
 import { useNameSuggestion, useUpdateName } from './api'
 
 export const DISPLAY_NAME_HINT =
-  'How you appear on your nominations, comments and contributions. We encourage your real name — it makes collaborating and crediting work easier — and started you off with the one from your sign-in where we had it. Prefer a pseudonym? Hit Randomize for a suggestion, then Save. Names are unique across the site.'
+  'How you appear on your nominations, comments and contributions. We encourage your real name, since it makes collaborating and crediting work easier, and started you off with the one from your sign-in where we had it. Prefer a pseudonym? Hit Randomize for a suggestion, then Save. Names are unique across the site.'
 
 /** Edit the display name, with a Randomize button that suggests a pseudonym. */
 export function DisplayNameEditor({ current }: { current: string }) {

@@ -35,7 +35,7 @@ const RULES: (JournalTag & { matches: (n: JournalTagInput) => boolean })[] = [
   {
     key: 'JRR',
     name: 'Journal of Robustness Reports',
-    hint: 'Robustness reproductions — re-running the original analysis plus alternative specifications. Social sciences and beyond.',
+    hint: 'Publishes robustness reproductions, which re-run the original analysis and try alternative specifications. Social sciences and beyond.',
     matches: (n) => wantsReproduction(n.verificationType),
   },
   {
@@ -47,15 +47,15 @@ const RULES: (JournalTag & { matches: (n: JournalTagInput) => boolean })[] = [
   {
     key: 'RC',
     name: 'ReScience C',
-    hint: 'Reruns and rewrites of computational research — this study shares open code.',
+    hint: 'Publishes reruns and rewrites of computational research. This study shares open code.',
     // No "computational" discipline exists; open code is our signal that the
     // study is computational enough to rerun or rewrite.
     matches: (n) => n.availability.includes('open_code'),
   },
   {
     key: 'RX',
-    name: 'Rx — Experimental Research (ReScience X)',
-    hint: 'Reruns and rewrites of experimental research — the nominator flagged this study as experimental.',
+    name: 'ReScience X (Rx, experimental research)',
+    hint: 'Publishes reruns and rewrites of experimental research. The nominator marked this study as experimental.',
     matches: (n) => !!n.experimentalResearch,
   },
 ]

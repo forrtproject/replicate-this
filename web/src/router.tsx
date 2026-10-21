@@ -35,8 +35,8 @@ export const router = createBrowserRouter([
         ),
       },
       { path: 'sign-in', element: <SignInPage /> },
-      { path: 'guidelines', element: <DocPage src="/nomination-guidelines.md" /> },
-      { path: 'code-of-conduct', element: <DocPage src="/code-of-conduct.md" /> },
+      { path: 'guidelines', element: <DocPage src="/nomination-guidelines.md" title="Nomination guidelines" /> },
+      { path: 'code-of-conduct', element: <DocPage src="/code-of-conduct.md" title="Code of Conduct" /> },
       {
         path: 'nominate',
         element: (

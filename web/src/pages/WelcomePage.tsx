@@ -13,6 +13,7 @@ import { LinksEditor } from '@/features/profile/LinksEditor'
 import { ApiError } from '@/lib/api'
 import { isValidEmail } from '@/lib/utils'
 import { EMAIL_PREF_OPTIONS, type EmailPrefs, type ProfileLinks } from '@/types'
+import { usePageTitle } from '@/lib/page-title'
 
 const STEPS = ['Name', 'Photo', 'Public profile', 'Notifications'] as const
 
@@ -22,6 +23,7 @@ const STEPS = ['Name', 'Photo', 'Public profile', 'Notifications'] as const
  * notifications — then marks them onboarded and drops them on the dashboard.
  */
 export function WelcomePage() {
+  usePageTitle('Welcome')
   const navigate = useNavigate()
   const qc = useQueryClient()
   const { data: profile, isLoading } = useProfile()
@@ -185,12 +187,13 @@ function NotificationStep({
     <div>
       <StepIntro
         title="Email notifications"
-        hint="We've filled in the address you signed in with — change it if you'd rather use another. Everything also arrives in-app, so uncheck anything you don't want by email."
+        hint="We've filled in the address you signed in with. Change it if you'd rather use another. Everything also arrives in-app, so uncheck anything you don't want by email."
       />
       <label className="block text-sm">
         <span className="mb-1 block text-muted-foreground">Notification email</span>
         <input
           type="email"
+          autoComplete="email"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}

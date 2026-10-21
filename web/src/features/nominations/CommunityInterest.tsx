@@ -2,7 +2,7 @@ import { Users, Bell, MessageSquare } from 'lucide-react'
 import type { NominationSummary } from '@/types'
 import { VoteButton } from './VoteButton'
 
-// Mirrors the server's UPVOTE_MILESTONES — the points at which maintainers are
+// Mirrors the server's UPVOTE_MILESTONES: the points at which maintainers are
 // alerted that a nomination is gathering support.
 const UPVOTE_MILESTONES = [10, 25, 50, 100, 250, 500, 1000, 2500, 5000]
 
@@ -24,7 +24,7 @@ export function CommunityInterest({ nomination: n }: { nomination: NominationSum
       <p className="eyebrow">Community interest</p>
       <p className="mb-3 mt-1 text-xs text-muted-foreground">
         {n.upvotes === 0
-          ? 'No votes yet — be the first to back this study.'
+          ? 'No votes yet. Be the first to back this study.'
           : 'How many researchers want this study revisited.'}
       </p>
 
@@ -63,6 +63,7 @@ export function CommunityInterest({ nomination: n }: { nomination: NominationSum
           nominationId={n.id}
           upvotes={n.upvotes}
           userUpvoted={n.userUpvoted}
+          verificationType={n.verificationType}
           variant="wide"
         />
       </div>
