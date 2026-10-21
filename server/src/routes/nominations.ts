@@ -43,7 +43,7 @@ nominationsRouter.get('/lookup', async (c) => {
   if (!raw) throw new HttpError(400, 'DOI is required.')
   const doi = normalizeDoi(raw)
   if (!/^10\.\d{4,9}\/\S+$/.test(doi)) {
-    return c.json({ error: 'That doesn’t look like a DOI — they start with “10.”', allowManual: false }, 422)
+    return c.json({ error: 'That doesn’t look like a DOI. DOIs start with “10.”', allowManual: false }, 422)
   }
   const existingId = await findActiveNominationByDoi(doi)
   try {
@@ -76,11 +76,19 @@ function parseManualMetadata(m: unknown): NominationMetadata {
   if (url && !/^https?:\/\/.+/i.test(url)) {
     throw new HttpError(400, 'The link to the paper must be a full http(s) URL.')
   }
+  // Same policy as the form: four digits, 1600 to next year (forthcoming work).
+  const year = String(v.publication_date ?? '').trim()
+  if (year) {
+    const latest = new Date().getFullYear() + 1
+    if (!/^\d{4}$/.test(year) || Number(year) < 1600 || Number(year) > latest) {
+      throw new HttpError(400, `Enter the year as four digits between 1600 and ${latest}.`)
+    }
+  }
   return {
     title,
     authors: Array.isArray(v.authors) ? v.authors.map(String).filter(Boolean) : [],
     journal: String(v.journal ?? '').trim(),
-    publication_date: String(v.publication_date ?? '').trim(),
+    publication_date: year,
     ...(url ? { url } : {}),
   }
 }
@@ -241,7 +249,7 @@ nominationsRouter.patch('/:id', async (c) => {
     throw new HttpError(403, 'Only the nominator or a maintainer can edit this nomination.')
   }
   if (!EDITABLE_STATUSES.includes(existing.status as never)) {
-    throw new HttpError(409, 'This nomination can no longer be edited — replication work has started or it was rejected.')
+    throw new HttpError(409, 'This nomination can no longer be edited, because work on it has started or it was rejected.')
   }
 
   const body = await c.req.json().catch(() => ({}))

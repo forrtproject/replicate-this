@@ -52,7 +52,7 @@ function validateAvatar(image: string): void {
       throw new HttpError(400, 'Only PNG, JPEG, GIF, or WEBP images are supported.')
     }
     if (image.length > AVATAR_MAX_BYTES) {
-      throw new HttpError(400, 'That image is too large — please use one under ~1 MB.')
+      throw new HttpError(400, 'That image is too large. Use one under about 1 MB.')
     }
     return
   }
@@ -133,7 +133,7 @@ profileRouter.patch('/name', async (c) => {
   const { name, error } = validatePseudonym(String(body.name ?? ''))
   if (error || !name) throw new HttpError(400, error ?? 'Invalid pseudonym.')
   if (await pseudonymTaken(name, user.id)) {
-    throw new HttpError(409, 'That pseudonym is already taken — try another.')
+    throw new HttpError(409, 'That name is already taken. Try another.')
   }
   try {
     await db
@@ -143,7 +143,7 @@ profileRouter.patch('/name', async (c) => {
   } catch (err) {
     // Unique-index race: someone claimed the name between check and write.
     if ((err as { code?: string }).code === '23505') {
-      throw new HttpError(409, 'That pseudonym is already taken — try another.')
+      throw new HttpError(409, 'That name is already taken. Try another.')
     }
     throw err
   }

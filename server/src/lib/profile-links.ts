@@ -34,7 +34,7 @@ export function normalizeOrcid(raw: string): string {
     throw new LinkError('Enter a valid ORCID iD, e.g. 0000-0002-1825-0097.')
   }
   if (!orcidChecksumValid(compact)) {
-    throw new LinkError('That ORCID iD looks mistyped — its checksum is invalid.')
+    throw new LinkError('That ORCID iD looks mistyped (its check digit doesn’t match).')
   }
   const dashed = compact.replace(/(.{4})(.{4})(.{4})(.{4})/, '$1-$2-$3-$4')
   return `https://orcid.org/${dashed}`

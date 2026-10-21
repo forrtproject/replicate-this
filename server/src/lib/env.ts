@@ -25,6 +25,29 @@ const DEV_DEFAULTS = {
 // forrt.org/replicate-this. Links need it whole; CORS and trusted origins
 // compare against the Origin header a browser sends, which never has a path.
 const webAppUrl = env('WEB_ORIGIN', DEV_DEFAULTS.WEB_ORIGIN).replace(/\/$/, '')
+const webOrigin = new URL(webAppUrl).origin
+
+/**
+ * Extra web origins this API also serves, beyond WEB_ORIGIN: e.g.
+ * EXTRA_WEB_ORIGINS=http://localhost:5173 lets a local dev server test against
+ * a deployed API. Comma-separated. Each one is trusted for CORS with
+ * credentials and for sign-in, so set it only temporarily and only to origins
+ * you control. Empty by default.
+ */
+function parseOrigins(raw: string): string[] {
+  return raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((s) => {
+      try {
+        return new URL(s).origin
+      } catch {
+        throw new Error(`EXTRA_WEB_ORIGINS: "${s}" is not a valid origin (e.g. http://localhost:5173).`)
+      }
+    })
+}
+const extraWebOrigins = parseOrigins(process.env.EXTRA_WEB_ORIGINS ?? '')
 
 export const config = {
   isProd,
@@ -32,8 +55,11 @@ export const config = {
   databaseUrl: env('DATABASE_URL', DEV_DEFAULTS.DATABASE_URL),
   // Public URL of the web app, base path included — for links in emails.
   webAppUrl,
-  // Just the origin of it — for CORS and Better Auth's trusted origins.
-  webOrigin: new URL(webAppUrl).origin,
+  // Just the origin of it, for working out whether auth is cross-site.
+  webOrigin,
+  // Every origin allowed to call the API with credentials and sign in:
+  // WEB_ORIGIN plus any EXTRA_WEB_ORIGINS.
+  webOrigins: [...new Set([webOrigin, ...extraWebOrigins])],
   betterAuthUrl: env('BETTER_AUTH_URL', DEV_DEFAULTS.BETTER_AUTH_URL),
   betterAuthSecret: env('BETTER_AUTH_SECRET', DEV_DEFAULTS.BETTER_AUTH_SECRET),
 

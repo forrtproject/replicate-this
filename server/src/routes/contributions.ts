@@ -94,7 +94,7 @@ contributionsRouter.post('/:nominationId', async (c) => {
     throw new HttpError(400, 'This nomination is not open for contributions.')
   }
   if (nomination.nominatorUid === user.id) {
-    throw new HttpError(400, 'You nominated this study — you are already involved.')
+    throw new HttpError(400, 'You nominated this study, so you’re already on its team.')
   }
 
   // A genuine join vs. re-saving the pitch message: only a first join fans out

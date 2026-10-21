@@ -134,7 +134,7 @@ export const auth = betterAuth({
   baseURL: config.betterAuthUrl,
   secret: config.betterAuthSecret,
   basePath: '/api/auth',
-  trustedOrigins: [config.webOrigin],
+  trustedOrigins: config.webOrigins,
 
   database: drizzleAdapter(db, {
     provider: 'pg',

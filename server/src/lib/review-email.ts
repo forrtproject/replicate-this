@@ -19,8 +19,8 @@ const AVAILABILITY_LABELS: Record<string, string> = {
 }
 
 const VERIFICATION_LABELS: Record<string, string> = {
-  replication: 'Replication — collect new data',
-  reproduction: 'Reproduction — re-run the original data/code and check robustness',
+  replication: 'Replication (collect new data)',
+  reproduction: 'Reproduction (re-run the original data or code, and/or check robustness)',
   both: 'Either replication or reproduction',
 }
 
@@ -104,7 +104,7 @@ export function nominationDetailRows(n: ReviewNomination): DetailRow[] {
       ? { label: 'DOI', value: n.doi, href: `https://doi.org/${n.doi}` }
       : m.url
         ? { label: 'Link (no DOI)', value: m.url, href: m.url }
-        : { label: 'DOI', value: 'None — reference entered by hand' },
+        : { label: 'DOI', value: 'None (reference entered by hand)' },
     {
       label: 'Discipline',
       value: n.disciplineOther ? `${n.discipline}: ${n.disciplineOther}` : n.discipline,
