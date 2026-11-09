@@ -14,7 +14,7 @@ function NavItem({ to, children }: { to: string; children: React.ReactNode }) {
         cn(
           'relative text-sm transition-colors hover:text-ink sm:py-[1.125rem]',
           isActive
-            ? 'font-medium text-ink sm:after:absolute sm:after:inset-x-0 sm:after:bottom-0 sm:after:h-0.5 sm:after:bg-brand'
+            ? 'font-medium text-ink sm:after:absolute sm:after:inset-x-0 sm:after:-bottom-px sm:after:h-0.5 sm:after:bg-brand'
             : 'text-muted-foreground',
         )
       }
