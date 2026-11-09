@@ -4,15 +4,18 @@ import { PageBand } from '@/components/layout/PageBand'
 
 const tab = ({ isActive }: { isActive: boolean }) =>
   cn(
-    '-mb-px border-b-2 px-1 pb-2.5 text-sm font-medium transition-colors',
-    isActive ? 'border-brand-deep text-ink' : 'border-transparent text-band-ink/75 hover:text-ink',
+    'text-sm transition-colors',
+    // Same current-page mark as the main navigation: the word itself.
+    isActive
+      ? 'font-medium text-ink underline decoration-current decoration-[1.5px] underline-offset-[6px]'
+      : 'text-band-ink/75 hover:text-ink',
   )
 
 /** Shared frame for the maintainer pages: one title, section tabs, and a short brief. */
 export function AdminPageHeader({ intro }: { intro: React.ReactNode }) {
   return (
     <div className="mb-8">
-      <PageBand bleed inner="pb-0" className="mb-0!">
+      <PageBand bleed inner="pb-6" className="mb-0!">
       <h1 className="font-display text-[2rem] font-semibold leading-tight">Maintainer tools</h1>
       <nav aria-label="Maintainer tools" className="mt-5 flex gap-6">
         <NavLink to="/admin" end className={tab}>

@@ -12,9 +12,11 @@ function NavItem({ to, children }: { to: string; children: React.ReactNode }) {
       to={to}
       className={({ isActive }) =>
         cn(
-          'relative text-sm transition-colors hover:text-ink sm:py-[1.125rem]',
+          // The current page is marked on the word itself: ink, medium weight and
+          // an underline in the same colour, close under the text.
+          'text-sm transition-colors hover:text-ink',
           isActive
-            ? 'font-medium text-ink sm:after:absolute sm:after:inset-x-0 sm:after:-bottom-px sm:after:h-0.5 sm:after:bg-brand'
+            ? 'font-medium text-ink underline decoration-current decoration-[1.5px] underline-offset-[6px]'
             : 'text-muted-foreground',
         )
       }
