@@ -20,7 +20,7 @@ import { usePageTitle } from '@/lib/page-title'
 export function AdminPage() {
   usePageTitle('Review nominations')
   return (
-    <div className="mx-auto max-w-5xl px-4 pb-16 pt-10">
+    <div className="mx-auto max-w-5xl px-4 pb-16">
       <AdminPageHeader
         intro="New nominations, and approved ones that were edited, wait here for review. They are public while pending. Approving lists them as looking for contributors; rejecting removes them from the registry and needs a reason, which the nominator sees."
       />

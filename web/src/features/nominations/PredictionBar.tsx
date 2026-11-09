@@ -183,7 +183,7 @@ function PredictButton({
         'inline-flex flex-1 items-center justify-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors',
         active
           ? 'border-green bg-green-tint text-forest'
-          : 'border-line text-ink hover:border-green',
+          : 'border-line bg-card text-ink hover:border-green',
       )}
     >
       {children}

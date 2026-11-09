@@ -1,3 +1,4 @@
+import { PageBand } from '@/components/layout/PageBand'
 import { siGithub, siGoogle, siOrcid, type SimpleIcon } from 'simple-icons'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -61,13 +62,17 @@ export function SignInPage() {
   const anyEnabled = providers && (providers.google || providers.github || providers.orcid)
 
   return (
-    <div className="mx-auto max-w-5xl px-4 pb-16 pt-14">
+    <div className="mx-auto max-w-5xl px-4 pb-16">
+      <PageBand bleed>
+        <div className="mx-auto max-w-sm">
+          <h1 className="font-display text-[2rem] font-semibold leading-tight">Sign in</h1>
+          <p className="mt-2 text-[0.9375rem] leading-relaxed text-band-ink/80">
+            Use an account you already have; ORCID also links your researcher identifier.
+            Signing in for the first time creates your Replicate This account.
+          </p>
+        </div>
+      </PageBand>
       <div className="mx-auto max-w-sm">
-      <h1 className="font-display text-[2rem] font-semibold leading-tight">Sign in</h1>
-      <p className="mb-6 mt-2 text-[0.9375rem] leading-relaxed text-muted-foreground">
-        Use an account you already have; ORCID also links your researcher identifier.
-        Signing in for the first time creates your Replicate This account.
-      </p>
 
       {isLoading && <p className="text-center text-sm text-muted-foreground">Loading…</p>}
 

@@ -86,7 +86,7 @@ export function VoteButton({
           'flex w-full items-center justify-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors',
           on
             ? 'border-green bg-green-tint text-forest hover:bg-muted'
-            : 'border-line text-ink hover:border-green hover:text-green',
+            : 'border-line bg-card text-ink hover:border-green hover:text-green',
         )}
       >
         {on ? (

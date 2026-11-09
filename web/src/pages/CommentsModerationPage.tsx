@@ -12,7 +12,7 @@ export function CommentsModerationPage() {
   const { data: comments, isLoading } = useAdminComments()
 
   return (
-    <div className="mx-auto max-w-5xl px-4 pb-16 pt-10">
+    <div className="mx-auto max-w-5xl px-4 pb-16">
       <AdminPageHeader
         intro="Comments people flagged come first, then recent comments on all nominations. Hide anything off-topic or against the Code of Conduct: it leaves the public thread but is kept for the record. Hiding or keeping a flagged comment closes its flags."
       />

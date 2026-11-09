@@ -23,6 +23,7 @@ import { CommentsSection } from '@/features/comments/CommentsSection'
 import { ApiError } from '@/lib/api'
 import { formatDate } from '@/lib/dates'
 import { usePageTitle } from '@/lib/page-title'
+import { PageBand } from '@/components/layout/PageBand'
 import type { NominationDetail } from '@/types'
 
 export function NominationDetailPage() {
@@ -79,7 +80,8 @@ export function NominationDetailPage() {
   )
 
   return (
-    <article className="mx-auto max-w-5xl px-4 pb-16 pt-8">
+    <article>
+      <PageBand inner="pt-8 pb-9">
       <BackLink />
 
       {/* Header: what the paper is, and where it stands. */}
@@ -140,7 +142,9 @@ export function NominationDetailPage() {
         {/* Phones: page actions sit under the byline; wide screens: top of the rail. */}
         <div className="mt-4 lg:hidden">{actions}</div>
       </header>
+      </PageBand>
 
+      <div className="mx-auto max-w-5xl px-4 pb-16">
       <div className="mt-10 grid gap-x-12 gap-y-10 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="min-w-0 space-y-12">
           {n.status === 'pending' && (n.viewerIsNominator || isMaintainer) && (
@@ -174,7 +178,7 @@ export function NominationDetailPage() {
             <StatusControls nominationId={n.id} status={n.status} />
           )}
           {/* One panel, three parts: interest, forecast, team. */}
-          <div className="divide-y divide-line rounded-lg border border-line bg-card">
+          <div className="divide-y divide-band-line rounded-lg border border-band-line bg-band">
           <CommunityInterest nomination={n} closed={done} />
           <section className="p-4" aria-labelledby="forecast">
             <h2 id="forecast" className="label">
@@ -196,6 +200,7 @@ export function NominationDetailPage() {
           <ContributionPanel nomination={n} />
           </div>
         </aside>
+      </div>
       </div>
     </article>
   )
@@ -290,34 +295,34 @@ function Outcome({ nomination: n }: { nomination: NominationDetail }) {
   return (
     <section
       aria-labelledby="outcome"
-      className="rounded-lg border border-status-done/25 bg-green-tint px-5 py-4"
+      className="rounded-lg bg-forest px-6 py-5 text-white"
     >
-      <h2 id="outcome" className="label text-[0.9375rem] text-forest">
+      <h2 id="outcome" className="label text-[0.9375rem]! text-[#bfe0d0]!">
         {n.status === 'published' ? `Result, published` : `Result`}
       </h2>
       {result ? (
         <>
-          <RichText className="mt-2 text-[0.9375rem] leading-relaxed text-ink">{result.content}</RichText>
-          <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+          <RichText className="mt-2 text-[1.0625rem] leading-relaxed text-white [&_a]:text-white">{result.content}</RichText>
+          <p className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-[#d7e7df]">
             {result.articleUrl && (
               <a
                 href={result.articleUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 font-medium text-forest hover:underline"
+                className="inline-flex items-center gap-1.5 rounded-md bg-paper px-3 py-1.5 font-semibold text-forest hover:bg-white"
               >
                 <FileText className="h-4 w-4" aria-hidden /> Read the write-up
                 <ExternalLink className="h-3 w-3" aria-hidden />
               </a>
             )}
             <span>
-              Reported by <ResearcherLink name={result.name} token={result.token} className="text-ink" /> on{' '}
+              Reported by <ResearcherLink name={result.name} token={result.token} className="text-white" /> on{' '}
               {formatDate(result.createdAt)}
             </span>
           </p>
         </>
       ) : (
-        <p className="mt-2 text-sm text-muted-foreground">The team has not posted a summary yet.</p>
+        <p className="mt-2 text-sm text-[#d7e7df]">The team has not posted a summary yet.</p>
       )}
     </section>
   )
@@ -347,7 +352,7 @@ function PendingNotice({
       className="rounded-lg border border-line bg-card px-5 py-4"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="review" className="label text-[0.9375rem]">
+        <h2 id="review" className="label text-[0.9375rem]!">
           {asMaintainer ? 'This nomination needs a review' : 'Waiting for review'}
         </h2>
         {asMaintainer && (
@@ -468,7 +473,7 @@ function BackLink() {
           navigate(-1)
         }
       }}
-      className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-forest"
+      className="inline-flex items-center gap-1.5 text-sm text-band-ink/80 hover:text-forest"
     >
       <ArrowLeft className="h-3.5 w-3.5" aria-hidden /> {toList ? 'All nominations' : 'Back'}
     </Link>

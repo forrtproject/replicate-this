@@ -272,7 +272,7 @@ export function NominationFormFields({
 /** Live list of journals the resulting study could go to, for the form's sidebar. */
 export function JournalPreview({ values }: { values: NominationFormValues }) {
   return (
-    <section className="mt-4 rounded-lg border border-line bg-card p-5 text-sm" aria-labelledby="journals">
+    <section className="mt-4 rounded-lg border border-band-line bg-band p-5 text-sm" aria-labelledby="journals">
       <h2 id="journals" className="label">
         Where the result could be published
       </h2>

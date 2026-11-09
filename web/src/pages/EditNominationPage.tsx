@@ -13,6 +13,7 @@ import { useSession } from '@/lib/auth-client'
 import { ApiError } from '@/lib/api'
 import type { NominationDetail } from '@/types'
 import { usePageTitle } from '@/lib/page-title'
+import { PageBand } from '@/components/layout/PageBand'
 
 const EDITABLE_STATUSES = ['pending', 'approved']
 
@@ -86,7 +87,8 @@ function EditForm({ nomination: n }: { nomination: NominationDetail }) {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 pb-16 pt-8">
+    <div className="mx-auto max-w-5xl px-4 pb-16">
+      <PageBand bleed inner="pt-8">
       <Link
         to={`/nominations/${n.id}`}
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-forest"
@@ -95,7 +97,8 @@ function EditForm({ nomination: n }: { nomination: NominationDetail }) {
       </Link>
 
       <h1 className="mt-5 font-display text-[2rem] font-semibold leading-tight">Edit nomination</h1>
-      <div className="mt-6 grid gap-x-12 gap-y-8 lg:grid-cols-[minmax(0,36rem)_minmax(0,1fr)]">
+      </PageBand>
+      <div className="grid gap-x-12 gap-y-8 lg:grid-cols-[minmax(0,36rem)_minmax(0,1fr)]">
       <NominationGuidance editing>
         <JournalPreview values={values} />
       </NominationGuidance>

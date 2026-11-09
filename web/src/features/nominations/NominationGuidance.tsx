@@ -13,7 +13,7 @@ export function NominationGuidance({
     return (
       <aside className="lg:order-2">
         <div className="lg:sticky lg:top-20">
-        <div className="rounded-lg border border-line bg-card p-5 text-sm leading-relaxed">
+        <div className="rounded-lg border border-band-line bg-band p-5 text-sm leading-relaxed">
           <h2 className="label">When editing</h2>
           <ul className="mt-2 list-disc space-y-1.5 pl-4 text-ink/85 marker:text-muted-foreground">
             <li>Keep the case about the evidence, never the authors.</li>
@@ -37,7 +37,7 @@ export function NominationGuidance({
   return (
     <aside className="lg:order-2">
       <div className="lg:sticky lg:top-20">
-      <div className="rounded-lg border border-line bg-card p-5 text-sm leading-relaxed">
+      <div className="rounded-lg border border-band-line bg-band p-5 text-sm leading-relaxed">
         <h2 className="label">A good nomination</h2>
         <ul className="mt-2 list-disc space-y-1.5 pl-4 text-ink/85 marker:text-muted-foreground">
           <li>Gives the DOI, so everyone looks at the same paper.</li>

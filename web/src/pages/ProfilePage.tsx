@@ -10,6 +10,7 @@ import { ApiError } from '@/lib/api'
 import { isValidEmail } from '@/lib/utils'
 import { EMAIL_PREF_OPTIONS, type EmailPrefs } from '@/types'
 import { usePageTitle } from '@/lib/page-title'
+import { PageBand } from '@/components/layout/PageBand'
 
 export function ProfilePage() {
   usePageTitle('Your profile')
@@ -18,10 +19,10 @@ export function ProfilePage() {
   const token = session?.user?.id?.slice(0, 8) ?? ''
 
   return (
-    <div className="mx-auto max-w-5xl px-4 pb-16 pt-10">
-      <div className="mb-6">
+    <div className="mx-auto max-w-5xl px-4 pb-16">
+      <PageBand bleed className="mb-0!">
         <h1 className="font-display text-[2rem] font-semibold leading-tight">Profile</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-sm text-band-ink/80">
           How others see you on the registry, and how we reach you.{' '}
           {token && (
             <Link to={`/researchers/${token}`} className="text-forest underline-offset-2 hover:underline">
@@ -29,9 +30,9 @@ export function ProfilePage() {
             </Link>
           )}
         </p>
-      </div>
+      </PageBand>
 
-      <div className="divide-y divide-line border-t border-line">
+      <div className="divide-y divide-line">
         <AvatarCard />
         <DisplayNameCard />
         <LinksCard />

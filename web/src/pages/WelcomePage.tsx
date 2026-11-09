@@ -1,3 +1,4 @@
+import { PageBand } from '@/components/layout/PageBand'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
@@ -63,16 +64,18 @@ export function WelcomePage() {
   const isLast = step === STEPS.length - 1
 
   return (
-    <div className="mx-auto max-w-5xl px-4 pb-16 pt-10">
-      <div className="max-w-2xl">
+    <div className="mx-auto max-w-5xl px-4 pb-16">
+      <PageBand bleed>
       <h1 className="font-display text-[2rem] font-semibold leading-tight">Welcome. Set up your profile</h1>
-      <p className="mt-2 text-[0.9375rem] leading-relaxed text-muted-foreground">
+      <p className="mt-2 max-w-2xl text-[0.9375rem] leading-relaxed text-band-ink/80">
         Four quick steps that help teammates recognise and reach you. Everything is optional
         and can be changed later in your profile.
       </p>
+      </PageBand>
+      <div className="max-w-2xl">
 
       {/* A real sequence, so the steps are numbered. */}
-      <ol className="mt-8 grid grid-cols-4 gap-2" aria-label="Setup steps">
+      <ol className="grid grid-cols-4 gap-2" aria-label="Setup steps">
         {STEPS.map((label, i) => (
           <li key={label} aria-current={i === step ? 'step' : undefined}>
             <span

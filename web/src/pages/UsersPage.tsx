@@ -32,7 +32,7 @@ export function UsersPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 pb-16 pt-10">
+    <div className="mx-auto max-w-5xl px-4 pb-16">
       <AdminPageHeader
         intro="Everyone with an account, under the display name they chose. Sign-in addresses are not stored. Maintainers can review nominations, moderate comments and manage roles."
       />

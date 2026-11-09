@@ -39,6 +39,11 @@
   --color-green-tint: #ecf6f1;
   --color-amber: #b4531a;
   --color-line: #e5e2d9;
+  /* Colour blocks: a sage band behind every page header, forest for the
+     visitor hero and the footer. */
+  --color-band: #e4eee7;
+  --color-band-line: #cddfd3;
+  --color-band-ink: #0a3d30;
 
   --radius: 0.5rem;
 

@@ -137,17 +137,17 @@ export function RootLayout() {
         <Outlet />
       </main>
 
-      <footer className="border-t border-line bg-paper">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-4 text-xs text-muted-foreground">
+      <footer className="bg-forest text-[#d7e7df]">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-xs">
           <span>
-            Run by <a href="https://forrt.org" className="hover:text-forest hover:underline">FORRT</a> and the
+            Run by <a href="https://forrt.org" className="text-white hover:underline">FORRT</a> and the
             Replication Journal Federation
           </span>
           <nav className="flex items-center gap-4">
-            <Link to="/guidelines" className="inline-block py-2 hover:text-green">
+            <Link to="/guidelines" className="inline-block py-2 hover:text-white hover:underline">
               Guidelines
             </Link>
-            <Link to="/code-of-conduct" className="inline-block py-2 hover:text-green">
+            <Link to="/code-of-conduct" className="inline-block py-2 hover:text-white hover:underline">
               Code of Conduct
             </Link>
           </nav>

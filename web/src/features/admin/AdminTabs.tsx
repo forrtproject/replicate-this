@@ -1,18 +1,20 @@
 import { NavLink } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import { PageBand } from '@/components/layout/PageBand'
 
 const tab = ({ isActive }: { isActive: boolean }) =>
   cn(
     '-mb-px border-b-2 px-1 pb-2.5 text-sm font-medium transition-colors',
-    isActive ? 'border-green text-ink' : 'border-transparent text-muted-foreground hover:text-ink',
+    isActive ? 'border-forest text-ink' : 'border-transparent text-band-ink/75 hover:text-ink',
   )
 
 /** Shared frame for the maintainer pages: one title, section tabs, and a short brief. */
 export function AdminPageHeader({ intro }: { intro: React.ReactNode }) {
   return (
     <div className="mb-8">
+      <PageBand bleed inner="pb-0" className="mb-0!">
       <h1 className="font-display text-[2rem] font-semibold leading-tight">Maintainer tools</h1>
-      <nav aria-label="Maintainer tools" className="mt-5 flex gap-6 border-b border-line">
+      <nav aria-label="Maintainer tools" className="mt-5 flex gap-6">
         <NavLink to="/admin" end className={tab}>
           Nominations
         </NavLink>
@@ -23,7 +25,8 @@ export function AdminPageHeader({ intro }: { intro: React.ReactNode }) {
           Users
         </NavLink>
       </nav>
-      <p className="mt-4 max-w-[70ch] text-sm leading-relaxed text-muted-foreground">{intro}</p>
+      </PageBand>
+      <p className="mt-6 max-w-[70ch] text-sm leading-relaxed text-muted-foreground">{intro}</p>
     </div>
   )
 }

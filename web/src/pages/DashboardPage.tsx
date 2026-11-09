@@ -17,6 +17,7 @@ import { VERIFICATION_CONFIG } from '@/features/nominations/verification'
 import { formatDate, formatWhen } from '@/lib/dates'
 import type { NominationSummary, NominationStatus } from '@/types'
 import { usePageTitle } from '@/lib/page-title'
+import { PageBand } from '@/components/layout/PageBand'
 
 interface MyNomination {
   id: string
@@ -53,16 +54,16 @@ export function DashboardPage() {
   const unread = notifications.data?.unread ?? 0
 
   return (
-    <div className="mx-auto max-w-5xl px-4 pb-16 pt-10">
-      <div className="mb-8">
+    <div className="mx-auto max-w-5xl px-4 pb-16">
+      <PageBand bleed>
         <h1 className="font-display text-[2rem] font-semibold leading-tight">Dashboard</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-sm text-band-ink/80">
           Signed in as <span className="text-ink">{session?.user?.name}</span>.{' '}
           <Link to="/profile" className="text-forest underline-offset-2 hover:underline">
             Edit profile
           </Link>
         </p>
-      </div>
+      </PageBand>
 
       {isNew && <GetStarted />}
 
@@ -188,7 +189,9 @@ export function DashboardPage() {
           </section>
         </div>
 
-        <aside>{contributions.data && <LookingForContributors />}</aside>
+        <aside className="self-start rounded-lg border border-band-line bg-band p-5">
+          {contributions.data && <LookingForContributors />}
+        </aside>
       </div>
     </div>
   )

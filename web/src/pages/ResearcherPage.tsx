@@ -1,3 +1,4 @@
+import { PageBand } from '@/components/layout/PageBand'
 import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
@@ -48,12 +49,13 @@ export function ResearcherPage() {
   const links = PROFILE_LINKS.filter((l) => r.links[l.key])
 
   return (
-    <div className="mx-auto max-w-5xl px-4 pb-16 pt-10">
+    <div className="mx-auto max-w-5xl px-4 pb-16">
+      <PageBand bleed>
       <div className="flex flex-wrap items-center gap-5">
         <AvatarBubble image={r.image} name={r.name} className="h-16 w-16 text-2xl" />
         <div className="min-w-0 flex-1">
           <h1 className="font-display text-[2rem] font-semibold leading-tight">{r.name}</h1>
-          <p className="meta mt-1 text-sm text-muted-foreground">
+          <p className="meta mt-1 text-sm text-band-ink/80">
             <span>
               {r.nominations.length} {r.nominations.length === 1 ? 'nomination' : 'nominations'}
             </span>
@@ -91,6 +93,7 @@ export function ResearcherPage() {
           ))}
         </ul>
       )}
+      </PageBand>
 
       <section className="mt-12" aria-labelledby="nominated">
         <h2 id="nominated" className="section-title mb-3">

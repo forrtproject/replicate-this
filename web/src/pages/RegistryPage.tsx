@@ -10,6 +10,7 @@ import { useDebounced } from '@/lib/hooks'
 import { DISCIPLINES, type NominationStatus, type NominationSummary } from '@/types'
 import { usePageTitle } from '@/lib/page-title'
 import { useSession } from '@/lib/auth-client'
+import { PageBand } from '@/components/layout/PageBand'
 
 // "Newest" is the default on purpose: ranking by votes first would keep the
 // already-popular nominations on top and make them ever more popular (a
@@ -96,13 +97,14 @@ export function RegistryPage() {
   const showIntro = !session && !filtering
 
   return (
-    <div className="mx-auto max-w-5xl px-4 pb-16">
+    <div>
       {showIntro ? (
-        <section className="border-b border-line pb-10 pt-14 sm:pt-20">
-          <h1 className="max-w-3xl font-display text-[2.5rem] font-medium leading-[1.05] tracking-[-0.02em] text-ink sm:text-[3.5rem]">
+        <section className="bg-forest text-white">
+          <div className="mx-auto max-w-5xl px-4 pb-14 pt-16 sm:pb-16 sm:pt-20">
+          <h1 className="max-w-3xl font-display text-[2.5rem] font-medium leading-[1.05] tracking-[-0.02em] sm:text-[3.5rem]">
             Studies worth checking twice
           </h1>
-          <p className="mt-5 max-w-2xl text-[1.0625rem] leading-relaxed text-ink/80">
+          <p className="mt-5 max-w-2xl text-[1.0625rem] leading-relaxed text-[#d7e7df]">
             A community registry of published findings that researchers want to see
             replicated with new data or reproduced from the original data. Nominate a
             study, back the ones you want checked, and form a team to do the work.
@@ -110,17 +112,19 @@ export function RegistryPage() {
           <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
             <Link
               to="/nominate"
-              className="rounded-md bg-green px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-forest"
+              className="rounded-md bg-paper px-5 py-2.5 text-sm font-semibold text-forest transition-colors hover:bg-white"
             >
               Nominate a study
             </Link>
-            <Link to="/guidelines" className="text-sm font-medium text-forest underline-offset-4 hover:underline">
+            <Link to="/guidelines" className="text-sm font-medium text-white underline underline-offset-4 decoration-white/40 hover:decoration-white">
               How nominations work
             </Link>
           </div>
+          </div>
         </section>
       ) : (
-        <div className="flex flex-wrap items-end justify-between gap-4 pb-6 pt-10">
+        <PageBand>
+        <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="font-display text-[2rem] font-semibold leading-tight">Nominations</h1>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -136,10 +140,11 @@ export function RegistryPage() {
             </Link>
           )}
         </div>
+        </PageBand>
       )}
 
       {/* Registry list */}
-      <section id="registry" aria-label="Registry" className={showIntro ? 'pt-8' : ''}>
+      <section id="registry" aria-label="Registry" className="mx-auto max-w-5xl px-4 pb-16 pt-8">
         <div className="mb-4 space-y-3">
           {/* Search first: the guidelines ask nominators to check for an existing entry. */}
           <div className="flex flex-col gap-2 lg:flex-row lg:items-center">

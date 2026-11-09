@@ -19,6 +19,7 @@ import type { NominationMetadata } from '@/types'
 import { NominationGuidance } from '@/features/nominations/NominationGuidance'
 import { JournalPreview } from '@/features/nominations/NominationFormFields'
 import { usePageTitle } from '@/lib/page-title'
+import { PageBand } from '@/components/layout/PageBand'
 
 const EMPTY_FORM: NominationFormValues = {
   discipline: '',
@@ -183,14 +184,16 @@ export function NominatePage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 pb-16 pt-10">
+    <div className="mx-auto max-w-5xl px-4 pb-16">
+      <PageBand bleed>
       <h1 className="font-display text-[2rem] font-semibold leading-tight">Nominate a study</h1>
-      <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+      <p className="mt-1 max-w-2xl text-sm text-band-ink/80">
         Suggest a published finding that deserves a second look. It appears in the registry
         straight away, marked “Pending review” until a maintainer has checked it.
       </p>
+      </PageBand>
 
-      <div className="mt-8 grid gap-x-12 gap-y-8 lg:grid-cols-[minmax(0,36rem)_minmax(0,1fr)]">
+      <div className="grid gap-x-12 gap-y-8 lg:grid-cols-[minmax(0,36rem)_minmax(0,1fr)]">
       {/* Read before writing: on wide screens the guidance sits beside the form. */}
       <NominationGuidance>
         <JournalPreview values={values} />
