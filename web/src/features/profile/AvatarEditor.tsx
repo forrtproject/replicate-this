@@ -151,6 +151,7 @@ export function AvatarEditor({ current, name }: { current: string; name?: string
         />
       </div>
 
+      <p className="text-xs text-muted-foreground">A new picture is saved as soon as you choose it.</p>
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   )

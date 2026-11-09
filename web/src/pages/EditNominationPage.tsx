@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { formatReference } from '@/features/nominations/format'
 import { NominationGuidance } from '@/features/nominations/NominationGuidance'
+import { JournalPreview } from '@/features/nominations/NominationFormFields'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useNomination, useUpdateNomination } from '@/features/nominations/api'
 import {
@@ -95,7 +96,9 @@ function EditForm({ nomination: n }: { nomination: NominationDetail }) {
 
       <h1 className="mt-5 font-display text-[2rem] font-semibold leading-tight">Edit nomination</h1>
       <div className="mt-6 grid gap-x-12 gap-y-8 lg:grid-cols-[minmax(0,36rem)_minmax(0,1fr)]">
-      <NominationGuidance editing />
+      <NominationGuidance editing>
+        <JournalPreview values={values} />
+      </NominationGuidance>
       <div className="lg:order-1">
       <div className="rounded-lg border border-line bg-card px-4 py-3">
         <p className="font-display text-[1.0625rem] font-semibold leading-snug">{n.metadata.title || n.doi}</p>

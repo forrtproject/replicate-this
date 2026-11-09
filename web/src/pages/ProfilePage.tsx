@@ -50,7 +50,7 @@ function AvatarCard() {
   return (
     <Card
       title="Picture"
-      hint="Shown on your public profile and next to your name on study teams. A new picture is saved straight away."
+      hint="Shown on your public profile and next to your name on study teams."
     >
       {isLoading || !profile ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
@@ -237,6 +237,7 @@ function EmailPrefsEditor({
       )}
 
       {error && <p className="text-sm text-destructive">{error}</p>}
+      {(dirty || saved) && (
       <div className="flex items-center gap-3 pt-1">
         <button
           onClick={save}
@@ -252,6 +253,7 @@ function EmailPrefsEditor({
           </span>
         )}
       </div>
+      )}
     </div>
   )
 }

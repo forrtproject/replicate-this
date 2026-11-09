@@ -22,7 +22,7 @@ const SORTS = {
       Date.parse(b.createdAt) - Date.parse(a.createdAt),
   },
   wanted: {
-    label: 'Most wanted',
+    label: 'Most upvoted',
     hint: 'Most upvotes first.',
     compare: (a: NominationSummary, b: NominationSummary) =>
       b.upvotes - a.upvotes || Date.parse(b.createdAt) - Date.parse(a.createdAt),

@@ -55,7 +55,7 @@ export function ContributionPanel({ nomination: n }: { nomination: NominationDet
   const [showInquiry, setShowInquiry] = useState(false)
 
   return (
-    <section className="rounded-lg border border-line bg-card p-4" aria-labelledby="team">
+    <section className="p-4" aria-labelledby="team">
       <h2 id="team" className="label">
         {copy.team}
         {contributors && contributors.length > 0 && (
@@ -122,10 +122,15 @@ export function ContributionPanel({ nomination: n }: { nomination: NominationDet
       {!done && (
         <div className="mt-4 border-t border-line pt-4">
           {!session ? (
-            <p className="text-sm text-muted-foreground">{copy.joinHint}</p>
+            <>
+              <button onClick={requireLogin} className="btn-secondary w-full">
+                Sign in to join the team
+              </button>
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{copy.joinHint}</p>
+            </>
           ) : isOwner ? (
             <p className="text-sm text-muted-foreground">
-              You nominated this study. You’ll be notified when someone joins.
+              As the nominator you’re part of the team. You’ll be notified when others join.
             </p>
           ) : n.userContributed ? (
             <div className="flex items-center justify-between gap-2">

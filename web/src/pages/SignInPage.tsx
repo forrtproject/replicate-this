@@ -65,8 +65,8 @@ export function SignInPage() {
       <div className="mx-auto max-w-sm">
       <h1 className="font-display text-[2rem] font-semibold leading-tight">Sign in</h1>
       <p className="mb-6 mt-2 text-[0.9375rem] leading-relaxed text-muted-foreground">
-        Use an account you already have. Signing in for the first time creates your
-        Replicate This account.
+        Use an account you already have; ORCID also links your researcher identifier.
+        Signing in for the first time creates your Replicate This account.
       </p>
 
       {isLoading && <p className="text-center text-sm text-muted-foreground">Loading…</p>}
@@ -85,14 +85,9 @@ export function SignInPage() {
 
       <div className="space-y-3">
         {providers?.orcid && (
-          <div>
-            <ProviderButton icon={siOrcid} brand onClick={() => start({ providerId: 'orcid' })}>
-              Continue with ORCID
-            </ProviderButton>
-            <p className="mt-1.5 text-xs text-muted-foreground">
-              Connects the account to your researcher identifier.
-            </p>
-          </div>
+          <ProviderButton icon={siOrcid} brand onClick={() => start({ providerId: 'orcid' })}>
+            Continue with ORCID
+          </ProviderButton>
         )}
         {providers?.google && (
           <ProviderButton icon={siGoogle} onClick={() => start({ provider: 'google' })}>

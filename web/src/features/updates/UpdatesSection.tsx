@@ -5,7 +5,7 @@ import { ResearcherLink } from '@/features/profile/ResearcherLink'
 import { RichText } from '@/components/ui/RichText'
 import { ApiError } from '@/lib/api'
 import type { NominationDetail } from '@/types'
-import { formatDate } from '@/lib/dates'
+import { formatWhen } from '@/lib/dates'
 import { useUpdates, usePostUpdate } from './api'
 
 /**
@@ -53,7 +53,9 @@ export function UpdatesSection({
 
   // The update that carries the result is already the page's lead; don't repeat it.
   const shown = resultShownAbove ? (updates ?? []).filter((u) => u.id !== resultId) : updates
-  if (!canPost && (!shown || shown.length === 0)) return null
+  // Updates start once work does: before that, an empty section is only noise.
+  const workStarted = n.status === 'in_progress' || n.status === 'completed' || n.status === 'published'
+  if ((!canPost || !workStarted) && (!shown || shown.length === 0)) return null
 
   return (
     <section aria-labelledby="updates">
@@ -74,7 +76,7 @@ export function UpdatesSection({
           <li key={u.id}>
             <p className="flex flex-wrap items-baseline gap-x-2 text-sm">
               <ResearcherLink name={u.name} token={u.token} className="font-medium text-ink" />
-              <span className="text-xs text-muted-foreground">{formatDate(u.createdAt)}</span>
+              <span className="text-xs text-muted-foreground">{formatWhen(u.createdAt)}</span>
             </p>
             <RichText className="mt-1 text-sm leading-relaxed">{u.content}</RichText>
             {u.articleUrl && (

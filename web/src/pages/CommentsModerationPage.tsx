@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { EyeOff, Eye, Flag, Check } from 'lucide-react'
+import { Flag } from 'lucide-react'
 import { useAdminComments, useHideComment, type AdminComment } from '@/features/admin/api'
 import { AdminPageHeader } from '@/features/admin/AdminTabs'
 import { ResearcherLink } from '@/features/profile/ResearcherLink'
@@ -105,7 +105,7 @@ function Row({ comment: c }: { comment: AdminComment }) {
                 disabled={hide.isPending}
                 className="btn-secondary btn-sm"
               >
-                <EyeOff className="h-4 w-4" aria-hidden /> Hide
+                Hide
               </button>
               <button
                 onClick={() => hide.mutate({ id: c.id, hidden: false })}
@@ -113,7 +113,7 @@ function Row({ comment: c }: { comment: AdminComment }) {
                 title="Dismiss the flags and leave the comment up"
                 className="btn-secondary btn-sm"
               >
-                <Check className="h-4 w-4" aria-hidden /> Keep
+                Keep
               </button>
             </>
           ) : (
@@ -122,7 +122,6 @@ function Row({ comment: c }: { comment: AdminComment }) {
               disabled={hide.isPending}
               className="btn-secondary btn-sm"
             >
-              {c.hidden ? <Eye className="h-4 w-4" aria-hidden /> : <EyeOff className="h-4 w-4" aria-hidden />}
               {c.hidden ? 'Restore' : 'Hide'}
             </button>
           )}

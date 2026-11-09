@@ -264,24 +264,33 @@ export function NominationFormFields({
         </div>
       </fieldset>
 
-      <div className="rounded-lg border border-line bg-card px-4 py-3">
-          <p className="text-sm font-medium">Where the result could be published</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Based on your answers so far; the list updates as you edit.
-          </p>
-          {!values.discipline ? (
-            <p className="mt-2 text-sm text-muted-foreground">Choose a discipline to see the list.</p>
-          ) : (
-          <ul className="mt-2 space-y-0.5 text-sm">
+
+    </>
+  )
+}
+
+/** Live list of journals the resulting study could go to, for the form's sidebar. */
+export function JournalPreview({ values }: { values: NominationFormValues }) {
+  return (
+    <section className="mt-4 rounded-lg border border-line bg-card p-5 text-sm" aria-labelledby="journals">
+      <h2 id="journals" className="label">
+        Where the result could be published
+      </h2>
+      {!values.discipline ? (
+        <p className="mt-2 text-muted-foreground">Choose a discipline to see the list.</p>
+      ) : (
+        <>
+          <ul className="mt-2 space-y-1 text-ink/85">
             {matchJournalTags(values).map((j) => (
               <li key={j.key} title={j.hint}>
                 {j.name}
               </li>
             ))}
           </ul>
-          )}
-      </div>
-    </>
+          <p className="mt-2 text-xs text-muted-foreground">Updates as you fill in the form.</p>
+        </>
+      )}
+    </section>
   )
 }
 

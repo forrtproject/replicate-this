@@ -53,17 +53,22 @@ export function ResearcherPage() {
         <AvatarBubble image={r.image} name={r.name} className="h-16 w-16 text-2xl" />
         <div className="min-w-0 flex-1">
           <h1 className="font-display text-[2rem] font-semibold leading-tight">{r.name}</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Researcher on Replicate This since {formatMonthYear(r.joinedAt)}
-            {r.isSelf && (
-              <>
-                {'. '}
-                <Link to="/profile" className="text-forest underline-offset-2 hover:underline">
-                  Edit your profile
-                </Link>
-              </>
-            )}
+          <p className="meta mt-1 text-sm text-muted-foreground">
+            <span>
+              {r.nominations.length} {r.nominations.length === 1 ? 'nomination' : 'nominations'}
+            </span>
+            <span>
+              {r.contributions.length} {r.contributions.length === 1 ? 'study team' : 'study teams'}
+            </span>
+            <span>Joined {formatMonthYear(r.joinedAt)}</span>
           </p>
+          {r.isSelf && (
+            <p className="mt-0.5 text-sm">
+              <Link to="/profile" className="text-forest underline-offset-2 hover:underline">
+                Edit your profile
+              </Link>
+            </p>
+          )}
         </div>
       </div>
 

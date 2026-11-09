@@ -105,7 +105,7 @@ export function DashboardPage() {
                         aria-hidden
                       />
                       <span className="min-w-0 flex-1">
-                        <span className={`block text-sm ${n.readAt ? 'text-muted-foreground' : 'font-medium text-ink'}`}>
+                        <span className={`block text-sm ${n.readAt ? 'text-ink/80' : 'font-medium text-ink'}`}>
                           {notificationLabel(n)}
                           {!n.readAt && <span className="sr-only"> (unread)</span>}
                         </span>
@@ -303,7 +303,7 @@ function LookingForContributors() {
           {suggestions.map((n) => (
             <li key={n.id}>
               <Link to={`/nominations/${n.id}`} className="group block px-4 py-3 hover:bg-[#f6f5ef]">
-                <span className="block text-sm font-medium leading-snug text-ink">
+                <span className="block font-display text-[0.9875rem] font-semibold leading-snug text-ink">
                   {n.metadata.title || n.doi}
                 </span>
                 <span className="meta mt-0.5 text-xs text-muted-foreground">

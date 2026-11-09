@@ -32,11 +32,12 @@ function NotificationBell() {
     <button
       onClick={() => navigate('/dashboard')}
       aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`}
+      title="Notifications"
       className="relative -m-2.5 rounded-md p-2.5 text-muted-foreground transition-colors hover:text-green"
     >
       <Bell className="h-5 w-5" />
       {unread > 0 && (
-        <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-green px-1 text-[10px] font-bold text-white">
+        <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-green px-1 text-[10px] font-bold text-white ring-2 ring-paper">
           {unread > 9 ? '9+' : unread}
         </span>
       )}

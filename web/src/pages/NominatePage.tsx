@@ -17,6 +17,7 @@ import { useDebounced } from '@/lib/hooks'
 import { ApiError } from '@/lib/api'
 import type { NominationMetadata } from '@/types'
 import { NominationGuidance } from '@/features/nominations/NominationGuidance'
+import { JournalPreview } from '@/features/nominations/NominationFormFields'
 import { usePageTitle } from '@/lib/page-title'
 
 const EMPTY_FORM: NominationFormValues = {
@@ -191,7 +192,9 @@ export function NominatePage() {
 
       <div className="mt-8 grid gap-x-12 gap-y-8 lg:grid-cols-[minmax(0,36rem)_minmax(0,1fr)]">
       {/* Read before writing: on wide screens the guidance sits beside the form. */}
-      <NominationGuidance />
+      <NominationGuidance>
+        <JournalPreview values={values} />
+      </NominationGuidance>
 
       <form onSubmit={onSubmit} className="space-y-6 lg:order-1">
         {restored && (

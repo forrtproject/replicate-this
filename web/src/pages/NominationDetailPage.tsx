@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Check, ExternalLink, Pencil, Bell, FileText } from 'lucide-react'
+import { ArrowLeft, Check, ExternalLink, Bell, FileText } from 'lucide-react'
 import { useNomination, useToggleSubscription } from '@/features/nominations/api'
 import { useSession } from '@/lib/auth-client'
 import { StatusControls } from '@/features/admin/StatusControls'
@@ -61,7 +61,7 @@ export function NominationDetailPage() {
       <SubscribeButton nomination={n} signedIn />
       {canEdit && (
         <Link to={`/nominations/${n.id}/edit`} className="btn-secondary btn-sm">
-          <Pencil className="h-3.5 w-3.5" aria-hidden /> Edit nomination
+          Edit nomination
         </Link>
       )}
     </div>
@@ -173,8 +173,10 @@ export function NominationDetailPage() {
           {isMaintainer && n.status !== 'pending' && (
             <StatusControls nominationId={n.id} status={n.status} />
           )}
+          {/* One panel, three parts: interest, forecast, team. */}
+          <div className="divide-y divide-line rounded-lg border border-line bg-card">
           <CommunityInterest nomination={n} closed={done} readOnly={!session} />
-          <section className="rounded-lg border border-line bg-card p-4" aria-labelledby="forecast">
+          <section className="p-4" aria-labelledby="forecast">
             <h2 id="forecast" className="label">
               {done ? 'Forecast before the result' : 'Forecast'}
             </h2>
@@ -193,6 +195,7 @@ export function NominationDetailPage() {
             />
           </section>
           <ContributionPanel nomination={n} />
+          </div>
         </aside>
       </div>
     </article>
@@ -290,7 +293,7 @@ function Outcome({ nomination: n }: { nomination: NominationDetail }) {
       aria-labelledby="outcome"
       className="rounded-lg border border-status-done/25 bg-green-tint px-5 py-4"
     >
-      <h2 id="outcome" className="text-[0.9375rem] font-semibold text-forest">
+      <h2 id="outcome" className="label text-[0.9375rem] text-forest">
         {n.status === 'published' ? `Result, published` : `Result`}
       </h2>
       {result ? (
@@ -345,7 +348,7 @@ function PendingNotice({
       className="rounded-lg border border-line bg-card px-5 py-4"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="review" className="text-[0.9375rem] font-semibold text-ink">
+        <h2 id="review" className="label text-[0.9375rem]">
           {asMaintainer ? 'This nomination needs a review' : 'Waiting for review'}
         </h2>
         {asMaintainer && (

@@ -16,7 +16,7 @@ export function CommunityInterest({
   readOnly?: boolean
 }) {
   return (
-    <section className="rounded-lg border border-line bg-card p-4" aria-labelledby="interest">
+    <section className="p-4" aria-labelledby="interest">
       <h2 id="interest" className="label">
         Community interest
       </h2>
@@ -35,9 +35,11 @@ export function CommunityInterest({
             verificationType={n.verificationType}
             variant="wide"
           />
-          <p className="mt-2 text-xs text-muted-foreground">
-            Upvotes help maintainers and teams decide what to take on first.
-          </p>
+          {!n.userUpvoted && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Upvotes help maintainers and teams decide what to take on first.
+            </p>
+          )}
         </div>
       )}
       {(closed || readOnly) && (
