@@ -93,43 +93,55 @@ export function PredictionBar({
 
   // Plain-language read of the split, worded for how many responses there are.
   const consensus = forecastSummary(verificationType, yes, no)
-  // With only a handful of responses a percentage or a bar overstates them:
-  // show counts, and draw the bar only once there are enough to mean something.
+  // With only a handful of responses a split overstates them.
   const few = total < FORECAST_CONSENSUS_MIN
+
+  // One display rule everywhere: below the threshold, only how many have
+  // answered; from the threshold on, the split as a bar with percentages.
+  const split = !few && (
+    <div className="mt-3">
+      <div className="flex h-2 overflow-hidden rounded-full bg-[#dcd8cc]" aria-hidden>
+        <div className="bg-green" style={{ width: `${yesPct}%` }} />
+      </div>
+      <p className="mt-1.5 flex justify-between text-xs text-muted-foreground">
+        <span>
+          <span className="data font-medium text-ink">{yesPct}%</span> yes
+        </span>
+        <span>
+          <span className="data font-medium text-ink">{100 - yesPct}%</span> no
+        </span>
+      </p>
+    </div>
+  )
+  const count = (
+    <>
+      <span className="data">{total}</span> {total === 1 ? 'prediction' : 'predictions'}
+    </>
+  )
 
   if (closed) {
     return (
-      <p className="mt-2 text-sm text-muted-foreground">
-        {total === 0 ? (
-          'No one made a prediction before the result.'
-        ) : (
-          <>
-            Before the result: <span className="data font-medium text-ink">{yes}</span> said yes,{' '}
-            <span className="data font-medium text-ink">{no}</span> said no.
-          </>
-        )}
-      </p>
+      <div>
+        <p className="mt-1 text-xs text-muted-foreground">Before the result</p>
+        {split}
+        <p className="mt-2 text-xs text-muted-foreground">
+          {total === 0 ? 'No one made a prediction.' : few ? <>{count}, too few to show a split.</> : count}
+        </p>
+      </div>
     )
   }
 
   return (
-    <div className="mt-3">
-      {!few && (
-        <div className="mb-2 flex h-2 overflow-hidden rounded-full bg-muted" aria-hidden>
-          <div className="bg-green" style={{ width: `${yesPct}%` }} />
-          <div className="bg-[#c9c4b6]" style={{ width: `${100 - yesPct}%` }} />
-        </div>
-      )}
-
-      <div className="flex gap-2">
+    <div>
+      {split}
+      <div className="mt-3 flex gap-2">
         <PredictButton active={mine === true} onClick={() => choose(true)}>
-          Yes {total > 0 && <span className="data font-normal text-muted-foreground">{few ? yes : `${yesPct}%`}</span>}
+          Yes
         </PredictButton>
         <PredictButton active={mine === false} onClick={() => choose(false)}>
-          No {total > 0 && <span className="data font-normal text-muted-foreground">{few ? no : `${100 - yesPct}%`}</span>}
+          No
         </PredictButton>
       </div>
-
       <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
         {consensus}
         {mine !== null && (

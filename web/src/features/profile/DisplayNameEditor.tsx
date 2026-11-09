@@ -35,7 +35,7 @@ export function DisplayNameEditor({ current }: { current: string }) {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         <input
           value={name}
@@ -44,26 +44,32 @@ export function DisplayNameEditor({ current }: { current: string }) {
           aria-label="Display name"
           className="input max-w-72"
         />
-        {name !== current && (
-          <button
-            type="button"
-            onClick={save}
-            disabled={update.isPending || name.trim().length < 3}
-            className="rounded-md bg-green px-3 py-2 text-sm font-semibold text-white hover:bg-forest"
-          >
-            {update.isPending ? 'Saving…' : 'Save name'}
-          </button>
-        )}
         <button
           type="button"
           onClick={roll}
           disabled={suggest.isPending}
-          className="inline-flex items-center gap-1.5 rounded-md border border-line bg-card px-3 py-2 text-sm font-medium hover:border-green disabled:opacity-60"
+          className="btn-secondary"
         >
           <Dices className="h-4 w-4" aria-hidden />
           {suggest.isPending ? 'Suggesting…' : 'Suggest a pseudonym'}
         </button>
-        {name !== current && !suggest.isPending && (
+      </div>
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={save}
+          disabled={update.isPending || name.trim().length < 3 || name === current}
+          className="btn-primary"
+        >
+          {update.isPending ? 'Saving…' : 'Save name'}
+        </button>
+        {saved ? (
+          <span role="status" className="text-sm text-forest">
+            Saved
+          </span>
+        ) : name === current ? (
+          <span className="text-sm text-muted-foreground">No changes</span>
+        ) : (
           <button
             type="button"
             onClick={() => setName(current)}
@@ -71,11 +77,6 @@ export function DisplayNameEditor({ current }: { current: string }) {
           >
             Undo
           </button>
-        )}
-        {saved && (
-          <span role="status" className="text-sm text-forest">
-            Saved
-          </span>
         )}
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}

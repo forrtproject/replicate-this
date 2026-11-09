@@ -113,10 +113,7 @@ export function NominationDetailPage() {
           )}
           <span className="flex items-center gap-2 sm:ml-auto">
             {canEdit && (
-              <Link
-                to={`/nominations/${n.id}/edit`}
-                className="inline-flex items-center gap-1.5 rounded-md border border-line bg-card px-2.5 py-1 text-xs font-medium text-ink hover:border-green"
-              >
+              <Link to={`/nominations/${n.id}/edit`} className="btn-secondary btn-sm">
                 <Pencil className="h-3.5 w-3.5" aria-hidden /> Edit
               </Link>
             )}
@@ -147,20 +144,32 @@ export function NominationDetailPage() {
 
           <StudyDetails nomination={n} />
 
-          <UpdatesSection nomination={n} />
+          <UpdatesSection nomination={n} resultShownAbove={done} />
 
           <CommentsSection nominationId={n.id} />
         </div>
 
         <aside className="space-y-4 lg:pt-1" aria-label="Take part">
+          {!session && !done && (
+            <p className="text-sm text-muted-foreground">
+              <Link
+                to={`/sign-in?redirect=${encodeURIComponent(`/nominations/${n.id}`)}`}
+                className="font-medium text-forest underline underline-offset-2"
+              >
+                Sign in
+              </Link>{' '}
+              to upvote, predict, subscribe or join the team.
+            </p>
+          )}
           {isMaintainer && n.status !== 'pending' && (
             <StatusControls nominationId={n.id} status={n.status} />
           )}
           <CommunityInterest nomination={n} closed={done} />
           <section className="rounded-lg border border-line bg-card p-4" aria-labelledby="forecast">
             <h2 id="forecast" className="label">
-              {done ? `Forecast: ${forecast.question.toLowerCase()}` : forecast.question}
+              Forecast
             </h2>
+            <p className="mt-0.5 text-sm text-ink">{forecast.question}</p>
             <PredictionBar
               nominationId={n.id}
               verificationType={n.verificationType}
@@ -170,7 +179,7 @@ export function NominationDetailPage() {
               closed={done}
             />
           </section>
-          <ContributionPanel nomination={n} />
+          {!(done && n.contributions === 0) && <ContributionPanel nomination={n} />}
         </aside>
       </div>
     </article>
@@ -264,11 +273,14 @@ function Outcome({ nomination: n }: { nomination: NominationDetail }) {
       className="rounded-lg border border-status-done/25 bg-green-tint px-5 py-4"
     >
       <h2 id="outcome" className="section-title text-forest">
-        {n.status === 'published' ? `The ${kind} is published` : `The ${kind} is complete`}
+        Result
       </h2>
+      <p className="mt-0.5 text-sm text-muted-foreground">
+        {n.status === 'published' ? `The ${kind} has been published.` : `The ${kind} is complete.`}
+      </p>
       {result ? (
         <>
-          <RichText className="mt-2 text-[0.9375rem] leading-relaxed text-ink">{result.content}</RichText>
+          <RichText className="mt-3 text-[0.9375rem] leading-relaxed text-ink">{result.content}</RichText>
           <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
             {result.articleUrl && (
               <a
@@ -322,8 +334,8 @@ function PendingNotice({
       </h2>
       <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
         {asMaintainer
-          ? 'Approve it to open it to contributors, or reject it with a reason the nominator will see.'
-          : 'A maintainer will check it against the guidelines before it opens to contributors. Others can already see, upvote and discuss it, and you can edit it until it is approved.'}
+          ? 'Approve it once it meets the guidelines; it is then listed as looking for contributors. Rejecting hides it and sends the nominator your reason.'
+          : 'A maintainer will check it against the guidelines. Until then it is listed as pending review, though people can already upvote, discuss and join it. You can edit it until it is approved.'}
       </p>
       {asMaintainer && (
         <div className="mt-3">
@@ -347,13 +359,13 @@ function PendingNotice({
                     reject.mutate({ id: n.id, reason }, { onError: fail })
                   }}
                   disabled={reject.isPending}
-                  className="rounded-md bg-destructive px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60"
+                  className="btn-primary bg-destructive! hover:opacity-90"
                 >
                   Reject nomination
                 </button>
                 <button
                   onClick={() => setRejecting(false)}
-                  className="rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:text-ink"
+                  className="px-2 text-sm text-muted-foreground hover:text-ink"
                 >
                   Cancel
                 </button>
@@ -364,18 +376,15 @@ function PendingNotice({
               <button
                 onClick={() => approve.mutate(n.id, { onError: fail })}
                 disabled={approve.isPending}
-                className="rounded-md bg-green px-3 py-1.5 text-sm font-semibold text-white hover:bg-forest disabled:opacity-60"
+                className="btn-primary"
               >
                 Approve
               </button>
-              <button
-                onClick={() => setRejecting(true)}
-                className="rounded-md border border-line px-3 py-1.5 text-sm font-medium text-destructive hover:border-destructive"
-              >
-                Reject…
+              <button onClick={() => setRejecting(true)} className="btn-secondary text-destructive!">
+                Reject
               </button>
               <Link to="/admin" className="ml-2 text-sm text-muted-foreground hover:text-ink hover:underline">
-                Review queue
+                All nominations awaiting review
               </Link>
             </div>
           )}
@@ -403,11 +412,7 @@ function SubscribeButton({
       }
       disabled={toggle.isPending}
       title="Subscribers are notified of comments, updates, new team members and status changes."
-      className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium disabled:opacity-60 ${
-        n.userSubscribed
-          ? 'border-green bg-green-tint text-forest hover:bg-muted'
-          : 'border-line bg-card text-ink hover:border-green'
-      }`}
+      className={`btn-secondary btn-sm ${n.userSubscribed ? 'border-green! bg-green-tint! text-forest!' : ''}`}
     >
       {n.userSubscribed ? <BellOff className="h-3.5 w-3.5" aria-hidden /> : <Bell className="h-3.5 w-3.5" aria-hidden />}
       {n.userSubscribed ? 'Unsubscribe' : 'Subscribe'}

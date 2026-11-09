@@ -1,3 +1,4 @@
+import { siGithub, siGoogle, siOrcid, type SimpleIcon } from 'simple-icons'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -83,22 +84,27 @@ export function SignInPage() {
       )}
 
       <div className="space-y-3">
+        {providers?.orcid && (
+          <ProviderButton icon={siOrcid} brand onClick={() => start({ providerId: 'orcid' })}>
+            Continue with ORCID
+          </ProviderButton>
+        )}
         {providers?.google && (
-          <ProviderButton onClick={() => start({ provider: 'google' })}>
+          <ProviderButton icon={siGoogle} onClick={() => start({ provider: 'google' })}>
             Continue with Google
           </ProviderButton>
         )}
         {providers?.github && (
-          <ProviderButton onClick={() => start({ provider: 'github' })}>
+          <ProviderButton icon={siGithub} onClick={() => start({ provider: 'github' })}>
             Continue with GitHub
           </ProviderButton>
         )}
-        {providers?.orcid && (
-          <ProviderButton onClick={() => start({ providerId: 'orcid' })}>
-            Continue with ORCID
-          </ProviderButton>
-        )}
       </div>
+      {providers?.orcid && (
+        <p className="mt-3 text-[0.8125rem] text-muted-foreground">
+          ORCID connects the account to your researcher identifier.
+        </p>
+      )}
 
       <p className="mt-8 border-t border-line pt-5 text-sm leading-relaxed text-muted-foreground">
         Your display name starts as the name from your provider; you can change it or
@@ -112,9 +118,14 @@ export function SignInPage() {
 
 function ProviderButton({
   onClick,
+  icon,
+  brand = false,
   children,
 }: {
   onClick: () => void
+  icon: SimpleIcon
+  /** Keep the brand colour (ORCID's green is meaningful to researchers). */
+  brand?: boolean
   children: React.ReactNode
 }) {
   return (
@@ -122,6 +133,9 @@ function ProviderButton({
       onClick={onClick}
       className="flex w-full items-center justify-center gap-2.5 rounded-md border border-input bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:border-green"
     >
+      <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden>
+        <path d={icon.path} fill={brand ? `#${icon.hex}` : 'currentColor'} />
+      </svg>
       {children}
     </button>
   )

@@ -13,13 +13,22 @@ import { useUpdates, usePostUpdate } from './api'
  * team (nominator, contributors, maintainers). Posting is optional; an update
  * with an article link asks the maintainers to mark the study completed.
  */
-export function UpdatesSection({ nomination: n }: { nomination: NominationDetail }) {
+export function UpdatesSection({
+  nomination: n,
+  resultShownAbove = false,
+}: {
+  nomination: NominationDetail
+  /** The page already leads with the result; list that update as a one-line entry. */
+  resultShownAbove?: boolean
+}) {
   const { data: session } = useSession()
   const isMaintainer = (session?.user as { role?: string } | undefined)?.role === 'maintainer'
   const { data: updates, isLoading } = useUpdates(n.id)
   const post = usePostUpdate(n.id)
 
   const canPost = n.viewerIsNominator || n.userContributed || isMaintainer
+  // Same choice as the result block on the page: the update that links the write-up.
+  const resultId = (updates?.find((u) => u.articleUrl) ?? updates?.[0])?.id
 
   const [showForm, setShowForm] = useState(false)
   const [content, setContent] = useState('')
@@ -50,7 +59,7 @@ export function UpdatesSection({ nomination: n }: { nomination: NominationDetail
         Progress updates
       </h2>
       <p className="mb-4 mt-1 text-sm text-muted-foreground">
-        Notes from the study team on how the work is going.
+        Notes from the nominator and study team on how the work is going.
       </p>
 
       {isLoading && <p className="text-sm text-muted-foreground">Loading updates…</p>}
@@ -59,7 +68,16 @@ export function UpdatesSection({ nomination: n }: { nomination: NominationDetail
       )}
 
       <ol className="space-y-5 border-l-2 border-line pl-5">
-        {updates?.map((u) => (
+        {updates?.map((u) =>
+          resultShownAbove && u.id === resultId ? (
+            <li key={u.id}>
+              <p className="flex flex-wrap items-baseline gap-x-2 text-sm">
+                <ResearcherLink name={u.name} token={u.token} className="font-medium text-ink" />
+                <span className="text-xs text-muted-foreground">{formatDate(u.createdAt)}</span>
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">Posted the result, shown at the top of this page.</p>
+            </li>
+          ) : (
           <li key={u.id}>
             <p className="flex flex-wrap items-baseline gap-x-2 text-sm">
               <ResearcherLink name={u.name} token={u.token} className="font-medium text-ink" />
@@ -78,7 +96,8 @@ export function UpdatesSection({ nomination: n }: { nomination: NominationDetail
               </a>
             )}
           </li>
-        ))}
+          ),
+        )}
       </ol>
 
       {canPost && (
@@ -109,7 +128,7 @@ export function UpdatesSection({ nomination: n }: { nomination: NominationDetail
                 <button
                   onClick={submit}
                   disabled={post.isPending || content.trim().length < 2}
-                  className="rounded-md bg-green px-3 py-1.5 text-sm font-semibold text-white hover:bg-forest disabled:opacity-60"
+                  className="btn-primary"
                 >
                   {post.isPending ? 'Posting…' : 'Post update'}
                 </button>
@@ -123,10 +142,7 @@ export function UpdatesSection({ nomination: n }: { nomination: NominationDetail
             </div>
           ) : (
             <>
-              <button
-                onClick={() => setShowForm(true)}
-                className="rounded-md border border-line bg-card px-3 py-1.5 text-sm font-medium hover:border-green"
-              >
+              <button onClick={() => setShowForm(true)} className="btn-secondary">
                 Post an update
               </button>
             </>

@@ -53,9 +53,15 @@ function Section({
       {data?.length === 0 && (
         <p className="rounded-lg border border-line bg-card px-4 py-5 text-sm text-muted-foreground">{empty}</p>
       )}
-      <div className="space-y-4">
-        {data?.map((n) => <Row key={n.id} nomination={n} tab={tab} />)}
-      </div>
+      {data && data.length > 0 && (
+        <ul className="divide-y divide-line rounded-lg border border-line bg-card">
+          {data.map((n) => (
+            <li key={n.id}>
+              <Row nomination={n} tab={tab} />
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   )
 }
@@ -73,7 +79,7 @@ function Row({ nomination: n, tab }: { nomination: AdminNomination; tab: 'pendin
   const pub = publicList?.find((p) => p.id === n.id)
 
   return (
-    <div className="rounded-lg border border-line bg-card p-5">
+    <div className="p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           <Link
@@ -126,10 +132,7 @@ function Row({ nomination: n, tab }: { nomination: AdminNomination; tab: 'pendin
         <div className="flex flex-shrink-0 flex-wrap gap-2">
           {tab === 'pending' ? (
             <>
-              <button
-                onClick={() => approve.mutate(n.id)}
-                className="rounded-md bg-green px-3 py-1.5 text-sm font-semibold text-white hover:bg-forest"
-              >
+              <button onClick={() => approve.mutate(n.id)} className="btn-primary">
                 Approve
               </button>
               <button
@@ -137,21 +140,18 @@ function Row({ nomination: n, tab }: { nomination: AdminNomination; tab: 'pendin
                   setRejecting(true)
                   setError('')
                 }}
-                className="rounded-md border border-line px-3 py-1.5 text-sm font-medium text-destructive hover:border-destructive"
+                className="btn-secondary text-destructive!"
               >
-                Reject…
+                Reject
               </button>
-              <Link
-                to={`/nominations/${n.id}/edit`}
-                className="rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:text-ink hover:underline"
-              >
+              <Link to={`/nominations/${n.id}/edit`} className="btn-secondary">
                 Edit
               </Link>
             </>
           ) : (
             <button
               onClick={() => undo.mutate(n.id)}
-              className="rounded-md border border-line px-3 py-1.5 text-sm font-medium hover:border-green"
+              className="btn-secondary"
             >
               Undo rejection
             </button>
@@ -181,7 +181,7 @@ function Row({ nomination: n, tab }: { nomination: AdminNomination; tab: 'pendin
                   { onSuccess: () => setRejecting(false) },
                 )
               }}
-              className="rounded-md bg-destructive px-3 py-1.5 text-sm font-medium text-destructive-foreground hover:opacity-90"
+              className="btn-primary bg-destructive! hover:opacity-90"
             >
               Reject nomination
             </button>

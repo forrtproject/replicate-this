@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { EyeOff, Eye, Minus, Plus, ThumbsUp, Flag } from 'lucide-react'
+import { EyeOff, Eye, ThumbsUp, Flag } from 'lucide-react'
 import { useSession } from '@/lib/auth-client'
 import { cn } from '@/lib/utils'
 import { researcherLabel } from '@/features/nominations/format'
@@ -70,23 +70,29 @@ export function CommentsSection({ nominationId }: { nominationId: string }) {
       </h2>
 
       {session ? (
-        <div className="mb-5">
+        <div className="mb-6">
+          <label htmlFor="new-comment" className="mb-1 block text-sm font-medium">
+            Add a comment
+          </label>
           <textarea
+            id="new-comment"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={3}
-            placeholder="Add to the discussion. Keep it constructive and about the work."
+            placeholder="Questions, related work, practical concerns"
             className="input"
           />
-          <p className="mt-1 text-xs text-muted-foreground">{MARKDOWN_HINT}</p>
-          <div className="mt-2">
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
             <button
               onClick={submit}
               disabled={post.isPending || content.trim().length < 2}
-              className="rounded-md bg-green px-3 py-2 text-sm font-medium text-white hover:bg-forest disabled:opacity-60"
+              className="btn-primary"
             >
               {post.isPending ? 'Posting…' : 'Post comment'}
             </button>
+            <p className="text-xs text-muted-foreground" title="**bold**, *italic*, lists, > quotes, [links](https://…)">
+              Markdown formatting works. Keep it about the work, not the authors.
+            </p>
           </div>
         </div>
       ) : (
@@ -191,15 +197,6 @@ function CommentThread({
         className={c.hidden ? 'rounded-md border border-amber/30 bg-amber/5 p-3' : ''}
       >
         <div className="flex flex-wrap items-center gap-x-2 text-sm">
-          {(node.children.length > 0 || collapsed) && (
-            <button
-              onClick={() => setCollapsed((v) => !v)}
-              aria-label={collapsed ? 'Expand thread' : 'Collapse thread'}
-              className="inline-flex h-4 w-4 items-center justify-center rounded border border-line text-muted-foreground hover:border-green hover:text-green"
-            >
-              {collapsed ? <Plus className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
-            </button>
-          )}
           <ResearcherLink name={c.name} token={c.token} className="font-medium text-ink" />
           {!deleted && <ContactLinks links={c.links} />}
           <span className="text-xs text-muted-foreground">{formatWhen(c.createdAt)}</span>
@@ -216,7 +213,7 @@ function CommentThread({
           )}
         </div>
 
-        {!collapsed && (
+        {(
           <>
             <RichText className="mt-1 text-[0.9375rem] leading-relaxed">{c.content}</RichText>
             <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -241,6 +238,11 @@ function CommentThread({
                   className="hover:text-green"
                 >
                   {replying ? 'Cancel' : 'Reply'}
+                </button>
+              )}
+              {node.children.length > 0 && (
+                <button onClick={() => setCollapsed(true)} className="hover:text-ink">
+                  Hide {replyCount === 1 ? 'reply' : `${replyCount} replies`}
                 </button>
               )}
               {signedIn && !c.isOwn && !c.hidden && !deleted && (
@@ -297,7 +299,7 @@ function CommentThread({
                 <button
                   onClick={sendReply}
                   disabled={post.isPending || reply.trim().length < 2}
-                  className="rounded-md bg-green px-3 py-1.5 text-sm font-medium text-white hover:bg-forest disabled:opacity-60"
+                  className="btn-primary"
                 >
                   {post.isPending ? 'Posting…' : 'Post reply'}
                 </button>
@@ -306,10 +308,10 @@ function CommentThread({
           </>
         )}
 
-        {collapsed && replyCount > 0 && (
-          <p className="mt-1 text-xs text-muted-foreground">
-            {replyCount} {replyCount === 1 ? 'reply' : 'replies'} hidden
-          </p>
+        {collapsed && (
+          <button onClick={() => setCollapsed(false)} className="mt-1 text-xs text-muted-foreground hover:text-ink">
+            Show {replyCount === 1 ? '1 reply' : `${replyCount} replies`}
+          </button>
         )}
       </div>
 

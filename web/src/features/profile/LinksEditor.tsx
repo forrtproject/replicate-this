@@ -62,7 +62,7 @@ export function LinksEditor({ initial }: { initial: ProfileLinks }) {
       {fields.map(({ key, label, placeholder, primary }) => (
         <label key={key} className="grid grid-cols-[8.5rem_1fr_auto] items-center gap-3 text-sm">
           <span className="inline-flex items-center gap-2 font-medium text-ink">
-            <LinkIcon kind={key} />
+            <LinkIcon kind={key} mono={key !== 'orcid'} className="h-4 w-4 text-muted-foreground" />
             {label}
           </span>
           <input
@@ -88,7 +88,7 @@ export function LinksEditor({ initial }: { initial: ProfileLinks }) {
 
       {addable.length > 0 && (
         <div className="pt-1">
-          <p className="mb-1.5 text-xs text-muted-foreground">Add another profile</p>
+          <p className="mb-2 text-sm font-medium">Add another profile</p>
           <div className="flex flex-wrap gap-1.5">
             {addable.map(({ key, label }) => (
               <button
@@ -96,9 +96,9 @@ export function LinksEditor({ initial }: { initial: ProfileLinks }) {
                 type="button"
                 onClick={() => setShown((s) => [...s, key])}
                 title={`Add ${label}`}
-                className="inline-flex items-center gap-1.5 rounded-full border border-line bg-card px-2.5 py-1 text-xs font-medium hover:border-green"
+                className="btn-secondary btn-sm font-normal"
               >
-                <LinkIcon kind={key} className="h-3.5 w-3.5" />
+                <LinkIcon kind={key} className="h-3.5 w-3.5 text-muted-foreground" mono />
                 {label}
               </button>
             ))}
@@ -112,7 +112,7 @@ export function LinksEditor({ initial }: { initial: ProfileLinks }) {
           type="button"
           onClick={save}
           disabled={update.isPending || !dirty}
-          className="rounded-md bg-green px-3 py-2 text-sm font-semibold text-white hover:bg-forest"
+          className="btn-primary"
         >
           {update.isPending ? 'Saving…' : 'Save links'}
         </button>

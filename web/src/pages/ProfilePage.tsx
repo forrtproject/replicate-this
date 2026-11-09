@@ -50,7 +50,7 @@ function AvatarCard() {
   return (
     <Card
       title="Picture"
-      hint="Shown on your public profile and next to your name on study teams."
+      hint="Shown on your public profile and next to your name on study teams. A new picture is saved straight away."
     >
       {isLoading || !profile ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
@@ -236,7 +236,7 @@ function EmailPrefsEditor({
           onClick={save}
           disabled={update.isPending || !emailValid || !dirty}
           title={emailValid ? undefined : 'Enter a valid email address first.'}
-          className="rounded-md bg-green px-3 py-2 text-sm font-semibold text-white hover:bg-forest"
+          className="btn-primary"
         >
           {update.isPending ? 'Saving…' : 'Save email settings'}
         </button>

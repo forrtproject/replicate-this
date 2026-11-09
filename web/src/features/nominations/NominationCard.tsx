@@ -1,9 +1,9 @@
 import { Link, useLocation } from 'react-router-dom'
 import type { NominationSummary } from '@/types'
-import { AVAILABILITY_OPTIONS } from '@/types'
 import { ResearcherLink } from '@/features/profile/ResearcherLink'
 import { VoteButton } from './VoteButton'
 import { StatusBadge } from './StatusBadge'
+import { AvailabilityTags } from './Availability'
 import { VERIFICATION_CONFIG } from './verification'
 import { disciplineLabel, formatReference } from './format'
 
@@ -12,9 +12,15 @@ import { disciplineLabel, formatReference } from './format'
  * link is stretched over it (`after:absolute after:inset-0`). The vote button
  * and the nominator's name sit above that overlay so they keep their own click.
  */
-export function NominationCard({ nomination: n }: { nomination: NominationSummary }) {
+export function NominationCard({
+  nomination: n,
+  showNominator = true,
+}: {
+  nomination: NominationSummary
+  /** Off on a researcher's own profile, where it would only repeat their name. */
+  showNominator?: boolean
+}) {
   const location = useLocation()
-  const open = AVAILABILITY_OPTIONS.filter((o) => n.availability.includes(o.key)).map((o) => o.label)
 
   return (
     // min-w-0 lets the row shrink to a phone's width instead of growing to fit
@@ -47,31 +53,33 @@ export function NominationCard({ nomination: n }: { nomination: NominationSummar
           {formatReference(n.metadata)}
         </p>
 
-        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 sm:gap-x-4 text-[0.8125rem] text-muted-foreground">
-          <StatusBadge status={n.status} />
-          <span className="text-ink/80">{VERIFICATION_CONFIG[n.verificationType].short}</span>
+        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.8125rem] text-muted-foreground">
+          <StatusBadge status={n.status} className="text-[0.8125rem]" />
+          <span>{VERIFICATION_CONFIG[n.verificationType].short}</span>
           <span>{disciplineLabel(n)}</span>
-          {open.length > 0 && <span className="hidden sm:inline">{sentenceList(open)}</span>}
-          {n.contributions > 0 && (
-            <span>{n.contributions} on the team</span>
-          )}
+          {n.contributions > 0 && <span>{n.contributions} on the team</span>}
           {n.comments > 0 && (
             <span>
               {n.comments} {n.comments === 1 ? 'comment' : 'comments'}
             </span>
           )}
-          {n.nominatorToken && (
-            <span className="relative z-10 hidden sm:inline">
-              Nominated by <ResearcherLink name={n.nominatorName} token={n.nominatorToken} />
-            </span>
-          )}
         </div>
+
+        {(n.availability.length > 0 || (showNominator && n.nominatorToken)) && (
+          <div className="mt-1 hidden flex-wrap items-center gap-x-4 gap-y-1 text-[0.8125rem] text-muted-foreground sm:flex">
+            {n.availability.length > 0 && (
+              <span className="relative z-10">
+                <AvailabilityTags items={n.availability} links={n.availabilityLinks} />
+              </span>
+            )}
+            {showNominator && n.nominatorToken && (
+              <span className="relative z-10">
+                Nominated by <ResearcherLink name={n.nominatorName} token={n.nominatorToken} />
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </article>
   )
-}
-
-/** ["Open data", "Open code"] → "Open data, open code" */
-function sentenceList(labels: string[]): string {
-  return labels.map((l, i) => (i === 0 ? l : l.charAt(0).toLowerCase() + l.slice(1))).join(', ')
 }

@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { Upload, X, ChevronDown, Smile } from 'lucide-react'
+import { Upload, ChevronDown, Smile } from 'lucide-react'
 import { ApiError } from '@/lib/api'
 import { EMOJI_GROUPS } from './emoji'
 import { useUpdateAvatar } from './api'
 
-// A handful of the catalogue shown inline, so the common picks are one click away.
-const QUICK_EMOJI = ['🔬', '🧪', '🧬', '🔭', '📊', '📈', '🧠', '⚗️', '🦠', '📚', '🤖', '🌌']
 
 /** True when the stored avatar value is an inline image rather than an emoji. */
 function isImageAvatar(image: string | undefined): boolean {
@@ -118,10 +116,11 @@ export function AvatarEditor({ current, name }: { current: string; name?: string
             type="button"
             onClick={() => fileRef.current?.click()}
             disabled={update.isPending}
-            className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-2 text-sm font-medium hover:border-green disabled:opacity-60"
+            className="btn-secondary"
           >
-            <Upload className="h-4 w-4" /> Upload image
+            <Upload className="h-4 w-4" aria-hidden /> Upload a photo
           </button>
+          <EmojiPicker selected={emoji} onSelect={pick} />
           {current && (
             <button
               type="button"
@@ -130,9 +129,9 @@ export function AvatarEditor({ current, name }: { current: string; name?: string
                 save('')
               }}
               disabled={update.isPending}
-              className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-2 text-sm font-medium hover:border-destructive disabled:opacity-60"
+              className="px-2 text-sm text-muted-foreground hover:text-destructive"
             >
-              <X className="h-4 w-4" /> Remove
+              Use initial
             </button>
           )}
         </div>
@@ -143,27 +142,6 @@ export function AvatarEditor({ current, name }: { current: string; name?: string
           className="hidden"
           onChange={(e) => onFile(e.target.files?.[0])}
         />
-      </div>
-
-      <div>
-        <p className="mb-1.5 text-xs text-muted-foreground">Or pick an emoji</p>
-        <div className="flex flex-wrap items-center gap-1.5">
-          {QUICK_EMOJI.map((e) => (
-            <button
-              key={e}
-              type="button"
-              onClick={() => pick(e)}
-              className={`rounded-full ring-offset-2 ring-offset-card transition-shadow hover:ring-2 hover:ring-green ${
-                emoji === e ? 'ring-2 ring-green' : ''
-              }`}
-              aria-label={`Use ${e}`}
-              aria-pressed={emoji === e}
-            >
-              <AvatarBubble image={e} className="h-9 w-9 text-lg" />
-            </button>
-          ))}
-          <EmojiPicker selected={emoji} onSelect={pick} />
-        </div>
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
@@ -206,10 +184,10 @@ function EmojiPicker({
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-haspopup="dialog"
-        className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-2 text-sm font-medium hover:border-green"
+        className="btn-secondary"
       >
-        <Smile className="h-4 w-4" />
-        More emojis
+        <Smile className="h-4 w-4" aria-hidden />
+        Choose an emoji
         <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 

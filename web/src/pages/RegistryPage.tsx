@@ -174,7 +174,7 @@ export function RegistryPage() {
                 ))}
               </Select>
               <Select label="Target journal" value={journal} onChange={(v) => setParam('journal', v)}>
-                <option value="">Any target journal</option>
+                <option value="">Any journal</option>
                 {TARGET_JOURNALS.map((j) => (
                   <option key={j.key} value={j.key}>
                     {j.name}

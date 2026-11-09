@@ -5,7 +5,6 @@ import {
   type AvailabilityKey,
   type VerificationType,
 } from '@/types'
-import { DefinedTerm } from './VerificationBadge'
 import { matchJournalTags } from './journal-tags'
 
 /** The nomination fields shared by the submit and edit forms. */
@@ -47,7 +46,7 @@ export function NominationFormFields({
 
   return (
     <>
-      <h2 className="section-title border-t border-line pt-6 text-lg">Why it deserves a second look</h2>
+      <h2 className="section-title border-t border-line pt-6 text-lg">Kind of check</h2>
       <Field label="Discipline" required>
         <select
           value={values.discipline}
@@ -79,39 +78,44 @@ export function NominationFormFields({
       )}
 
       <fieldset>
-        <legend className="mb-1 text-sm font-medium">Replication or reproduction?</legend>
-        <p className="mb-2 text-xs text-muted-foreground">
-          <DefinedTerm term="Reproduction" lowercase={false} /> re-runs the original data or code (including
-          simulation and other computational studies) and/or checks the results hold up under
-          other reasonable analyses. <DefinedTerm term="Replication" lowercase={false} /> collects new data.
-        </p>
-        <div className="space-y-1.5">
+        <legend className="mb-2 text-sm font-medium">
+          What kind of second look? <span className="font-normal text-muted-foreground">(required)</span>
+        </legend>
+        <div className="space-y-2.5">
           {(
             [
-              ['replication', 'Replication (collect new data)'],
-              ['reproduction', 'Reproduction (re-run the original data or code, and/or check robustness)'],
-              ['both', 'Either / not sure'],
+              ['replication', 'Replication', 'Run the study again with new data and the same methods.'],
+              [
+                'reproduction',
+                'Reproduction',
+                'Re-run the original analysis on the original data or code, and test whether the results are robust.',
+              ],
+              ['both', 'Either, or not sure', 'Leave it to the team that takes it on.'],
             ] as const
-          ).map(([value, label]) => (
-            <label key={value} className="flex items-center gap-2 text-sm">
+          ).map(([value, label, hint]) => (
+            <label key={value} className="flex items-start gap-2 text-sm">
               <input
                 type="radio"
                 name="verificationType"
                 value={value}
                 checked={values.verificationType === value}
                 onChange={() => set({ verificationType: value })}
-                className="accent-[var(--color-green)]"
+                className="mt-1 accent-[var(--color-green)]"
               />
-              {label}
+              <span>
+                {label}
+                <span className="block text-[0.8125rem] text-muted-foreground">{hint}</span>
+              </span>
             </label>
           ))}
         </div>
       </fieldset>
 
+      <h2 className="section-title border-t border-line pt-6 text-lg">The case for a second look</h2>
       <Field
-        label="Scientific justification"
+        label="Why revisit this?"
         required
-        hint="Why is this paper valuable to replicate or reproduce? e.g. highly influential, surprising results, methodologically innovative. At least 20 characters."
+        hint="Shown first on the study’s page. For example: it is highly cited, informs policy, the result was surprising, or the evidence is thin. At least 20 characters."
       >
         <textarea
           value={values.justification}
@@ -126,7 +130,8 @@ export function NominationFormFields({
       {isReproduction && (
         <Field
           label="Data location"
-          hint="Where do the original data or code live? e.g. a Zenodo or OSF link. For simulation studies, link the code."
+          optional
+          hint="Where the original data or code live, such as an OSF or Zenodo link."
         >
           <input
             value={values.dataLocation}
@@ -139,7 +144,8 @@ export function NominationFormFields({
 
       <Field
         label="Suggested robustness checks"
-        hint="Any specific alternative specifications worth trying? (optional)"
+        optional
+        hint="Alternative analyses worth trying."
       >
         <textarea
           value={values.robustnessChecks}
@@ -151,8 +157,9 @@ export function NominationFormFields({
 
       {isReplication && (
         <Field
-          label="Suggested deviations from the original design"
-          hint="If replicating, how should the new design differ from the original? (optional)"
+          label="Suggested changes to the design"
+          optional
+          hint="How a replication should differ from the original, if at all."
         >
           <textarea
             value={values.designDeviations}
@@ -183,7 +190,7 @@ export function NominationFormFields({
                   />
                   <span>
                     {o.label}
-                    <span className="block text-xs text-muted-foreground">{o.hint}</span>
+                    <span className="block text-[0.8125rem] text-muted-foreground">{o.hint}</span>
                   </span>
                 </label>
                 {checked && (
@@ -231,7 +238,7 @@ export function NominationFormFields({
               <label htmlFor="replication-workshop" className="cursor-pointer">
                 Suits a replication workshop
               </label>
-              <span className="block text-xs text-muted-foreground">
+              <span className="block text-[0.8125rem] text-muted-foreground">
                 This paper could be reproduced by a team in a one-day workshop.
               </span>
             </span>
@@ -248,7 +255,7 @@ export function NominationFormFields({
               <label htmlFor="experimental-research" className="cursor-pointer">
                 Experimental research
               </label>
-              <span className="block text-xs text-muted-foreground">
+              <span className="block text-[0.8125rem] text-muted-foreground">
                 The study manipulates conditions rather than observing them.
               </span>
             </span>
@@ -284,12 +291,15 @@ export function Field({
   label,
   hint,
   required = false,
+  optional = false,
   children,
 }: {
   label: string
   hint?: string
   /** Shows "(required)" after the label; the control itself carries `required`. */
   required?: boolean
+  /** Shows "(optional)" after the label. */
+  optional?: boolean
   children: React.ReactElement<{ id?: string; 'aria-describedby'?: string }>
 }) {
   const id = useId()
@@ -301,10 +311,11 @@ export function Field({
       <label htmlFor={id} className="mb-1 block text-sm font-medium">
         {label}
         {required && <span className="font-normal text-muted-foreground"> (required)</span>}
+        {optional && <span className="font-normal text-muted-foreground"> (optional)</span>}
       </label>
       {cloneElement(children, { id, 'aria-describedby': describedBy })}
       {hint && (
-        <p id={hintId} className="mt-1 text-xs text-muted-foreground">
+        <p id={hintId} className="mt-1 text-[0.8125rem] leading-snug text-muted-foreground">
           {hint}
         </p>
       )}

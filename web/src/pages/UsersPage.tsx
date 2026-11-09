@@ -60,17 +60,15 @@ export function UsersPage() {
               return (
                 <tr key={u.id} className="border-t border-line">
                   <td className="px-4 py-3">
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-x-2">
                       <span className="font-medium">{researcherLabel(u.name, u.token)}</span>
+                      <ContactLinks links={u.links} />
                       {u.providers.length > 0 && (
                         <span className="text-xs text-muted-foreground">
                           {u.providers.join(', ')}
                         </span>
                       )}
                       {isMe && <span className="text-xs text-muted-foreground">(you)</span>}
-                    </div>
-                    <div className="mt-0.5 text-xs">
-                      <ContactLinks links={u.links} />
                     </div>
                   </td>
                   <td className="px-4 py-3">

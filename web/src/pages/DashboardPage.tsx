@@ -109,9 +109,7 @@ export function DashboardPage() {
                           {!n.readAt && <span className="sr-only"> (unread)</span>}
                         </span>
                         {study && (
-                          <span className="mt-0.5 block truncate font-display text-[0.9375rem] text-ink/80">
-                            {study}
-                          </span>
+                          <span className="mt-0.5 block text-[0.8125rem] text-muted-foreground">{study}</span>
                         )}
                       </span>
                       <span className="shrink-0 pt-0.5 text-xs text-muted-foreground">{formatWhen(n.createdAt)}</span>
@@ -197,15 +195,15 @@ function StudyList({
         <li key={n.id}>
           <Link
             to={`/nominations/${n.id}`}
-            className="flex items-center justify-between gap-4 px-4 py-3 transition-colors hover:bg-[#f6f5ef]"
+            className="block px-4 py-3 transition-colors hover:bg-[#f6f5ef]"
           >
-            <span className="min-w-0">
-              <span className="block truncate font-display text-[1.0625rem] font-semibold text-ink">
-                {n.title}
-              </span>
-              <span className="text-xs text-muted-foreground">{n.note}</span>
+            <span className="block font-display text-[1.0625rem] font-semibold leading-snug text-ink">
+              {n.title}
             </span>
-            <StatusBadge status={n.status} className="shrink-0" />
+            <span className="mt-1 flex flex-wrap items-center gap-x-4 text-[0.8125rem] text-muted-foreground">
+              <StatusBadge status={n.status} className="text-[0.8125rem]" />
+              <span>{n.note}</span>
+            </span>
           </Link>
         </li>
       ))}
@@ -271,10 +269,10 @@ function LookingForContributors() {
   if (!all) return null
   return (
     <section aria-labelledby="open-studies">
-      <h2 id="open-studies" className="label">
+      <h2 id="open-studies" className="section-title">
         Looking for contributors
       </h2>
-      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
         Open studies with the smallest teams, where another person helps most.
       </p>
       {suggestions.length === 0 ? (
@@ -286,11 +284,11 @@ function LookingForContributors() {
           .
         </p>
       ) : (
-        <ul className="mt-3 space-y-4">
+        <ul className="mt-3 divide-y divide-line rounded-lg border border-line bg-card">
           {suggestions.map((n) => (
             <li key={n.id}>
-              <Link to={`/nominations/${n.id}`} className="group block">
-                <span className="block font-display text-[0.9875rem] font-semibold leading-snug text-ink group-hover:text-forest">
+              <Link to={`/nominations/${n.id}`} className="group block px-4 py-3 hover:bg-[#f6f5ef]">
+                <span className="block font-display text-[1rem] font-semibold leading-snug text-ink">
                   {n.metadata.title || n.doi}
                 </span>
                 <span className="mt-0.5 block text-xs text-muted-foreground">

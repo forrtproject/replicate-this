@@ -68,17 +68,19 @@ export function ResearcherPage() {
       </div>
 
       {links.length > 0 && (
-        <ul className="mt-5 flex flex-wrap gap-2">
+        <ul className="mt-5 flex flex-wrap gap-x-6 gap-y-2">
           {links.map((l) => (
             <li key={l.key}>
               <a
                 href={r.links[l.key]}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="inline-flex items-center gap-1.5 rounded-md border border-line bg-card px-3 py-1.5 text-sm hover:border-green"
+                className="inline-flex items-center gap-1.5 text-sm text-ink hover:text-forest hover:underline"
+                title={l.label}
               >
-                <LinkIcon kind={l.key} />
-                {l.label}
+                <LinkIcon kind={l.key} mono={l.key !== 'orcid'} className="h-4 w-4 text-muted-foreground" />
+                <span className="sr-only">{l.label}: </span>
+                {linkText(r.links[l.key]!)}
               </a>
             </li>
           ))}
@@ -91,12 +93,12 @@ export function ResearcherPage() {
           <span className="data ml-2 font-sans text-base font-normal text-muted-foreground">{r.nominations.length}</span>
         </h2>
         {r.nominations.length === 0 ? (
-          <Empty>No public nominations yet.</Empty>
+          <p className="text-sm text-muted-foreground">No public nominations yet.</p>
         ) : (
           <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-card">
             {r.nominations.map((n) => (
               <li key={n.id}>
-                <NominationCard nomination={n} />
+                <NominationCard nomination={n} showNominator={false} />
               </li>
             ))}
           </ul>
@@ -109,7 +111,7 @@ export function ResearcherPage() {
           <span className="data ml-2 font-sans text-base font-normal text-muted-foreground">{r.contributions.length}</span>
         </h2>
         {r.contributions.length === 0 ? (
-          <Empty>Not on any study team yet.</Empty>
+          <p className="text-sm text-muted-foreground">Not on any study team yet.</p>
         ) : (
           <ul className="divide-y divide-line rounded-lg border border-line bg-card">
             {r.contributions.map((c) => (
@@ -130,10 +132,7 @@ export function ResearcherPage() {
   )
 }
 
-function Empty({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="rounded-lg border border-line bg-card px-4 py-5 text-sm text-muted-foreground">
-      {children}
-    </p>
-  )
+/** "https://orcid.org/0000-…" → "orcid.org/0000-…": the address, minus the scheme. */
+function linkText(url: string): string {
+  return url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')
 }

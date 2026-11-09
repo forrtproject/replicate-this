@@ -12,8 +12,10 @@ function NavItem({ to, children }: { to: string; children: React.ReactNode }) {
       to={to}
       className={({ isActive }) =>
         cn(
-          'text-sm transition-colors hover:text-green',
-          isActive ? 'font-medium text-ink' : 'text-muted-foreground',
+          'relative text-sm transition-colors hover:text-ink sm:py-[1.125rem]',
+          isActive
+            ? 'font-medium text-ink sm:after:absolute sm:after:inset-x-0 sm:after:bottom-0 sm:after:h-0.5 sm:after:bg-green'
+            : 'text-muted-foreground',
         )
       }
     >
@@ -60,16 +62,16 @@ export function RootLayout() {
           <NavItem to="/nominate">Nominate</NavItem>
           <NavItem to="/dashboard">Dashboard</NavItem>
           <NavItem to="/profile">Profile</NavItem>
-          {isMaintainer && <NavItem to="/admin">Admin</NavItem>}
+          {isMaintainer && <NavItem to="/admin">Maintainer tools</NavItem>}
           <button
             onClick={() => signOut()}
-            className="text-left text-sm text-muted-foreground transition-colors hover:text-amber"
+            className="text-left text-sm text-muted-foreground transition-colors hover:text-ink sm:ml-2 sm:border-l sm:border-line sm:pl-5"
           >
             Sign out
           </button>
         </>
       ) : (
-        <NavItem to="/sign-in">Sign in / Register</NavItem>
+        <NavItem to="/sign-in">Sign in</NavItem>
       )}
     </>
   )
@@ -136,7 +138,10 @@ export function RootLayout() {
 
       <footer className="border-t border-line bg-paper">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-4 text-xs text-muted-foreground">
-          <span>FORRT · Replication Journal Federation</span>
+          <span>
+            Run by <a href="https://forrt.org" className="hover:text-forest hover:underline">FORRT</a> and the
+            Replication Journal Federation
+          </span>
           <nav className="flex items-center gap-4">
             <Link to="/guidelines" className="inline-block py-2 hover:text-green">
               Guidelines

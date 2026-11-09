@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { formatReference } from '@/features/nominations/format'
+import { NominationGuidance } from '@/features/nominations/NominationGuidance'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useNomination, useUpdateNomination } from '@/features/nominations/api'
 import {
@@ -92,9 +93,11 @@ function EditForm({ nomination: n }: { nomination: NominationDetail }) {
         <ArrowLeft className="h-3.5 w-3.5" aria-hidden /> Back to the nomination
       </Link>
 
-      <div className="max-w-[36rem]">
       <h1 className="mt-5 font-display text-[2rem] font-semibold leading-tight">Edit nomination</h1>
-      <div className="mt-4 rounded-lg border border-line bg-card px-4 py-3">
+      <div className="mt-6 grid gap-x-12 gap-y-8 lg:grid-cols-[minmax(0,36rem)_minmax(0,1fr)]">
+      <NominationGuidance />
+      <div className="lg:order-1">
+      <div className="rounded-lg border border-line bg-card px-4 py-3">
         <p className="font-display text-[1.0625rem] font-semibold leading-snug">{n.metadata.title || n.doi}</p>
         <p className="mt-0.5 text-sm text-muted-foreground">
           {formatReference(n.metadata)}
@@ -104,7 +107,10 @@ function EditForm({ nomination: n }: { nomination: NominationDetail }) {
 
       <p className="mb-6 mt-3 text-sm leading-relaxed text-muted-foreground">
         The paper itself can’t be changed; if it’s the wrong one, nominate the right paper
-        instead. Saving sends the nomination back for review.
+        instead.{' '}
+        {n.status === 'approved'
+          ? 'Saving sends the nomination back for review, so it shows as pending until a maintainer approves it again.'
+          : 'It is still waiting for review, so a maintainer will see your changes.'}
       </p>
 
       <form onSubmit={onSubmit} className="space-y-6">
@@ -113,18 +119,15 @@ function EditForm({ nomination: n }: { nomination: NominationDetail }) {
         {error && <p className="text-sm text-destructive">{error}</p>}
 
         <div className="flex items-center gap-4">
-          <button
-            type="submit"
-            disabled={update.isPending}
-            className="rounded-md bg-green px-5 py-2.5 text-sm font-semibold text-white hover:bg-forest"
-          >
-            {update.isPending ? 'Saving…' : 'Save changes'}
+          <button type="submit" disabled={update.isPending} className="btn-primary px-5 py-2.5">
+            {update.isPending ? 'Saving…' : n.status === 'approved' ? 'Save and send for review' : 'Save changes'}
           </button>
           <Link to={`/nominations/${n.id}`} className="text-sm text-muted-foreground hover:text-ink">
             Cancel
           </Link>
         </div>
       </form>
+      </div>
       </div>
     </div>
   )

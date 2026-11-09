@@ -15,7 +15,7 @@ export function CommentsModerationPage() {
     <div className="mx-auto max-w-5xl px-4 pb-16 pt-10">
       <AdminPageHeader
         title="Moderate comments"
-        intro="Recent comments on all nominations, flagged ones first. Hide anything off-topic or against the Code of Conduct: it leaves the public thread but is kept for the record. Hiding or keeping a flagged comment closes its flags."
+        intro="Comments people flagged come first, then recent comments on all nominations. Hide anything off-topic or against the Code of Conduct: it leaves the public thread but is kept for the record. Hiding or keeping a flagged comment closes its flags."
       />
 
       {isLoading && <p className="text-sm text-muted-foreground">Loading comments…</p>}
@@ -25,10 +25,45 @@ export function CommentsModerationPage() {
         </p>
       )}
 
-      <div className="space-y-3">
-        {comments?.map((c) => <Row key={c.id} comment={c} />)}
-      </div>
+      {comments && comments.length > 0 && (
+        <>
+          <Group
+            title="Flagged"
+            empty="No open flags."
+            items={comments.filter((c) => c.openFlags > 0 && !c.hidden)}
+          />
+          <Group
+            title="Recent comments"
+            empty="No other comments."
+            items={comments.filter((c) => !(c.openFlags > 0 && !c.hidden))}
+          />
+        </>
+      )}
     </div>
+  )
+}
+
+function Group({ title, empty, items }: { title: string; empty: string; items: AdminComment[] }) {
+  return (
+    <section className="mb-12" aria-label={title}>
+      <h2 className="section-title mb-3">
+        {title}
+        {items.length > 0 && (
+          <span className="data ml-2 font-sans text-base font-normal text-muted-foreground">{items.length}</span>
+        )}
+      </h2>
+      {items.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{empty}</p>
+      ) : (
+        <ul className="divide-y divide-line rounded-lg border border-line bg-card">
+          {items.map((c) => (
+            <li key={c.id}>
+              <Row comment={c} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   )
 }
 
@@ -36,9 +71,7 @@ function Row({ comment: c }: { comment: AdminComment }) {
   const hide = useHideComment()
   return (
     <div
-      className={`rounded-lg border bg-card p-5 ${
-        c.openFlags > 0 && !c.hidden ? 'border-amber/50 border-l-4 border-l-amber' : 'border-line'
-      } ${c.hidden ? 'opacity-75' : ''}`}
+      className={`p-5 ${c.hidden ? 'opacity-75' : ''}`}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
@@ -67,34 +100,33 @@ function Row({ comment: c }: { comment: AdminComment }) {
             </div>
           )}
         </div>
-        <div className="flex flex-shrink-0 flex-col gap-2">
-          <button
-            onClick={() => hide.mutate({ id: c.id, hidden: !c.hidden })}
-            disabled={hide.isPending}
-            className={`inline-flex flex-shrink-0 items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-sm font-medium disabled:opacity-60 ${
-              c.hidden
-                ? 'border-line hover:border-green hover:text-green'
-                : 'border-amber/40 text-amber hover:bg-amber/10'
-            }`}
-          >
-            {c.hidden ? (
-              <>
-                <Eye className="h-4 w-4" /> Restore
-              </>
-            ) : (
-              <>
-                <EyeOff className="h-4 w-4" /> Hide
-              </>
-            )}
-          </button>
-          {c.openFlags > 0 && !c.hidden && (
+        <div className="flex flex-shrink-0 gap-2">
+          {c.openFlags > 0 && !c.hidden ? (
+            <>
+              <button
+                onClick={() => hide.mutate({ id: c.id, hidden: true })}
+                disabled={hide.isPending}
+                className="btn-primary"
+              >
+                <EyeOff className="h-4 w-4" aria-hidden /> Hide
+              </button>
+              <button
+                onClick={() => hide.mutate({ id: c.id, hidden: false })}
+                disabled={hide.isPending}
+                title="Dismiss the flags and leave the comment up"
+                className="btn-secondary"
+              >
+                <Check className="h-4 w-4" aria-hidden /> Keep
+              </button>
+            </>
+          ) : (
             <button
-              onClick={() => hide.mutate({ id: c.id, hidden: false })}
+              onClick={() => hide.mutate({ id: c.id, hidden: !c.hidden })}
               disabled={hide.isPending}
-              title="Dismiss the flags and leave the comment up"
-              className="inline-flex items-center gap-1.5 rounded-md border border-line px-2.5 py-1.5 text-sm font-medium hover:border-green hover:text-green disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-ink disabled:opacity-60"
             >
-              <Check className="h-4 w-4" /> Keep
+              {c.hidden ? <Eye className="h-4 w-4" aria-hidden /> : <EyeOff className="h-4 w-4" aria-hidden />}
+              {c.hidden ? 'Restore' : 'Hide'}
             </button>
           )}
         </div>

@@ -102,7 +102,7 @@ export function ContributionPanel({ nomination: n }: { nomination: NominationDet
             <button
               onClick={() => shareEmail.mutate({ all: true })}
               disabled={shareEmail.isPending}
-              className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-xs font-medium hover:border-green disabled:opacity-60"
+              className="btn-secondary btn-sm"
             >
               <Mail className="h-3.5 w-3.5" aria-hidden />
               Share my email with the whole team
@@ -164,7 +164,7 @@ export function ContributionPanel({ nomination: n }: { nomination: NominationDet
                     contribute.mutate(message, { onSuccess: () => setShowForm(false) })
                   }
                   disabled={contribute.isPending}
-                  className="rounded-md bg-green px-3 py-1.5 text-sm font-semibold text-white hover:bg-forest disabled:opacity-60"
+                  className="btn-primary"
                 >
                   {contribute.isPending ? 'Joining…' : 'Join the team'}
                 </button>
@@ -180,7 +180,8 @@ export function ContributionPanel({ nomination: n }: { nomination: NominationDet
             <>
               <button
                 onClick={() => (session ? setShowForm(true) : requireLogin())}
-                className="w-full rounded-md bg-green px-3 py-2 text-sm font-semibold text-white hover:bg-forest"
+                // Before review, approving is the page's main action, not joining.
+                className={`w-full ${n.status === 'pending' ? 'btn-secondary' : 'btn-primary'}`}
               >
                 {copy.join}
               </button>
@@ -218,7 +219,7 @@ export function ContributionPanel({ nomination: n }: { nomination: NominationDet
                     })
                   }
                   disabled={inquiry.isPending || inquiryText.trim().length < 5}
-                  className="rounded-md border border-line px-3 py-1.5 text-sm font-medium hover:border-green disabled:opacity-60"
+                  className="btn-secondary"
                 >
                   {inquiry.isPending ? 'Sending…' : 'Send message'}
                 </button>

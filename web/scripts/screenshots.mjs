@@ -128,6 +128,8 @@ for (const s of SCREENS) {
     await page.goto(base + path, { waitUntil: 'networkidle' })
     if (s.setup) await s.setup(page)
     await page.waitForLoadState('networkidle')
+    // Park the pointer so no row is captured in its hover state.
+    await page.mouse.move(0, 0)
     // Let fonts and late layout settle; hide the caret so shots are stable.
     await page.evaluate(() => document.fonts.ready)
     await page.addStyleTag({ content: '*{caret-color:transparent!important}' })

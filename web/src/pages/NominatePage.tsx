@@ -16,12 +16,13 @@ import { yearError } from '@/features/nominations/reference'
 import { useDebounced } from '@/lib/hooks'
 import { ApiError } from '@/lib/api'
 import type { NominationMetadata } from '@/types'
+import { NominationGuidance } from '@/features/nominations/NominationGuidance'
 import { usePageTitle } from '@/lib/page-title'
 
 const EMPTY_FORM: NominationFormValues = {
   discipline: '',
   disciplineOther: '',
-  verificationType: 'replication',
+  verificationType: 'both',
   justification: '',
   dataLocation: '',
   robustnessChecks: '',
@@ -190,35 +191,7 @@ export function NominatePage() {
 
       <div className="mt-8 grid gap-x-12 gap-y-8 lg:grid-cols-[minmax(0,36rem)_minmax(0,1fr)]">
       {/* Read before writing: on wide screens the guidance sits beside the form. */}
-      <aside className="lg:order-2">
-        <div className="rounded-lg border border-line bg-card p-5 text-sm leading-relaxed lg:sticky lg:top-20">
-          <h2 className="label">A good nomination</h2>
-          <ul className="mt-2 list-disc space-y-1.5 pl-4 text-ink/85 marker:text-muted-foreground">
-            <li>Gives the DOI, so everyone looks at the same paper.</li>
-            <li>
-              Says why a second look is valuable: the finding is influential, later work rests
-              on it, or the evidence is thin.
-            </li>
-            <li>Notes what is openly available, so others can judge feasibility.</li>
-            <li>Is about the evidence, never the authors. No allegations of misconduct.</li>
-          </ul>
-          <p className="mt-3 text-muted-foreground">
-            Search the{' '}
-            <Link to="/nominations" className="text-forest underline">
-              registry
-            </Link>{' '}
-            first: if the study is listed, upvote it instead.
-          </p>
-          <p className="mt-4 flex gap-4 border-t border-line pt-3">
-            <Link to="/guidelines" target="_blank" className="font-medium text-forest hover:underline">
-              Full guidelines
-            </Link>
-            <Link to="/code-of-conduct" target="_blank" className="font-medium text-forest hover:underline">
-              Code of Conduct
-            </Link>
-          </p>
-        </div>
-      </aside>
+      <NominationGuidance />
 
       <form onSubmit={onSubmit} className="space-y-6 lg:order-1">
         {restored && (
