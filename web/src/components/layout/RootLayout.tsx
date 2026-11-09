@@ -142,8 +142,10 @@ export function RootLayout() {
       <footer className="bg-brand-deep text-on-deep">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-xs">
           <span>
-            Run by <a href="https://forrt.org" className="text-white hover:underline">FORRT</a> and the
-            Replication Journal Federation
+            Run by <a href="https://forrt.org" className="text-white hover:underline">FORRT</a> and the{' '}
+            <a href="https://forrt.org/rjf/" className="text-white hover:underline">
+              Replication Journal Federation
+            </a>
           </span>
           <nav className="flex items-center gap-4">
             <Link to="/guidelines" className="inline-block py-2 hover:text-white hover:underline">
