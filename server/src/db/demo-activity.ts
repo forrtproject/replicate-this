@@ -88,10 +88,17 @@ async function makeFixturesRealistic() {
       .where(eq(schema.user.id, u.id))
   }
   const noms = await db
-    .select({ id: schema.nominations.id, status: schema.nominations.status })
+    .select({
+      id: schema.nominations.id,
+      status: schema.nominations.status,
+      title: sql<string>`${schema.nominations.metadata}->>'title'`,
+    })
     .from(schema.nominations)
-  const order: Record<string, number> = { published: 0, completed: 1, in_progress: 2, approved: 3, pending: 4 }
-  noms.sort((a, b) => (order[a.status] ?? 5) - (order[b.status] ?? 5))
+  // Finished studies are the oldest and pending ones the newest; open and
+  // in-progress studies are interleaved, so "Newest" doesn't look like a
+  // sort by status.
+  const phase = (st: string) => (['published', 'completed'].includes(st) ? 0 : st === 'pending' ? 2 : 1)
+  noms.sort((a, b) => phase(a.status) - phase(b.status) || (a.title.length % 5) - (b.title.length % 5) || a.title.localeCompare(b.title))
   for (const [i, nom] of noms.entries()) {
     const created = ago(150 - i * 11)
     await db

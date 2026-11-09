@@ -92,12 +92,12 @@ function ResearcherIdFooter({ id }: { id: string }) {
   return (
     <p className="mt-2 flex flex-wrap items-center gap-2 border-t border-line pt-6 text-xs text-muted-foreground">
       <span>
-        Researcher ID <span className="data font-medium">#{id}</span>. You only need it to
+        Researcher ID <span className="data rounded bg-muted px-1.5 py-0.5 font-medium text-ink">{id}</span>. You only need it to
         request the maintainer role.
       </span>
       <button
         onClick={() =>
-          navigator.clipboard?.writeText(`#${id}`).then(() => {
+          navigator.clipboard?.writeText(id).then(() => {
             setCopied(true)
             setTimeout(() => setCopied(false), 1500)
           })

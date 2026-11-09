@@ -89,7 +89,7 @@ function Row({ nomination: n, tab }: { nomination: AdminNomination; tab: 'pendin
           </Link>
           <p className="mt-0.5 text-sm text-muted-foreground">
             {formatReference(n.metadata)}
-            {n.doi ? `, doi:${n.doi}` : ', no DOI'}
+            {n.doi ? `, doi.org/${n.doi}` : ', no DOI'}
             {n.metadataManual && ' (reference entered by hand)'}
           </p>
           <p className="meta mt-2 text-[0.8125rem] text-muted-foreground">
@@ -104,8 +104,12 @@ function Row({ nomination: n, tab }: { nomination: AdminNomination; tab: 'pendin
               )}{' '}
               on {formatDate(n.createdAt)}
             </span>
-            <AvailabilityTags items={n.availability} links={n.availabilityLinks} />
           </p>
+          {n.availability.length > 0 && (
+            <p className="mt-1 text-[0.8125rem] text-muted-foreground">
+              <AvailabilityTags items={n.availability} links={n.availabilityLinks} />
+            </p>
+          )}
 
           <RichText className="mt-3 max-w-[70ch] text-[0.9375rem] leading-relaxed">{n.justification}</RichText>
 

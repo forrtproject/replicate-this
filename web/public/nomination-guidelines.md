@@ -20,7 +20,7 @@ Please keep nominations impersonal and focused on the work, never the authors.
   data, and/or varies how the analysis is done to check the results are robust.
   For simulation and other computational studies, which have no data of their
   own, a reproduction re-runs or re-implements the code.
-- **Notes what's openly available** (data, code, materials, preregistration, or
+- **Notes what’s openly available** (data, code, materials, preregistration, or
   an open-access version), so others can judge how feasible the work is.
 
 ## Please avoid
@@ -32,7 +32,7 @@ Please keep nominations impersonal and focused on the work, never the authors.
 
 ## What happens next
 
-A maintainer checks each nomination against the Code of Conduct. Nominations are
-visible straight away, marked "Pending review" until then. Anyone can upvote a
+A maintainer checks each nomination against these guidelines and the Code of Conduct. Nominations are
+visible straight away, marked “Pending review” until then. Anyone can upvote a
 nomination, predict whether the finding will hold up, or join the team doing
 the work.

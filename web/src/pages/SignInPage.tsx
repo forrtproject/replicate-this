@@ -85,9 +85,14 @@ export function SignInPage() {
 
       <div className="space-y-3">
         {providers?.orcid && (
-          <ProviderButton icon={siOrcid} brand onClick={() => start({ providerId: 'orcid' })}>
-            Continue with ORCID
-          </ProviderButton>
+          <div>
+            <ProviderButton icon={siOrcid} brand onClick={() => start({ providerId: 'orcid' })}>
+              Continue with ORCID
+            </ProviderButton>
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Connects the account to your researcher identifier.
+            </p>
+          </div>
         )}
         {providers?.google && (
           <ProviderButton icon={siGoogle} onClick={() => start({ provider: 'google' })}>
@@ -100,11 +105,7 @@ export function SignInPage() {
           </ProviderButton>
         )}
       </div>
-      {providers?.orcid && (
-        <p className="mt-3 text-[0.8125rem] text-muted-foreground">
-          ORCID connects the account to your researcher identifier.
-        </p>
-      )}
+
 
       <p className="mt-8 border-t border-line pt-5 text-sm leading-relaxed text-muted-foreground">
         Your display name starts as the name from your provider; you can change it or

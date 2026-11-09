@@ -15,7 +15,6 @@ export function CommunityInterest({
   /** Signed out: show the tally only; the rail has one sign-in button. */
   readOnly?: boolean
 }) {
-  const people = n.upvotes === 1 ? 'researcher' : 'researchers'
   return (
     <section className="rounded-lg border border-line bg-card p-4" aria-labelledby="interest">
       <h2 id="interest" className="label">
@@ -25,9 +24,7 @@ export function CommunityInterest({
         <span className="data mr-1 align-[-0.1em] font-display text-[1.75rem] font-semibold leading-none text-ink">
           {n.upvotes}
         </span>{' '}
-        {closed
-          ? `${people} wanted this checked`
-          : `${people} ${n.upvotes === 1 ? 'wants' : 'want'} this checked`}
+        {n.upvotes === 1 ? 'upvote' : 'upvotes'}
       </p>
       {!closed && !readOnly && (
         <div className="mt-3">
@@ -38,15 +35,17 @@ export function CommunityInterest({
             verificationType={n.verificationType}
             variant="wide"
           />
-          {n.upvotes === 0 && (
-            <p className="mt-2 text-xs text-muted-foreground">
-              Upvotes help maintainers and teams decide what to take on first.
-            </p>
-          )}
+          <p className="mt-2 text-xs text-muted-foreground">
+            Upvotes help maintainers and teams decide what to take on first.
+          </p>
         </div>
       )}
-      {closed && n.userUpvoted && (
-        <p className="mt-2 text-xs text-muted-foreground">You were one of them.</p>
+      {(closed || readOnly) && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          {closed
+            ? `Researchers who wanted this checked before the work began.${n.userUpvoted ? ' You were one of them.' : ''}`
+            : 'Upvotes help maintainers and teams decide what to take on first.'}
+        </p>
       )}
     </section>
   )

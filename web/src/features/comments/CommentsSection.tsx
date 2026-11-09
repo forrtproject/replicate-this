@@ -42,7 +42,14 @@ function buildTree(comments: Comment[]): CommentNode[] {
   return roots
 }
 
-export function CommentsSection({ nominationId }: { nominationId: string }) {
+export function CommentsSection({
+  nominationId,
+  closed = false,
+}: {
+  nominationId: string
+  /** The check is finished: invite questions about the result instead. */
+  closed?: boolean
+}) {
   const { data: session } = useSession()
   const isMaintainer = (session?.user as { role?: string } | undefined)?.role === 'maintainer'
   const navigate = useNavigate()
@@ -80,7 +87,9 @@ export function CommentsSection({ nominationId }: { nominationId: string }) {
       {isLoading && <p className="text-sm text-muted-foreground">Loading comments…</p>}
       {comments && comments.length === 0 && (
         <p className="text-sm text-muted-foreground">
-          No comments yet. Questions about the design, data or feasibility are welcome.
+          {closed
+            ? 'No comments yet. Questions about the result or the write-up are welcome.'
+            : 'No comments yet. Questions about the design, data or feasibility are welcome.'}
         </p>
       )}
 

@@ -164,7 +164,7 @@ export function NominationFormFields({
           What’s openly available?{' '}
           <span className="font-normal text-muted-foreground">(check all that apply)</span>
         </legend>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="space-y-3">
           {AVAILABILITY_OPTIONS.map((o) => {
             const checked = values.availability.includes(o.key)
             return (
@@ -210,9 +210,9 @@ export function NominationFormFields({
       </fieldset>
 
       <Field
-        label="Data location"
+        label="Other data or code location"
         optional
-        hint="Where the original data or code live, such as an OSF or Zenodo link, if not linked above."
+        hint="For example an OSF or Zenodo page, if it isn’t linked above."
       >
         <input
           value={values.dataLocation}
@@ -274,8 +274,8 @@ export function NominationFormFields({
           ) : (
           <ul className="mt-2 space-y-0.5 text-sm">
             {matchJournalTags(values).map((j) => (
-              <li key={j.key}>
-                {j.name} <span className="text-muted-foreground">({j.key})</span>
+              <li key={j.key} title={j.hint}>
+                {j.name}
               </li>
             ))}
           </ul>

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom'
-import { ArrowLeft, ExternalLink, Pencil, Bell, BellOff, FileText } from 'lucide-react'
+import { ArrowLeft, Check, ExternalLink, Pencil, Bell, FileText } from 'lucide-react'
 import { useNomination, useToggleSubscription } from '@/features/nominations/api'
 import { useSession } from '@/lib/auth-client'
 import { StatusControls } from '@/features/admin/StatusControls'
@@ -151,7 +151,7 @@ export function NominationDetailPage() {
 
           <section aria-labelledby="why">
             <h2 id="why" className="section-title">
-              Why revisit this?
+              {done ? 'Why it was nominated' : 'Why revisit this?'}
             </h2>
             <RichText className="mt-3 max-w-[68ch] text-base leading-relaxed text-ink">
               {n.justification}
@@ -165,7 +165,7 @@ export function NominationDetailPage() {
 
           <UpdatesSection nomination={n} resultShownAbove={done} />
 
-          <CommentsSection nominationId={n.id} />
+          <CommentsSection nominationId={n.id} closed={done} />
         </div>
 
         <aside className="space-y-4" aria-label="Take part">
@@ -255,11 +255,10 @@ function StudyDetails({ nomination: n }: { nomination: NominationDetail }) {
         )}
         {journals.length > 0 && (
           <Row label="Could be published in">
-            <ul className="space-y-2">
+            <ul className="space-y-1">
               {journals.map((j) => (
-                <li key={j.key}>
-                  <span className="text-ink">{j.name}</span>
-                  <span className="block text-xs text-muted-foreground">{j.hint}</span>
+                <li key={j.key} title={j.hint}>
+                  {j.name}
                 </li>
               ))}
             </ul>
@@ -291,7 +290,7 @@ function Outcome({ nomination: n }: { nomination: NominationDetail }) {
       aria-labelledby="outcome"
       className="rounded-lg border border-status-done/25 bg-green-tint px-5 py-4"
     >
-      <h2 id="outcome" className="section-title text-forest">
+      <h2 id="outcome" className="text-[0.9375rem] font-semibold text-forest">
         {n.status === 'published' ? `Result, published` : `Result`}
       </h2>
       {result ? (
@@ -346,7 +345,7 @@ function PendingNotice({
       className="rounded-lg border border-line bg-card px-5 py-4"
     >
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="review" className="font-semibold text-ink">
+        <h2 id="review" className="text-[0.9375rem] font-semibold text-ink">
           {asMaintainer ? 'This nomination needs a review' : 'Waiting for review'}
         </h2>
         {asMaintainer && (
@@ -358,7 +357,7 @@ function PendingNotice({
       <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
         {asMaintainer
           ? 'Approving marks it as reviewed and lists it as looking for contributors. Rejecting removes it from the registry and sends the nominator your reason.'
-          : 'A maintainer will check it against the guidelines. Meanwhile it is listed as pending review, and people can already upvote, discuss and join it. Edits are welcome at any point before work starts.'}
+          : 'A maintainer will check it against the guidelines and Code of Conduct. Meanwhile it is listed as pending review, and people can already upvote, discuss and join it. Edits are welcome at any point before work starts.'}
       </p>
       {asMaintainer && (
         <div className="mt-3">
@@ -432,11 +431,16 @@ function SubscribeButton({
         signedIn ? toggle.mutate() : navigate(`/sign-in?redirect=/nominations/${n.id}`)
       }
       disabled={toggle.isPending}
-      title="Subscribers are notified of comments, updates, new team members and status changes."
+      title={
+        n.userSubscribed
+          ? 'You are notified of comments, updates, new team members and status changes. Click to stop.'
+          : 'Get notified of comments, updates, new team members and status changes.'
+      }
+      aria-pressed={n.userSubscribed}
       className={`btn-secondary btn-sm ${n.userSubscribed ? 'border-green! bg-green-tint! text-forest!' : ''}`}
     >
-      {n.userSubscribed ? <BellOff className="h-3.5 w-3.5" aria-hidden /> : <Bell className="h-3.5 w-3.5" aria-hidden />}
-      {n.userSubscribed ? 'Unsubscribe' : 'Subscribe'}
+      {n.userSubscribed ? <Check className="h-3.5 w-3.5" aria-hidden /> : <Bell className="h-3.5 w-3.5" aria-hidden />}
+      {n.userSubscribed ? 'Following' : 'Follow'}
       {n.subscribers > 0 && <span className="data text-muted-foreground">{n.subscribers}</span>}
     </button>
   )

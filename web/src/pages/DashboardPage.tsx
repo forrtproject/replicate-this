@@ -279,7 +279,7 @@ function LookingForContributors() {
   const suggestions = (all ?? [])
     .filter((n) => n.status === 'approved' && !n.userContributed && !n.viewerIsNominator)
     .sort((a, b) => a.contributions - b.contributions || b.upvotes - a.upvotes)
-    .slice(0, 4)
+    .slice(0, 3)
 
   if (!all) return null
   return (
@@ -303,7 +303,7 @@ function LookingForContributors() {
           {suggestions.map((n) => (
             <li key={n.id}>
               <Link to={`/nominations/${n.id}`} className="group block px-4 py-3 hover:bg-[#f6f5ef]">
-                <span className="block font-display text-[1rem] font-semibold leading-snug text-ink">
+                <span className="block text-sm font-medium leading-snug text-ink">
                   {n.metadata.title || n.doi}
                 </span>
                 <span className="meta mt-0.5 text-xs text-muted-foreground">

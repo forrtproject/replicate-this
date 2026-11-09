@@ -159,6 +159,7 @@ export function PredictionBar({
           </>
         )}
       </p>
+      <p className="mt-1 text-xs text-muted-foreground">Predictions are anonymous and can be changed.</p>
     </div>
   )
 }

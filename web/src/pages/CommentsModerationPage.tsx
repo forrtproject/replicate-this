@@ -74,7 +74,7 @@ function Row({ comment: c }: { comment: AdminComment }) {
         <div className="min-w-0 flex-1">
           <p className="mb-1.5 text-sm text-muted-foreground">
             <ResearcherLink name={c.authorName} token={c.authorToken} className="font-medium text-ink" /> on{' '}
-            <Link to={`/nominations/${c.nominationId}`} className="text-ink underline decoration-line underline-offset-2 hover:text-forest">
+            <Link to={`/nominations/${c.nominationId}`} className="text-forest hover:underline">
               {c.nominationTitle || 'a nomination'}
             </Link>
             <span className="ml-2 text-xs">{formatWhen(c.createdAt)}</span>

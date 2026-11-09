@@ -14,7 +14,7 @@ export const VERIFICATION_CONFIG: Record<
 > = {
   replication: { label: 'Suggested: replication', short: 'Replication', term: 'Replication' },
   reproduction: { label: 'Suggested: reproduction', short: 'Reproduction', term: 'Reproduction' },
-  both: { label: 'Suggested: replication or reproduction', short: 'Replication / Reproduction', term: null },
+  both: { label: 'Suggested: replication or reproduction', short: 'Replication or reproduction', term: null },
 }
 
 /**
@@ -59,19 +59,19 @@ export const FORECAST_QUESTION: Record<
 > = {
   replication: {
     question: 'Will the finding hold up?',
-    qualifier: 'In a replication with new data.',
+    qualifier: 'The paper’s main claim, tested in a replication with new data.',
     yes: 'Most expect it to hold up.',
     no: 'Most expect it not to hold up.',
   },
   reproduction: {
     question: 'Will the finding hold up?',
-    qualifier: 'When the original analysis is re-run and varied.',
+    qualifier: 'The paper’s main claim, when the original analysis is re-run and varied.',
     yes: 'Most expect it to hold up.',
     no: 'Most expect it not to hold up.',
   },
   both: {
     question: 'Will the finding hold up?',
-    qualifier: 'In a replication or a reproduction.',
+    qualifier: 'The paper’s main claim, in a replication or a reproduction.',
     yes: 'Most expect it to hold up.',
     no: 'Most expect it not to hold up.',
   },
@@ -86,7 +86,7 @@ export const FORECAST_CONSENSUS_MIN = 5
  */
 export function forecastSummary(type: VerificationType, yes: number, no: number): string {
   const total = yes + no
-  if (total === 0) return 'No predictions yet. Predictions are anonymous and you can change yours.'
+  if (total === 0) return 'No predictions yet.'
   if (total < FORECAST_CONSENSUS_MIN) {
     return `${total} ${total === 1 ? 'prediction' : 'predictions'} so far, too few to show a split.`
   }

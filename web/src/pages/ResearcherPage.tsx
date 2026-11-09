@@ -89,8 +89,10 @@ export function ResearcherPage() {
 
       <section className="mt-12" aria-labelledby="nominated">
         <h2 id="nominated" className="section-title mb-3">
-          Nominated
-          <span className="data ml-2 font-sans text-base font-normal text-muted-foreground">{r.nominations.length}</span>
+          Nominations
+          {r.nominations.length > 0 && (
+            <span className="data ml-2 font-sans text-base font-normal text-muted-foreground">{r.nominations.length}</span>
+          )}
         </h2>
         {r.nominations.length === 0 ? (
           <p className="text-sm text-muted-foreground">No public nominations yet.</p>
@@ -107,8 +109,10 @@ export function ResearcherPage() {
 
       <section className="mt-12" aria-labelledby="teams">
         <h2 id="teams" className="section-title mb-3">
-          On the team for
-          <span className="data ml-2 font-sans text-base font-normal text-muted-foreground">{r.contributions.length}</span>
+          Study teams
+          {r.contributions.length > 0 && (
+            <span className="data ml-2 font-sans text-base font-normal text-muted-foreground">{r.contributions.length}</span>
+          )}
         </h2>
         {r.contributions.length === 0 ? (
           <p className="text-sm text-muted-foreground">Not on any study team yet.</p>

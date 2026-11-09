@@ -45,7 +45,7 @@ export interface ProfileLinkOption {
 
 /** Display order everywhere: ORCID and website first, then the extra profiles. */
 export const PROFILE_LINKS: ProfileLinkOption[] = [
-  { key: 'orcid', label: 'ORCID iD', placeholder: '0000-0002-1825-0097', primary: true },
+  { key: 'orcid', label: 'ORCID iD', placeholder: '0000-0000-0000-0000', primary: true },
   { key: 'website', label: 'Website', placeholder: 'https://example.org', primary: true },
   { key: 'bluesky', label: 'Bluesky', placeholder: '@you.bsky.social' },
   { key: 'mastodon', label: 'Mastodon', placeholder: '@you@fediscience.org' },
@@ -78,7 +78,7 @@ export const EMAIL_PREF_OPTIONS: {
   {
     key: 'watched',
     label: 'Subscribed studies',
-    hint: 'Comments, progress updates, contributors and status changes on studies you subscribe to',
+    hint: 'Comments, progress updates, new team members and status changes on studies you follow',
   },
   {
     key: 'admin',
@@ -90,9 +90,9 @@ export const EMAIL_PREF_OPTIONS: {
 
 export const AVAILABILITY_OPTIONS: { key: AvailabilityKey; label: string; hint: string }[] = [
   { key: 'open_data', label: 'Open data', hint: 'Raw or processed data are publicly available' },
-  { key: 'open_code', label: 'Open code', hint: 'Analysis scripts / code are shared' },
+  { key: 'open_code', label: 'Open code', hint: 'Analysis scripts or software are shared' },
   { key: 'open_materials', label: 'Open materials', hint: 'Stimuli, surveys, or protocols are shared' },
-  { key: 'preregistration', label: 'Preregistration', hint: 'The study was preregistered' },
+  { key: 'preregistration', label: 'Preregistration', hint: 'Hypotheses and analyses were registered in advance' },
   { key: 'open_access', label: 'Open access', hint: 'The paper or a preprint is freely readable' },
 ]
 

@@ -377,6 +377,7 @@ function DoiPreview({
         <div className="min-w-0 text-sm">
           <p className="font-medium text-ink">{metadata.title || 'Untitled'}</p>
           <p className="text-xs text-muted-foreground">{formatReference(metadata)}</p>
+          <p className="mt-1 text-xs text-forest">Not yet in the registry.</p>
         </div>
       </div>
     )

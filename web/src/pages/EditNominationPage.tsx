@@ -101,7 +101,7 @@ function EditForm({ nomination: n }: { nomination: NominationDetail }) {
         <p className="font-display text-[1.0625rem] font-semibold leading-snug">{n.metadata.title || n.doi}</p>
         <p className="mt-0.5 text-sm text-muted-foreground">
           {formatReference(n.metadata)}
-          {n.doi ? `, doi:${n.doi}` : ''}
+          {n.doi ? `, doi.org/${n.doi}` : ''}
         </p>
       </div>
 

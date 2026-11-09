@@ -3,7 +3,7 @@ import { forecastSummary } from './verification'
 
 describe('forecastSummary', () => {
   it('invites a first prediction when there are none', () => {
-    expect(forecastSummary('replication', 0, 0)).toMatch(/anonymous/)
+    expect(forecastSummary('replication', 0, 0)).toBe('No predictions yet.')
   })
 
   it('reports a single prediction as one response, not a consensus', () => {

@@ -51,7 +51,9 @@ export function UpdatesSection({
     )
   }
 
-  if (!canPost && (!updates || updates.length === 0)) return null
+  // The update that carries the result is already the page's lead; don't repeat it.
+  const shown = resultShownAbove ? (updates ?? []).filter((u) => u.id !== resultId) : updates
+  if (!canPost && (!shown || shown.length === 0)) return null
 
   return (
     <section aria-labelledby="updates">
@@ -63,21 +65,12 @@ export function UpdatesSection({
       </p>
 
       {isLoading && <p className="text-sm text-muted-foreground">Loading updates…</p>}
-      {updates && updates.length === 0 && (
+      {shown && shown.length === 0 && (
         <p className="text-sm text-muted-foreground">No updates yet. Post one when there’s news.</p>
       )}
 
       <ol className="space-y-5 border-l-2 border-line pl-5">
-        {updates?.map((u) =>
-          resultShownAbove && u.id === resultId ? (
-            <li key={u.id}>
-              <p className="flex flex-wrap items-baseline gap-x-2 text-sm">
-                <ResearcherLink name={u.name} token={u.token} className="font-medium text-ink" />
-                <span className="text-xs text-muted-foreground">{formatDate(u.createdAt)}</span>
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">Posted the result, shown at the top of this page.</p>
-            </li>
-          ) : (
+        {shown?.map((u) => (
           <li key={u.id}>
             <p className="flex flex-wrap items-baseline gap-x-2 text-sm">
               <ResearcherLink name={u.name} token={u.token} className="font-medium text-ink" />
@@ -96,8 +89,7 @@ export function UpdatesSection({
               </a>
             )}
           </li>
-          ),
-        )}
+        ))}
       </ol>
 
       {canPost && (
