@@ -15,6 +15,11 @@ export function UsersPage() {
   const { data: session } = useSession()
   const setRole = useSetUserRole()
   const [error, setError] = useState('')
+  const [query, setQuery] = useState('')
+  const q = query.trim().toLowerCase()
+  const shown = (users ?? []).filter(
+    (u) => !q || researcherLabel(u.name, u.token).toLowerCase().includes(q) || u.id.toLowerCase().startsWith(q.replace(/^#/, '')),
+  )
 
   const myId = session?.user?.id
   const maintainers = users?.filter((u) => u.role === 'maintainer').length ?? 0
@@ -30,8 +35,7 @@ export function UsersPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 pb-16 pt-10">
       <AdminPageHeader
-        title="Users"
-        intro="People appear under the display name they chose; login emails are never stored. The maintainer role gives access to these tools."
+        intro="Everyone with an account, under the display name they chose. Sign-in addresses are not stored. Maintainers can review nominations, moderate comments and manage roles."
       />
 
       {error && (
@@ -42,6 +46,17 @@ export function UsersPage() {
 
       {isLoading && <p className="text-sm text-muted-foreground">Loading users…</p>}
 
+      <label className="mb-4 block max-w-sm">
+        <span className="sr-only">Find a researcher</span>
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Find by name or researcher ID"
+          className="input"
+        />
+      </label>
+
       <div className="overflow-x-auto rounded-lg border border-line bg-card">
         <table className="w-full text-sm">
           <thead className="border-b border-line text-left text-xs text-muted-foreground">
@@ -50,11 +65,11 @@ export function UsersPage() {
               <th className="px-4 py-2 font-medium">Role</th>
               <th className="hidden px-4 py-2 font-medium sm:table-cell">Joined</th>
               <th className="hidden px-4 py-2 font-medium md:table-cell">Activity</th>
-              <th className="px-4 py-2 text-right font-medium"><span className="sr-only">Actions</span></th>
+              <th className="px-4 py-2 text-right font-medium">Role change</th>
             </tr>
           </thead>
           <tbody>
-            {users?.map((u) => {
+            {shown.map((u) => {
               const isMe = u.id === myId
               const isAdmin = u.role === 'maintainer'
               return (

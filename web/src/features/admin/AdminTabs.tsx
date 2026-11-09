@@ -7,12 +7,11 @@ const tab = ({ isActive }: { isActive: boolean }) =>
     isActive ? 'border-green text-ink' : 'border-transparent text-muted-foreground hover:text-ink',
   )
 
-/** Shared frame for the maintainer pages: title, section tabs, and a short brief. */
-export function AdminPageHeader({ title, intro }: { title: string; intro: React.ReactNode }) {
+/** Shared frame for the maintainer pages: one title, section tabs, and a short brief. */
+export function AdminPageHeader({ intro }: { intro: React.ReactNode }) {
   return (
     <div className="mb-8">
-      <p className="text-sm text-muted-foreground">Maintainer tools</p>
-      <h1 className="mt-0.5 font-display text-[2rem] font-semibold leading-tight">{title}</h1>
+      <h1 className="font-display text-[2rem] font-semibold leading-tight">Maintainer tools</h1>
       <nav aria-label="Maintainer tools" className="mt-5 flex gap-6 border-b border-line">
         <NavLink to="/admin" end className={tab}>
           Nominations

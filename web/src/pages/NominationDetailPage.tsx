@@ -52,6 +52,31 @@ export function NominationDetailPage() {
   const done = n.status === 'completed' || n.status === 'published'
   const canEdit = (n.viewerIsNominator || isMaintainer) && ['pending', 'approved'].includes(n.status)
   const forecast = FORECAST_QUESTION[n.verificationType] ?? FORECAST_QUESTION.replication
+  const signInHref = `/sign-in?redirect=${encodeURIComponent(`/nominations/${n.id}`)}`
+
+  // Page-level actions. Signed out, every way of taking part needs an account,
+  // so there is one sign-in button instead of controls that would only redirect.
+  const actions = session ? (
+    <div className="flex flex-wrap gap-2">
+      <SubscribeButton nomination={n} signedIn />
+      {canEdit && (
+        <Link to={`/nominations/${n.id}/edit`} className="btn-secondary btn-sm">
+          <Pencil className="h-3.5 w-3.5" aria-hidden /> Edit nomination
+        </Link>
+      )}
+    </div>
+  ) : (
+    <div>
+      <Link to={signInHref} className="btn-primary w-full">
+        Sign in to take part
+      </Link>
+      <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+        {done
+          ? 'Follow the study or message the team.'
+          : 'Upvote, predict the outcome, follow updates or join the team.'}
+      </p>
+    </div>
+  )
 
   return (
     <article className="mx-auto max-w-5xl px-4 pb-16 pt-8">
@@ -111,15 +136,9 @@ export function NominationDetailPage() {
               <span> on {formatDate(n.createdAt)}</span>
             </span>
           )}
-          <span className="flex items-center gap-2 sm:ml-auto">
-            {canEdit && (
-              <Link to={`/nominations/${n.id}/edit`} className="btn-secondary btn-sm">
-                <Pencil className="h-3.5 w-3.5" aria-hidden /> Edit
-              </Link>
-            )}
-            <SubscribeButton nomination={n} signedIn={!!session} />
-          </span>
         </div>
+        {/* Phones: page actions sit under the byline; wide screens: top of the rail. */}
+        <div className="mt-4 lg:hidden">{actions}</div>
       </header>
 
       <div className="mt-10 grid gap-x-12 gap-y-10 lg:grid-cols-[minmax(0,1fr)_20rem]">
@@ -150,26 +169,18 @@ export function NominationDetailPage() {
         </div>
 
         <aside className="space-y-4 lg:pt-1" aria-label="Take part">
-          {!session && !done && (
-            <p className="text-sm text-muted-foreground">
-              <Link
-                to={`/sign-in?redirect=${encodeURIComponent(`/nominations/${n.id}`)}`}
-                className="font-medium text-forest underline underline-offset-2"
-              >
-                Sign in
-              </Link>{' '}
-              to upvote, predict, subscribe or join the team.
-            </p>
-          )}
+          <div className="hidden lg:block">{actions}</div>
           {isMaintainer && n.status !== 'pending' && (
             <StatusControls nominationId={n.id} status={n.status} />
           )}
-          <CommunityInterest nomination={n} closed={done} />
+          <CommunityInterest nomination={n} closed={done} readOnly={!session} />
           <section className="rounded-lg border border-line bg-card p-4" aria-labelledby="forecast">
             <h2 id="forecast" className="label">
-              Forecast
+              {done ? 'Forecast before the result' : 'Forecast'}
             </h2>
-            <p className="mt-0.5 text-sm text-ink">{forecast.question}</p>
+            <p className="mt-0.5 text-sm text-ink">
+              {done ? forecast.question.replace(/^Will /, 'Would ') : forecast.question}
+            </p>
             <PredictionBar
               nominationId={n.id}
               verificationType={n.verificationType}
@@ -177,6 +188,7 @@ export function NominationDetailPage() {
               predictNo={n.predictNo}
               userPrediction={n.userPrediction}
               closed={done}
+              readOnly={!session}
             />
           </section>
           {!(done && n.contributions === 0) && <ContributionPanel nomination={n} />}
@@ -238,8 +250,10 @@ function StudyDetails({ nomination: n }: { nomination: NominationDetail }) {
             <ul className="space-y-1">
               {journals.map((j) => (
                 <li key={j.key}>
-                  <span className="text-ink">{j.name}</span>{' '}
-                  <span className="text-muted-foreground">({j.key})</span>
+                  <span className="text-ink">{j.name}</span>
+                  {j.name.replace('²', '2') !== j.key && (
+                    <span className="text-muted-foreground"> ({j.key})</span>
+                  )}
                 </li>
               ))}
             </ul>
@@ -266,21 +280,17 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 function Outcome({ nomination: n }: { nomination: NominationDetail }) {
   const { data: updates } = useUpdates(n.id)
   const result = updates?.find((u) => u.articleUrl) ?? updates?.[0]
-  const kind = n.verificationType === 'reproduction' ? 'reproduction' : n.verificationType === 'replication' ? 'replication' : 'check'
   return (
     <section
       aria-labelledby="outcome"
       className="rounded-lg border border-status-done/25 bg-green-tint px-5 py-4"
     >
       <h2 id="outcome" className="section-title text-forest">
-        Result
+        {n.status === 'published' ? `Result, published` : `Result`}
       </h2>
-      <p className="mt-0.5 text-sm text-muted-foreground">
-        {n.status === 'published' ? `The ${kind} has been published.` : `The ${kind} is complete.`}
-      </p>
       {result ? (
         <>
-          <RichText className="mt-3 text-[0.9375rem] leading-relaxed text-ink">{result.content}</RichText>
+          <RichText className="mt-2 text-[0.9375rem] leading-relaxed text-ink">{result.content}</RichText>
           <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
             {result.articleUrl && (
               <a
@@ -334,8 +344,8 @@ function PendingNotice({
       </h2>
       <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
         {asMaintainer
-          ? 'Approve it once it meets the guidelines; it is then listed as looking for contributors. Rejecting hides it and sends the nominator your reason.'
-          : 'A maintainer will check it against the guidelines. Until then it is listed as pending review, though people can already upvote, discuss and join it. You can edit it until it is approved.'}
+          ? 'Approving marks it as reviewed and lists it as looking for contributors. Rejecting removes it from the registry and sends the nominator your reason.'
+          : 'A maintainer will check it against the guidelines. Meanwhile it is listed as pending review, and people can already upvote, discuss and join it. Edits are welcome at any point before work starts.'}
       </p>
       {asMaintainer && (
         <div className="mt-3">

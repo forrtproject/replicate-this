@@ -8,9 +8,12 @@ import { VoteButton } from './VoteButton'
 export function CommunityInterest({
   nomination: n,
   closed = false,
+  readOnly = false,
 }: {
   nomination: NominationSummary
   closed?: boolean
+  /** Signed out: show the tally only; the rail has one sign-in button. */
+  readOnly?: boolean
 }) {
   const people = n.upvotes === 1 ? 'researcher' : 'researchers'
   return (
@@ -26,7 +29,7 @@ export function CommunityInterest({
           ? `${people} wanted this checked`
           : `${people} ${n.upvotes === 1 ? 'wants' : 'want'} this checked`}
       </p>
-      {!closed && (
+      {!closed && !readOnly && (
         <div className="mt-3">
           <VoteButton
             nominationId={n.id}

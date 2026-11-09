@@ -6,6 +6,7 @@ import {
   useProfile,
   useUpdateEmailPrefs,
   useCompleteOnboarding,
+  useUpdateName,
 } from '@/features/profile/api'
 import { AvatarEditor } from '@/features/profile/AvatarEditor'
 import { DisplayNameEditor, DISPLAY_NAME_HINT } from '@/features/profile/DisplayNameEditor'
@@ -29,6 +30,23 @@ export function WelcomePage() {
   const { data: profile, isLoading } = useProfile()
   const complete = useCompleteOnboarding()
   const [step, setStep] = useState(0)
+  // Step 1's name is saved by Continue rather than by a separate button.
+  const [nameDraft, setNameDraft] = useState<string | null>(null)
+  const [stepError, setStepError] = useState('')
+  const updateName = useUpdateName()
+
+  async function next() {
+    setStepError('')
+    if (step === 0 && nameDraft !== null && profile && nameDraft.trim() !== profile.name) {
+      try {
+        await updateName.mutateAsync(nameDraft.trim())
+      } catch (e) {
+        setStepError(e instanceof ApiError ? e.message : 'Could not save your name.')
+        return
+      }
+    }
+    setStep((s) => s + 1)
+  }
 
   async function finish() {
     await complete.mutateAsync()
@@ -74,7 +92,7 @@ export function WelcomePage() {
       </ol>
 
       <section className="mt-6 rounded-lg border border-line bg-card p-6">
-        {step === 0 && <NameStep current={profile.name} />}
+        {step === 0 && <NameStep current={profile.name} onDraftChange={setNameDraft} />}
         {step === 1 && (
           <div>
             <StepIntro
@@ -93,6 +111,7 @@ export function WelcomePage() {
         )}
       </section>
 
+      {stepError && <p className="mt-3 text-sm text-destructive">{stepError}</p>}
       <div className="mt-5 flex items-center justify-between">
         <button
           onClick={finish}
@@ -105,7 +124,7 @@ export function WelcomePage() {
           {step > 0 && (
             <button
               onClick={() => setStep((s) => s - 1)}
-              className="rounded-md border border-line px-4 py-2 text-sm font-medium hover:border-green"
+              className="btn-secondary px-4 py-2"
             >
               Back
             </button>
@@ -114,16 +133,13 @@ export function WelcomePage() {
             <button
               onClick={finish}
               disabled={complete.isPending}
-              className="rounded-md bg-green px-4 py-2 text-sm font-medium text-white hover:bg-forest disabled:opacity-60"
+              className="btn-primary px-4 py-2"
             >
               {complete.isPending ? 'Finishing…' : 'Go to your dashboard'}
             </button>
           ) : (
-            <button
-              onClick={() => setStep((s) => s + 1)}
-              className="rounded-md bg-green px-4 py-2 text-sm font-semibold text-white hover:bg-forest"
-            >
-              Continue
+            <button onClick={next} disabled={updateName.isPending} className="btn-primary px-4 py-2">
+              {updateName.isPending ? 'Saving…' : step === 0 ? 'Save and continue' : 'Continue'}
             </button>
           )}
         </div>
@@ -142,11 +158,17 @@ function StepIntro({ title, hint }: { title: string; hint: string }) {
   )
 }
 
-function NameStep({ current }: { current: string }) {
+function NameStep({
+  current,
+  onDraftChange,
+}: {
+  current: string
+  onDraftChange: (name: string) => void
+}) {
   return (
     <div>
       <StepIntro title="Your display name" hint={DISPLAY_NAME_HINT} />
-      <DisplayNameEditor current={current} />
+      <DisplayNameEditor current={current} onDraftChange={onDraftChange} />
     </div>
   )
 }

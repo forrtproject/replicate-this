@@ -145,7 +145,7 @@ function EmailNotificationsCard({ isMaintainer }: { isMaintainer: boolean }) {
   return (
     <Card
       title="Email notifications"
-      hint="Everything also appears in your dashboard. We started with your sign-in address; any address works."
+      hint="Everything also appears in your dashboard. If your sign-in provider shared an address, we filled it in; any address works."
     >
       {isLoading || !profile ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
@@ -212,11 +212,15 @@ function EmailPrefsEditor({
 
       <fieldset>
         <legend className="mb-2 text-sm font-medium">Email me about</legend>
+        {!emailValid && (
+          <p className="mb-2 text-[0.8125rem] text-muted-foreground">Add an address above to choose what to receive.</p>
+        )}
         <div className="space-y-2.5">
           {options.map((o) => (
             <label key={o.key} className="flex items-start gap-2 text-sm">
               <input
                 type="checkbox"
+                disabled={!emailValid}
                 checked={prefs[o.key] === true}
                 onChange={(e) => setPrefs((p) => ({ ...p, [o.key]: e.target.checked }))}
                 className="mt-1 accent-[var(--color-green)]"
@@ -240,11 +244,11 @@ function EmailPrefsEditor({
         >
           {update.isPending ? 'Saving…' : 'Save email settings'}
         </button>
-        {saved ? (
-          <span role="status" className="text-sm text-forest">Saved</span>
-        ) : !dirty ? (
-          <span className="text-sm text-muted-foreground">No changes</span>
-        ) : null}
+        {saved && (
+          <span role="status" className="text-sm text-forest">
+            Saved
+          </span>
+        )}
       </div>
     </div>
   )
@@ -288,7 +292,7 @@ function DangerZone() {
       ) : (
         <button
           onClick={() => setConfirming(true)}
-          className="rounded-md border border-destructive/40 px-3 py-1.5 text-sm font-medium text-destructive hover:bg-destructive/10"
+          className="btn-secondary text-destructive!"
         >
           Delete my account
         </button>

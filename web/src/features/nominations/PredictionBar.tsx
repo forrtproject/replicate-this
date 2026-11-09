@@ -16,6 +16,8 @@ interface Props {
   userPrediction: boolean | null
   /** The check is done: show the forecast as it stood, without voting. */
   closed?: boolean
+  /** Signed out: results only, no Yes/No buttons. */
+  readOnly?: boolean
 }
 
 /**
@@ -29,6 +31,7 @@ export function PredictionBar({
   predictNo,
   userPrediction,
   closed = false,
+  readOnly = false,
 }: Props) {
   const { data: session } = useSession()
   const navigate = useNavigate()
@@ -119,13 +122,18 @@ export function PredictionBar({
     </>
   )
 
-  if (closed) {
+  if (closed || readOnly) {
     return (
       <div>
-        <p className="mt-1 text-xs text-muted-foreground">Before the result</p>
         {split}
         <p className="mt-2 text-xs text-muted-foreground">
-          {total === 0 ? 'No one made a prediction.' : few ? <>{count}, too few to show a split.</> : count}
+          {total === 0
+            ? closed
+              ? 'No one made a prediction.'
+              : 'No predictions yet.'
+            : few
+              ? <>{count} so far, too few to show a split.</>
+              : count}
         </p>
       </div>
     )

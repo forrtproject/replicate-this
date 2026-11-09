@@ -45,9 +45,16 @@ export function AvatarBubble({
       className={`${base} font-display font-semibold text-ink/75`}
       style={{ background: gradientFor(name ?? '?') }}
     >
-      {(name ?? '?').slice(0, 1).toUpperCase()}
+      {initial(name)}
     </span>
   )
+}
+
+/** First letter of the name, skipping academic titles ("Dr. Jane Cortez" → "J"). */
+function initial(name: string | null | undefined): string {
+  const words = (name ?? '?').trim().split(/\s+/)
+  const first = words.find((w) => !/^(dr|prof|professor|mr|mrs|ms|mx)\.?$/i.test(w)) ?? words[0]
+  return (first || '?').slice(0, 1).toUpperCase()
 }
 
 /** Downscale an uploaded image to a small inline data URL (keeps it under the cap). */

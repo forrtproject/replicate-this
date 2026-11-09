@@ -49,13 +49,14 @@ export function NominationCard({
           </Link>
         </h3>
 
-        <p className="mt-0.5 line-clamp-2 text-sm text-muted-foreground [overflow-wrap:anywhere]">
+        <p className="mt-0.5 line-clamp-2 text-sm text-ink/70 [overflow-wrap:anywhere]">
           {formatReference(n.metadata)}
         </p>
 
-        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.8125rem] text-muted-foreground">
+        {/* Line 1: where it stands. Line 2: what exists and who is involved. */}
+        <p className="mt-2 flex flex-wrap items-center gap-y-1 text-[0.8125rem] text-muted-foreground [&>*+*]:before:mx-2 [&>*+*]:before:text-line [&>*+*]:before:content-['/']">
           <StatusBadge status={n.status} className="text-[0.8125rem]" />
-          <span>{VERIFICATION_CONFIG[n.verificationType].short}</span>
+          <span className="text-ink/80">{VERIFICATION_CONFIG[n.verificationType].short}</span>
           <span>{disciplineLabel(n)}</span>
           {n.contributions > 0 && <span>{n.contributions} on the team</span>}
           {n.comments > 0 && (
@@ -63,10 +64,10 @@ export function NominationCard({
               {n.comments} {n.comments === 1 ? 'comment' : 'comments'}
             </span>
           )}
-        </div>
+        </p>
 
         {(n.availability.length > 0 || (showNominator && n.nominatorToken)) && (
-          <div className="mt-1 hidden flex-wrap items-center gap-x-4 gap-y-1 text-[0.8125rem] text-muted-foreground sm:flex">
+          <div className="mt-1 hidden flex-wrap items-center gap-x-5 gap-y-1 text-[0.8125rem] text-muted-foreground sm:flex">
             {n.availability.length > 0 && (
               <span className="relative z-10">
                 <AvailabilityTags items={n.availability} links={n.availabilityLinks} />

@@ -46,7 +46,6 @@ export function NominationFormFields({
 
   return (
     <>
-      <h2 className="section-title border-t border-line pt-6 text-lg">Kind of check</h2>
       <Field label="Discipline" required>
         <select
           value={values.discipline}
@@ -77,6 +76,7 @@ export function NominationFormFields({
         </Field>
       )}
 
+      <h2 className="section-title border-t border-line pt-6 text-lg">Kind of check</h2>
       <fieldset>
         <legend className="mb-2 text-sm font-medium">
           What kind of second look? <span className="font-normal text-muted-foreground">(required)</span>
@@ -272,7 +272,8 @@ export function NominationFormFields({
           <ul className="mt-2 space-y-0.5 text-sm">
             {matchJournalTags(values).map((j) => (
               <li key={j.key}>
-                {j.name} <span className="text-muted-foreground">({j.key})</span>
+                {j.name}
+                {j.name.replace('²', '2') !== j.key && <span className="text-muted-foreground"> ({j.key})</span>}
               </li>
             ))}
           </ul>

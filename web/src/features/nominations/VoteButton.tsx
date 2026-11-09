@@ -110,7 +110,7 @@ export function VoteButton({
       className={cn(
         'flex h-14 w-14 flex-col items-center justify-center gap-0.5 rounded-md border transition-colors',
         on
-          ? 'border-green bg-green text-white'
+          ? 'border-green bg-green-tint text-forest'
           : 'border-line text-muted-foreground hover:border-green hover:text-green',
       )}
     >

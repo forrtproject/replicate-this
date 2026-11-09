@@ -22,8 +22,7 @@ export function AdminPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 pb-16 pt-10">
       <AdminPageHeader
-        title="Review nominations"
-        intro="New and edited nominations wait here until a maintainer approves them, which opens them to contributors. Rejecting needs a reason, which the nominator sees."
+        intro="New nominations, and approved ones that were edited, wait here for review. They are public while pending. Approving lists them as looking for contributors; rejecting removes them from the registry and needs a reason, which the nominator sees."
       />
       <Section title="Waiting for review" tab="pending" empty="Nothing to review. New nominations will appear here." />
       <Section title="Rejected" tab="archived" empty="No rejected nominations." />
@@ -51,7 +50,7 @@ function Section({
       </h2>
       {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
       {data?.length === 0 && (
-        <p className="rounded-lg border border-line bg-card px-4 py-5 text-sm text-muted-foreground">{empty}</p>
+        <p className="text-sm text-muted-foreground">{empty}</p>
       )}
       {data && data.length > 0 && (
         <ul className="divide-y divide-line rounded-lg border border-line bg-card">

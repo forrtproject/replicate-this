@@ -7,7 +7,7 @@
  * Prerequisites (see docs/SYSTEM.md § 8 for the local stack):
  *   1. API and web dev servers running (`npm run dev` in server/ and web/).
  *   2. Demo data: in server/, `npm run db:seed && npm run db:demo &&
- *      npx tsx src/db/demo-activity.ts`.
+ *      npx tsx src/db/demo-activity.ts` (replaces placeholder papers, staggers dates).
  *   3. Sessions: in server/, `npx tsx src/scripts/dev-sessions.ts > sessions.json`
  *      (any path; pass it with --sessions).
  *
@@ -61,8 +61,8 @@ const SCREENS = [
   { name: 'nomination-approved-owner', path: () => `/nominations/${byTitle('Power Posing')}`, as: 'user' },
   { name: 'nomination-in-progress', path: () => `/nominations/${byTitle('Ego Depletion')}`, as: null },
   { name: 'nomination-completed', path: () => `/nominations/${byTitle('Growth in a Time of Debt')}`, as: null },
-  { name: 'nomination-pending-owner', path: () => `/nominations/${byTitle('A recently nominated economics')}`, as: 'user' },
-  { name: 'nomination-maintainer-view', path: () => `/nominations/${byTitle('A Recent Large-Scale Study')}`, as: 'admin' },
+  { name: 'nomination-pending-owner', path: () => `/nominations/${byTitle('Minimum Wages and Employment')}`, as: 'user' },
+  { name: 'nomination-maintainer-view', path: () => `/nominations/${byTitle('Publication bias in the social sciences')}`, as: 'admin' },
   {
     name: 'researcher-profile',
     path: () => `/nominations/${byTitle('Feeling the Future')}`,

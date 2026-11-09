@@ -50,12 +50,21 @@ export function CommentsSection({ nominationId }: { nominationId: string }) {
   const { data: comments, isLoading } = useComments(nominationId)
   const post = usePostComment(nominationId)
   const [content, setContent] = useState('')
+  const [composing, setComposing] = useState(false)
 
   const tree = useMemo(() => buildTree(comments ?? []), [comments])
 
   function submit() {
     if (content.trim().length < 2) return
-    post.mutate({ content: content.trim() }, { onSuccess: () => setContent('') })
+    post.mutate(
+      { content: content.trim() },
+      {
+        onSuccess: () => {
+          setContent('')
+          setComposing(false)
+        },
+      },
+    )
   }
 
   return (
@@ -69,8 +78,31 @@ export function CommentsSection({ nominationId }: { nominationId: string }) {
         )}
       </h2>
 
-      {session ? (
-        <div className="mb-6">
+      {isLoading && <p className="text-sm text-muted-foreground">Loading comments…</p>}
+      {comments && comments.length === 0 && (
+        <p className="text-sm text-muted-foreground">
+          No comments yet. Questions about the design, data or feasibility are welcome.
+        </p>
+      )}
+
+      <ul className="space-y-4">
+        {tree.map((node) => (
+          <CommentThread
+            key={node.comment.id}
+            node={node}
+            depth={0}
+            nominationId={nominationId}
+            canModerate={isMaintainer}
+            signedIn={!!session}
+          />
+        ))}
+      </ul>
+      {session && !composing ? (
+        <button onClick={() => setComposing(true)} className="btn-secondary mt-6">
+          Add a comment
+        </button>
+      ) : session ? (
+        <div className="mt-6">
           <label htmlFor="new-comment" className="mb-1 block text-sm font-medium">
             Add a comment
           </label>
@@ -79,6 +111,7 @@ export function CommentsSection({ nominationId }: { nominationId: string }) {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={3}
+            autoFocus
             placeholder="Questions, related work, practical concerns"
             className="input"
           />
@@ -96,7 +129,7 @@ export function CommentsSection({ nominationId }: { nominationId: string }) {
           </div>
         </div>
       ) : (
-        <p className="mb-5 text-sm text-muted-foreground">
+        <p className="mt-6 text-sm text-muted-foreground">
           <button
             onClick={() => navigate(`/sign-in?redirect=/nominations/${nominationId}`)}
             className="font-medium text-forest underline underline-offset-2"
@@ -107,23 +140,6 @@ export function CommentsSection({ nominationId }: { nominationId: string }) {
         </p>
       )}
 
-      {isLoading && <p className="text-sm text-muted-foreground">Loading comments…</p>}
-      {comments && comments.length === 0 && (
-        <p className="text-sm text-muted-foreground">No comments yet. Questions about the design, data or feasibility are welcome.</p>
-      )}
-
-      <ul className="space-y-4">
-        {tree.map((node) => (
-          <CommentThread
-            key={node.comment.id}
-            node={node}
-            depth={0}
-            nominationId={nominationId}
-            canModerate={isMaintainer}
-            signedIn={!!session}
-          />
-        ))}
-      </ul>
     </section>
   )
 }

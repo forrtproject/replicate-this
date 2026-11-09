@@ -14,15 +14,12 @@ export function CommentsModerationPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 pb-16 pt-10">
       <AdminPageHeader
-        title="Moderate comments"
         intro="Comments people flagged come first, then recent comments on all nominations. Hide anything off-topic or against the Code of Conduct: it leaves the public thread but is kept for the record. Hiding or keeping a flagged comment closes its flags."
       />
 
       {isLoading && <p className="text-sm text-muted-foreground">Loading comments…</p>}
       {comments?.length === 0 && (
-        <p className="rounded-lg border border-line bg-card px-4 py-5 text-sm text-muted-foreground">
-          No comments yet.
-        </p>
+        <p className="text-sm text-muted-foreground">No comments yet.</p>
       )}
 
       {comments && comments.length > 0 && (
@@ -77,7 +74,7 @@ function Row({ comment: c }: { comment: AdminComment }) {
         <div className="min-w-0 flex-1">
           <p className="mb-1.5 text-sm text-muted-foreground">
             <ResearcherLink name={c.authorName} token={c.authorToken} className="font-medium text-ink" /> on{' '}
-            <Link to={`/nominations/${c.nominationId}`} className="font-display text-ink hover:text-forest hover:underline">
+            <Link to={`/nominations/${c.nominationId}`} className="text-ink underline decoration-line underline-offset-2 hover:text-forest">
               {c.nominationTitle || 'a nomination'}
             </Link>
             <span className="ml-2 text-xs">{formatWhen(c.createdAt)}</span>
@@ -106,7 +103,7 @@ function Row({ comment: c }: { comment: AdminComment }) {
               <button
                 onClick={() => hide.mutate({ id: c.id, hidden: true })}
                 disabled={hide.isPending}
-                className="btn-primary"
+                className="btn-secondary text-destructive!"
               >
                 <EyeOff className="h-4 w-4" aria-hidden /> Hide
               </button>

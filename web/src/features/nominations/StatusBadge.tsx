@@ -1,7 +1,7 @@
 import { BookOpenCheck, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { NominationStatus } from '@/types'
-import { STATUS_LABELS } from './status'
+import { STATUS_HINTS, STATUS_LABELS } from './status'
 
 /**
  * Lifecycle status as a marker plus label, not a filled pill. One colour per
@@ -32,6 +32,7 @@ export function StatusBadge({ status, className }: { status: NominationStatus; c
   const done = status === 'completed' || status === 'published'
   return (
     <span
+      title={STATUS_HINTS[status]}
       className={cn(
         'inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-medium',
         TEXT[status],

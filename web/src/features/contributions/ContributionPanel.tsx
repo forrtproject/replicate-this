@@ -52,7 +52,6 @@ export function ContributionPanel({ nomination: n }: { nomination: NominationDet
     viewerOnTeam && (!team?.viewerHasEmail || unsharedTeammates.length > 0)
 
   const done = n.status === 'completed' || n.status === 'published'
-  const signInHref = `/sign-in?redirect=${encodeURIComponent(`/nominations/${n.id}`)}`
   const [showInquiry, setShowInquiry] = useState(false)
 
   return (
@@ -123,12 +122,7 @@ export function ContributionPanel({ nomination: n }: { nomination: NominationDet
       {!done && (
         <div className="mt-4 border-t border-line pt-4">
           {!session ? (
-            <p className="text-sm text-muted-foreground">
-              <Link to={signInHref} className="font-medium text-forest underline underline-offset-2">
-                Sign in
-              </Link>{' '}
-              to join the team or send it a message.
-            </p>
+            <p className="text-sm text-muted-foreground">{copy.joinHint}</p>
           ) : isOwner ? (
             <p className="text-sm text-muted-foreground">
               You nominated this study. You’ll be notified when someone joins.
@@ -199,7 +193,7 @@ export function ContributionPanel({ nomination: n }: { nomination: NominationDet
           ) : showInquiry ? (
             <div className="space-y-2">
               <label htmlFor="inquiry" className="block text-sm font-medium">
-                Message the nominator and team
+                {n.contributions > 0 ? 'Message the nominator and team' : 'Message the nominator'}
               </label>
               <textarea
                 id="inquiry"
@@ -236,19 +230,12 @@ export function ContributionPanel({ nomination: n }: { nomination: NominationDet
               onClick={() => setShowInquiry(true)}
               className="inline-flex items-center gap-1.5 text-sm font-medium text-forest hover:underline"
             >
-              <Mail className="h-4 w-4" aria-hidden /> Message the team
+              <Mail className="h-4 w-4" aria-hidden /> {n.contributions > 0 ? 'Message the team' : 'Message the nominator'}
             </button>
           )}
         </div>
       )}
-      {!session && done && (
-        <p className="mt-4 border-t border-line pt-4 text-sm text-muted-foreground">
-          <Link to={signInHref} className="font-medium text-forest underline underline-offset-2">
-            Sign in
-          </Link>{' '}
-          to message the team.
-        </p>
-      )}
+
     </section>
   )
 }

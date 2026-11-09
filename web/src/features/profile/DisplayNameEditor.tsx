@@ -7,7 +7,17 @@ export const DISPLAY_NAME_HINT =
   'Shown on your nominations, comments and study teams. A real name makes it easier to collaborate and credit work; a pseudonym is fine too. Names are unique on the site.'
 
 /** Edit the display name, with a Randomize button that suggests a pseudonym. */
-export function DisplayNameEditor({ current }: { current: string }) {
+export function DisplayNameEditor({
+  current,
+  onDraftChange,
+}: {
+  current: string
+  /**
+   * Hands the edited name to a parent that saves it itself (the welcome flow
+   * saves on Continue); the editor then shows no Save button of its own.
+   */
+  onDraftChange?: (name: string) => void
+}) {
   const update = useUpdateName()
   const suggest = useNameSuggestion()
   const [name, setName] = useState(current)
@@ -29,7 +39,10 @@ export function DisplayNameEditor({ current }: { current: string }) {
   function roll() {
     setError('')
     suggest.mutate(undefined, {
-      onSuccess: (res) => setName(res.name),
+      onSuccess: (res) => {
+        setName(res.name)
+        onDraftChange?.(res.name)
+      },
       onError: () => setError('Could not generate a suggestion. Try again.'),
     })
   }
@@ -39,7 +52,10 @@ export function DisplayNameEditor({ current }: { current: string }) {
       <div className="flex flex-wrap items-center gap-2">
         <input
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => {
+            setName(e.target.value)
+            onDraftChange?.(e.target.value)
+          }}
           maxLength={50}
           aria-label="Display name"
           className="input max-w-72"
@@ -54,6 +70,7 @@ export function DisplayNameEditor({ current }: { current: string }) {
           {suggest.isPending ? 'Suggesting…' : 'Suggest a pseudonym'}
         </button>
       </div>
+      {!onDraftChange && (
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -67,9 +84,7 @@ export function DisplayNameEditor({ current }: { current: string }) {
           <span role="status" className="text-sm text-forest">
             Saved
           </span>
-        ) : name === current ? (
-          <span className="text-sm text-muted-foreground">No changes</span>
-        ) : (
+        ) : name === current ? null : (
           <button
             type="button"
             onClick={() => setName(current)}
@@ -79,6 +94,7 @@ export function DisplayNameEditor({ current }: { current: string }) {
           </button>
         )}
       </div>
+      )}
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   )

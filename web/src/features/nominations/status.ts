@@ -14,3 +14,13 @@ export const STATUS_LABELS: Record<NominationStatus, string> = {
   published: 'Published',
   rejected: 'Rejected',
 }
+
+/** One-line meaning of each status, shown on hover and in the registry filter. */
+export const STATUS_HINTS: Record<NominationStatus, string> = {
+  pending: 'Public, but not yet checked by a maintainer.',
+  approved: 'Checked by a maintainer and open for a team to take on.',
+  in_progress: 'A team is working on the replication or reproduction.',
+  completed: 'The work is done and the team has posted the result.',
+  published: 'The result has been published as a journal article.',
+  rejected: 'Did not meet the guidelines; visible only to the nominator.',
+}

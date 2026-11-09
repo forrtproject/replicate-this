@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Compass, FilePlus2, UserRound } from 'lucide-react'
+import { ChevronRight, Compass, FilePlus2, UserRound } from 'lucide-react'
 import { api } from '@/lib/api'
 import { useSession } from '@/lib/auth-client'
 import { useMyContributions } from '@/features/contributions/api'
@@ -113,6 +113,7 @@ export function DashboardPage() {
                         )}
                       </span>
                       <span className="shrink-0 pt-0.5 text-xs text-muted-foreground">{formatWhen(n.createdAt)}</span>
+                      {href && <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />}
                     </>
                   )
                   return (
@@ -195,8 +196,9 @@ function StudyList({
         <li key={n.id}>
           <Link
             to={`/nominations/${n.id}`}
-            className="block px-4 py-3 transition-colors hover:bg-[#f6f5ef]"
+            className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[#f6f5ef]"
           >
+            <span className="min-w-0 flex-1">
             <span className="block font-display text-[1.0625rem] font-semibold leading-snug text-ink">
               {n.title}
             </span>
@@ -204,6 +206,8 @@ function StudyList({
               <StatusBadge status={n.status} className="text-[0.8125rem]" />
               <span>{n.note}</span>
             </span>
+            </span>
+            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
           </Link>
         </li>
       ))}
@@ -312,7 +316,7 @@ function LookingForContributors() {
 
 function Empty({ children }: { children: React.ReactNode }) {
   return (
-    <p className="rounded-lg border border-line bg-card px-4 py-5 text-sm text-muted-foreground">
+    <p className="text-sm leading-relaxed text-muted-foreground">
       {children}
     </p>
   )

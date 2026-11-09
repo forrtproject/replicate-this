@@ -194,7 +194,7 @@ export function RegistryPage() {
               <span role="status" aria-live="polite" className="sr-only">
                 {announced}
               </span>
-              {filtering && (
+              {filtering && filtered.length > 0 && (
                 <button
                   onClick={clearFilters}
                   className="inline-flex items-center gap-1 rounded text-sm font-medium text-forest hover:underline focus-visible:outline-2 focus-visible:outline-green"
@@ -206,7 +206,7 @@ export function RegistryPage() {
 
             {/* Native radios: arrow keys move the selection and the group is a
                 single Tab stop, as screen-reader and keyboard users expect. */}
-            <fieldset className="flex items-center gap-2">
+            <fieldset className={`flex items-center gap-2 ${filtered.length === 0 ? 'invisible' : ''}`}>
               <legend className="sr-only">Sort by</legend>
               <span className="text-sm text-muted-foreground" aria-hidden>
                 Sort
@@ -239,20 +239,26 @@ export function RegistryPage() {
           <Placeholder>{(error as Error)?.message ?? 'Could not load nominations.'}</Placeholder>
         )}
         {!isLoading && !isError && filtered.length === 0 && (
-          <Placeholder>
-            {query ? (
-              <>
-                Nothing matches “{query}”{discipline || status || journal ? ' with these filters' : ''}.
-                Try fewer words or the DOI. If the paper isn’t listed yet,{' '}
-                <Link to="/nominate" className="font-medium text-green underline">
-                  nominate it
+          <div className="border-t border-line pt-8">
+            <h2 className="section-title">
+              {query ? `No nominations match “${query}”` : 'No nominations match these filters'}
+            </h2>
+            <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
+              {query
+                ? 'Try fewer words, an author’s surname or the DOI. If the paper isn’t listed yet, you can nominate it.'
+                : 'Try a different status or discipline.'}
+            </p>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <button onClick={clearFilters} className="btn-secondary">
+                Clear search and filters
+              </button>
+              {query && (
+                <Link to="/nominate" className="btn-primary">
+                  Nominate a study
                 </Link>
-                .
-              </>
-            ) : (
-              'No nominations match these filters.'
-            )}
-          </Placeholder>
+              )}
+            </div>
+          </div>
         )}
 
         {filtered.length > 0 && (
@@ -298,7 +304,7 @@ function Select({
 
 function Placeholder({ children }: { children: React.ReactNode }) {
   return (
-    <p className="rounded-lg border border-line bg-card px-6 py-12 text-center text-sm leading-relaxed text-muted-foreground">
+    <p className="border-t border-line pt-8 text-sm leading-relaxed text-muted-foreground">
       {children}
     </p>
   )

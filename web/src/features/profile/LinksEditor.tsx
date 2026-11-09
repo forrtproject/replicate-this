@@ -87,23 +87,24 @@ export function LinksEditor({ initial }: { initial: ProfileLinks }) {
       ))}
 
       {addable.length > 0 && (
-        <div className="pt-1">
-          <p className="mb-2 text-sm font-medium">Add another profile</p>
-          <div className="flex flex-wrap gap-1.5">
+        <label className="block pt-1">
+          <span className="sr-only">Add another profile</span>
+          <select
+            value=""
+            onChange={(e) => {
+              const key = e.target.value as ProfileLinkKey
+              if (key) setShown((s) => [...s, key])
+            }}
+            className="input max-w-64"
+          >
+            <option value="">Add another profile…</option>
             {addable.map(({ key, label }) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setShown((s) => [...s, key])}
-                title={`Add ${label}`}
-                className="btn-secondary btn-sm font-normal"
-              >
-                <LinkIcon kind={key} className="h-3.5 w-3.5 text-muted-foreground" mono />
+              <option key={key} value={key}>
                 {label}
-              </button>
+              </option>
             ))}
-          </div>
-        </div>
+          </select>
+        </label>
       )}
 
       {error && <p className="text-sm text-destructive">{error}</p>}
@@ -116,11 +117,11 @@ export function LinksEditor({ initial }: { initial: ProfileLinks }) {
         >
           {update.isPending ? 'Saving…' : 'Save links'}
         </button>
-        {saved ? (
-          <span role="status" className="text-sm text-forest">Saved</span>
-        ) : !dirty ? (
-          <span className="text-sm text-muted-foreground">No changes</span>
-        ) : null}
+        {saved && (
+          <span role="status" className="text-sm text-forest">
+            Saved
+          </span>
+        )}
       </div>
     </div>
   )
