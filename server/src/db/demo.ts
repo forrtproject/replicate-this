@@ -26,6 +26,8 @@ const DEMO_USERS: { id: string; name?: string; links?: Record<string, string> }[
   { id: 'demo_user_12' },
 ]
 const IDS = DEMO_USERS.map((u) => u.id)
+// Pseudonyms in the same style the app generates, for users without a display name.
+const DEMO_PSEUDONYMS = ['KeenParsec31', 'QuietLemma08', 'BoldIsotope54', 'SteadyPrior19', 'BrightVector63', 'CalmTensor27', 'SharpOrbit45', 'WarmCipher72', 'NimbleProton16', 'ClearSignal88', 'FairQuanta39', 'SwiftHelix50']
 
 type Nom = {
   doi: string
@@ -234,7 +236,7 @@ async function seed() {
     .values(
       DEMO_USERS.map((u) => ({
         id: u.id,
-        name: u.name ?? `Researcher-${u.id.slice(-6)}`,
+        name: u.name ?? DEMO_PSEUDONYMS[DEMO_USERS.indexOf(u)],
         email: `${u.id}@demo.invalid`,
         emailVerified: true,
         role: 'user',
