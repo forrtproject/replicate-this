@@ -154,7 +154,7 @@ sign-in, so nothing needs the tokens.
 | `data_location` | text | Where the original data/code live (reproductions). |
 | `robustness_checks` | text | Suggested alternative specifications (optional). |
 | `design_deviations` | text | For replications: how the new design should differ (optional). |
-| `replication_games` | boolean | Nominator-set "Workshop Suitability" tag: the paper suits a one-day Replication Workshop (Institute for Replication). Code name `replicationWorkshop`; the column keeps its old name. |
+| `replication_games` | boolean | Nominator-set "Suits a one-day workshop" tag: the paper suits a one-day Replication Workshop (Institute for Replication). Code name `replicationWorkshop`; the column keeps its old name. |
 | `experimental_research` | boolean | Nominator-set flag that the study is experimental research. Gates the ReScience X target-journal tag. |
 | `slack_channel_id` / `slack_channel_name` | text | The team's locked Slack channel, created at approval when the integration is configured. Empty = none. Only the *name* is exposed to the client. |
 | `nominator_uid` | text FK → user (set null) | |
@@ -217,7 +217,7 @@ jsonb (usually `{ nominationId, … }`), `read_at`.
 
 ### Derived values (not stored)
 
-- **Target-journal tags** (R², Journal of Robustness Reports, JCRE,
+- **Target-journal tags** (Replication Research (R2), Journal of Robustness Reports, JCRE,
   ReScience C, ReScience X) are computed on the fly from discipline /
   verification type / availability (`web/src/features/nominations/journal-tags.ts`),
   so rule changes retroactively update every card.
@@ -407,7 +407,13 @@ takes it from the `VITE_API_ORIGIN` Actions variable, falling back for now to
   automatically (`node dist/db/migrate.js`); locally use `db:migrate`, or
   `db:push` to sync a scratch database.
 - **Seed/demo data:** `npm run db:seed` / `db:demo`; `npm run make-admin`
-  grants the maintainer role.
+  grants the maintainer role. `npx tsx src/db/demo-activity.ts` adds comments,
+  updates and notifications, replaces placeholder papers with real ones and
+  spreads dates out (dev only).
+- **Screenshots:** `web/scripts/screenshots.mjs` captures every main screen as
+  a visitor, researcher, new account and maintainer. Mint the sessions it needs
+  with `npx tsx src/scripts/dev-sessions.ts` in `server/` (dev only); usage is
+  in the script header.
 - **Tests:** `npm test` in `server/` (email hashing, email-action tokens, OAuth
   token scrubbing, profile links, Crossref, Slack client) and in `web/` (status
   labels, journal tags, search, forecast wording, year rule, pending actions,

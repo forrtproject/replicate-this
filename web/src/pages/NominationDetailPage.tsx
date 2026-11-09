@@ -73,7 +73,7 @@ export function NominationDetailPage() {
       <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
         {done
           ? 'Follow the study or message the team.'
-          : 'Upvote, predict the outcome, follow updates or join the team.'}
+          : 'Or upvote or predict below: you’ll be asked to sign in, and your choice is kept.'}
       </p>
     </div>
   )
@@ -175,7 +175,7 @@ export function NominationDetailPage() {
           )}
           {/* One panel, three parts: interest, forecast, team. */}
           <div className="divide-y divide-line rounded-lg border border-line bg-card">
-          <CommunityInterest nomination={n} closed={done} readOnly={!session} />
+          <CommunityInterest nomination={n} closed={done} />
           <section className="p-4" aria-labelledby="forecast">
             <h2 id="forecast" className="label">
               {done ? 'Forecast before the result' : 'Forecast'}
@@ -191,7 +191,6 @@ export function NominationDetailPage() {
               predictNo={n.predictNo}
               userPrediction={n.userPrediction}
               closed={done}
-              readOnly={!session}
             />
           </section>
           <ContributionPanel nomination={n} />
