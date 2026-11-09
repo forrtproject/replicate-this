@@ -193,9 +193,12 @@ PK (`comment_id`, `user_uid`) + optional `reason`, `resolved_at`. A first flag
 alerts maintainers; flagged comments sort first in the comment moderation
 queue, and hiding or keeping the comment resolves its flags.
 
-**`subscriptions`**: GitHub-style "watch". PK (`nomination_id`, `user_uid`).
-Subscribers get notifications for comments, updates, contributors, and status
-changes (except for activity they caused themselves).
+**`subscriptions`**: GitHub-style "watch", shown as Follow in the UI. PK
+(`nomination_id`, `user_uid`). Nominators follow their own nomination from the
+moment they submit it, and people who join a team follow that study; either can
+unfollow. Subscribers get notifications for comments, updates, contributors, and
+status changes, except for activity they caused themselves and events they were
+already told about directly (e.g. the nominator's "approved" notice).
 
 **`nomination_updates`**: progress updates from the team (2–5000 chars).
 `article_url` non-empty ⇒ doubles as a **completion request** that alerts

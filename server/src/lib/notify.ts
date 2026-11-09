@@ -152,15 +152,19 @@ export async function notifySubscribers(
   nominationId: string,
   type: string,
   data: Record<string, unknown>,
-  excludeUid?: string | null,
+  // Who not to tell: the person who caused the event, and anyone who already
+  // got a direct notification about it (e.g. the nominator, who follows their
+  // own nominations).
+  exclude?: string | null | (string | null | undefined)[],
 ): Promise<void> {
+  const skip = new Set((Array.isArray(exclude) ? exclude : [exclude]).filter(Boolean))
   const subs = await db
     .select({ userUid: schema.subscriptions.userUid })
     .from(schema.subscriptions)
     .where(eq(schema.subscriptions.nominationId, nominationId))
   await notify(
     subs
-      .filter((s) => s.userUid !== excludeUid)
+      .filter((s) => !skip.has(s.userUid))
       .map((s) => ({ userUid: s.userUid, type, data: { nominationId, ...data } })),
   )
 }

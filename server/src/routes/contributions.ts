@@ -118,7 +118,7 @@ contributionsRouter.post('/:nominationId', async (c) => {
       },
     ])
   }
-  await notifySubscribers(nominationId, 'watched_contribution', {}, user.id)
+  await notifySubscribers(nominationId, 'watched_contribution', {}, [user.id, nomination.nominatorUid])
 
   if (isNewJoin) {
     // Auto-subscribe the new member to the study they just joined.

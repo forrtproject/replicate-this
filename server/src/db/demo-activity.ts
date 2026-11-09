@@ -120,6 +120,11 @@ async function makeFixturesRealistic() {
       .onConflictDoNothing()
   }
 
+  // Nominators follow their own nominations, as the API does for new ones.
+  await db.execute(sql`insert into subscriptions (nomination_id, user_uid)
+    select id, nominator_uid from nominations where nominator_uid is not null
+    on conflict do nothing`)
+
   // The signed-in demo researcher has backed and forecast a few studies, so
   // the "you upvoted" and "you said" states appear.
   for (const title of ['Feeling the Future', 'Inhibiting and Facilitating']) {

@@ -117,12 +117,17 @@ adminRouter.post('/nominations/:id/status', async (c) => {
   if (status === 'approved' || status === 'in_progress') {
     await ensureSlackChannel(id)
   }
-  if (current.nominatorUid && !isRevert && (status === 'completed' || status === 'published')) {
+  const toldDirectly =
+    current.nominatorUid && !isRevert && (status === 'completed' || status === 'published')
+  if (toldDirectly) {
     await notify([
-      { userUid: current.nominatorUid, type: `nomination_${status}`, data: { nominationId: id } },
+      { userUid: current.nominatorUid!, type: `nomination_${status}`, data: { nominationId: id } },
     ])
   }
-  await notifySubscribers(id, 'watched_status', { status }, admin.id)
+  await notifySubscribers(id, 'watched_status', { status }, [
+    admin.id,
+    toldDirectly ? current.nominatorUid : null,
+  ])
   return c.json({ ok: true })
 })
 

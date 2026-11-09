@@ -86,7 +86,7 @@ export async function approveNomination(adminUid: string, id: string): Promise<M
       { userUid: updated.nominatorUid, type: 'nomination_approved', data: { nominationId: id } },
     ])
   }
-  await notifySubscribers(id, 'watched_status', { status: 'approved' }, adminUid)
+  await notifySubscribers(id, 'watched_status', { status: 'approved' }, [adminUid, updated.nominatorUid])
   return 'done'
 }
 
