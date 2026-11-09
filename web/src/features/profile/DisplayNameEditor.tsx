@@ -70,7 +70,7 @@ export function DisplayNameEditor({
           {suggest.isPending ? 'Suggesting…' : 'Suggest a pseudonym'}
         </button>
       </div>
-      {!onDraftChange && (name !== current || saved) && (
+      {!onDraftChange && (
       <div className="flex items-center gap-3">
         <button
           type="button"

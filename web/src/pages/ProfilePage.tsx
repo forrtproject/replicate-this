@@ -237,7 +237,7 @@ function EmailPrefsEditor({
       )}
 
       {error && <p className="text-sm text-destructive">{error}</p>}
-      {(dirty || saved) && (
+      {(
       <div className="flex items-center gap-3 pt-1">
         <button
           onClick={save}

@@ -130,7 +130,7 @@ export function ContributionPanel({ nomination: n }: { nomination: NominationDet
             </>
           ) : isOwner ? (
             <p className="text-sm text-muted-foreground">
-              As the nominator you’re part of the team. You’ll be notified when others join.
+              You nominated this study. You’ll be notified when someone joins its team.
             </p>
           ) : n.userContributed ? (
             <div className="flex items-center justify-between gap-2">

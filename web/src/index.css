@@ -25,7 +25,7 @@
   --color-accent: #ecf6f1; /* soft green surface */
   --color-accent-foreground: #0a5c47;
 
-  --color-destructive: #b4531a; /* muted terracotta */
+  --color-destructive: #a8322d; /* brick red, distinct from in-progress amber */
   --color-destructive-foreground: #ffffff;
 
   --color-card: #ffffff;

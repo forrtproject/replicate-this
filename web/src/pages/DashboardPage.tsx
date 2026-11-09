@@ -168,7 +168,7 @@ export function DashboardPage() {
               Your study teams
             </h2>
             {contributions.data?.length === 0 ? (
-              <Empty>You haven’t joined a study team yet. Studies looking for contributors are listed alongside.</Empty>
+              <Empty>Studies whose team you join appear here. You haven’t joined one yet; open studies are listed alongside.</Empty>
             ) : (
               <StudyList
                 items={(contributions.data ?? []).map((c) => {
