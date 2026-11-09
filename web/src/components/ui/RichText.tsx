@@ -46,7 +46,7 @@ export function RichText({ children, className = '' }: { children: string; class
               href={href}
               target="_blank"
               rel="noreferrer nofollow"
-              className="break-words text-green underline"
+              className="break-words text-brand underline"
             >
               {children}
             </a>
@@ -62,7 +62,7 @@ export function RichText({ children, className = '' }: { children: string; class
             <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.85em]">{children}</code>
           ),
           blockquote: ({ children }) => (
-            <blockquote className="my-3 border-l-2 border-green pl-3 text-muted-foreground first:mt-0 last:mb-0">
+            <blockquote className="my-3 border-l-2 border-brand pl-3 text-muted-foreground first:mt-0 last:mb-0">
               {children}
             </blockquote>
           ),

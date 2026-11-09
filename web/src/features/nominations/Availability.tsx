@@ -27,7 +27,7 @@ export function AvailabilityList({
                 href={url}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="inline-flex items-center gap-1 text-forest underline-offset-2 hover:underline"
+                className="inline-flex items-center gap-1 text-brand-deep underline-offset-2 hover:underline"
               >
                 {o.label}
                 <ExternalLink className="h-3 w-3" aria-hidden />

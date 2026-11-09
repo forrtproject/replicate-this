@@ -46,7 +46,7 @@ export const router = createBrowserRouter([
                 <Link to="/nominate" className="btn-primary">
                   Nominate a study
                 </Link>
-                <Link to="/nominations" className="text-sm font-medium text-forest hover:underline">
+                <Link to="/nominations" className="text-sm font-medium text-brand-deep hover:underline">
                   Search existing nominations
                 </Link>
               </div>

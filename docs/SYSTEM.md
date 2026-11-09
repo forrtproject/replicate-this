@@ -191,7 +191,9 @@ toggled on/off.
 **`comment_flags`**: user reports of a comment against the Code of Conduct.
 PK (`comment_id`, `user_uid`) + optional `reason`, `resolved_at`. A first flag
 alerts maintainers; flagged comments sort first in the comment moderation
-queue, and hiding or keeping the comment resolves its flags.
+queue, and hiding or keeping the comment resolves its flags. In that queue each
+reply also shows a short plain-text excerpt of the comment it answers
+(`server/src/lib/excerpt.ts`), so it can be judged without opening the study.
 
 **`subscriptions`**: GitHub-style "watch", shown as Follow in the UI. PK
 (`nomination_id`, `user_uid`). Nominators follow their own nomination from the
@@ -457,4 +459,5 @@ Behaviour that spans pages, and where it lives in `web/src`:
   typed.
 - **Accessibility baseline.** Skip link, visible focus, 16px inputs on phones
   (so iOS doesn't zoom), a sticky header with matching `scroll-padding-top`,
-  reduced motion respected, and the brand green at `#047857` for 4.5:1 contrast.
+  reduced motion respected, and the brand blue at `#2858c8` (6.0:1 on the page
+  background, 5.4:1 on the header band).

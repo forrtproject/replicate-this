@@ -104,7 +104,7 @@ export function PredictionBar({
   const split = !few && (
     <div className="mt-3">
       <div className="flex h-2 overflow-hidden rounded-full bg-[#dcd8cc]" aria-hidden>
-        <div className="bg-green" style={{ width: `${yesPct}%` }} />
+        <div className="bg-brand" style={{ width: `${yesPct}%` }} />
       </div>
       <p className="mt-1.5 flex justify-between text-xs text-muted-foreground">
         <span>
@@ -182,8 +182,8 @@ function PredictButton({
       className={cn(
         'inline-flex flex-1 items-center justify-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors',
         active
-          ? 'border-green bg-green-tint text-forest'
-          : 'border-line bg-card text-ink hover:border-green',
+          ? 'border-brand bg-brand-tint text-brand-deep'
+          : 'border-line bg-card text-ink hover:border-brand',
       )}
     >
       {children}

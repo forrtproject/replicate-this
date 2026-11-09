@@ -99,12 +99,12 @@ export function RegistryPage() {
   return (
     <div>
       {showIntro ? (
-        <section className="bg-forest text-white">
+        <section className="bg-brand-deep text-white">
           <div className="mx-auto max-w-5xl px-4 pb-14 pt-16 sm:pb-16 sm:pt-20">
           <h1 className="max-w-3xl font-display text-[2.5rem] font-medium leading-[1.05] tracking-[-0.02em] sm:text-[3.5rem]">
             Studies worth checking twice
           </h1>
-          <p className="mt-5 max-w-2xl text-[1.0625rem] leading-relaxed text-[#d7e7df]">
+          <p className="mt-5 max-w-2xl text-[1.0625rem] leading-relaxed text-on-deep">
             A community registry of published findings that researchers want to see
             replicated with new data or reproduced from the original data. Nominate a
             study, back the ones you want checked, and form a team to do the work.
@@ -112,7 +112,7 @@ export function RegistryPage() {
           <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
             <Link
               to="/nominate"
-              className="rounded-md bg-paper px-5 py-2.5 text-sm font-semibold text-forest transition-colors hover:bg-white"
+              className="rounded-md bg-paper px-5 py-2.5 text-sm font-semibold text-brand-deep transition-colors hover:bg-white"
             >
               Nominate a study
             </Link>
@@ -134,7 +134,7 @@ export function RegistryPage() {
           {session && (
             <Link
               to="/nominate"
-              className="rounded-md bg-green px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-forest"
+              className="rounded-md bg-brand px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-deep"
             >
               Nominate a study
             </Link>
@@ -202,7 +202,7 @@ export function RegistryPage() {
               {filtering && filtered.length > 0 && (
                 <button
                   onClick={clearFilters}
-                  className="inline-flex items-center gap-1 rounded text-sm font-medium text-forest hover:underline focus-visible:outline-2 focus-visible:outline-green"
+                  className="inline-flex items-center gap-1 rounded text-sm font-medium text-brand-deep hover:underline focus-visible:outline-2 focus-visible:outline-brand"
                 >
                   <X className="h-3.5 w-3.5" aria-hidden /> Clear search and filters
                 </button>
@@ -221,7 +221,7 @@ export function RegistryPage() {
                   <label
                     key={key}
                     title={SORTS[key].hint}
-                    className="cursor-pointer rounded px-2.5 py-1 text-sm text-muted-foreground transition-colors hover:text-ink has-checked:bg-green-tint has-checked:font-medium has-checked:text-forest has-focus-visible:outline-2 has-focus-visible:outline-offset-1 has-focus-visible:outline-green"
+                    className="cursor-pointer rounded px-2.5 py-1 text-sm text-muted-foreground transition-colors hover:text-ink has-checked:bg-brand-tint has-checked:font-medium has-checked:text-brand-deep has-focus-visible:outline-2 has-focus-visible:outline-offset-1 has-focus-visible:outline-brand"
                   >
                     <input
                       type="radio"
@@ -298,7 +298,7 @@ function Select({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className={`max-w-full rounded-md border bg-card py-2 pl-2.5 pr-8 text-base text-ink w-full sm:w-44 sm:text-sm ${
-          value ? 'border-green' : 'border-input'
+          value ? 'border-brand' : 'border-input'
         }`}
       >
         {children}

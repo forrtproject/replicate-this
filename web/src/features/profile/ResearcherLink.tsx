@@ -23,7 +23,7 @@ export function ResearcherLink({
   return (
     <Link
       to={`/researchers/${token}`}
-      className={cn('relative z-10 hover:text-green hover:underline', className)}
+      className={cn('relative z-10 hover:text-brand hover:underline', className)}
     >
       {label}
     </Link>

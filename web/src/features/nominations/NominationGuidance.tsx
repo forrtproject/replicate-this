@@ -21,10 +21,10 @@ export function NominationGuidance({
             <li>Comments and votes stay with the nomination when you save.</li>
           </ul>
           <p className="mt-4 flex gap-4 border-t border-line pt-3">
-            <Link to="/guidelines" target="_blank" className="font-medium text-forest hover:underline">
+            <Link to="/guidelines" target="_blank" className="font-medium text-brand-deep hover:underline">
               Full guidelines
             </Link>
-            <Link to="/code-of-conduct" target="_blank" className="font-medium text-forest hover:underline">
+            <Link to="/code-of-conduct" target="_blank" className="font-medium text-brand-deep hover:underline">
               Code of Conduct
             </Link>
           </p>
@@ -50,16 +50,16 @@ export function NominationGuidance({
         </ul>
         <p className="mt-3 text-muted-foreground">
           Search the{' '}
-          <Link to="/nominations" className="text-forest underline">
+          <Link to="/nominations" className="text-brand-deep underline">
             registry
           </Link>{' '}
           first: if the study is listed, upvote it instead.
         </p>
         <p className="mt-4 flex gap-4 border-t border-line pt-3">
-          <Link to="/guidelines" target="_blank" className="font-medium text-forest hover:underline">
+          <Link to="/guidelines" target="_blank" className="font-medium text-brand-deep hover:underline">
             Full guidelines
           </Link>
-          <Link to="/code-of-conduct" target="_blank" className="font-medium text-forest hover:underline">
+          <Link to="/code-of-conduct" target="_blank" className="font-medium text-brand-deep hover:underline">
             Code of Conduct
           </Link>
         </p>

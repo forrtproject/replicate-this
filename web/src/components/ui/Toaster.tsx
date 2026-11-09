@@ -52,7 +52,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                   setToast(null)
                   setPaused(false)
                 }}
-                className="rounded-md px-2 py-1.5 font-semibold text-green-tint underline underline-offset-2 hover:text-white focus-visible:outline-2 focus-visible:outline-white"
+                className="rounded-md px-2 py-1.5 font-semibold text-brand-tint underline underline-offset-2 hover:text-white focus-visible:outline-2 focus-visible:outline-white"
               >
                 {toast.action.label}
               </button>

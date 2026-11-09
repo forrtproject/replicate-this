@@ -84,7 +84,7 @@ export function UpdatesSection({
                 href={u.articleUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-1.5 inline-flex items-center gap-1 text-sm font-medium text-forest hover:underline"
+                className="mt-1.5 inline-flex items-center gap-1 text-sm font-medium text-brand-deep hover:underline"
               >
                 <FileText className="h-3.5 w-3.5" aria-hidden /> Read the write-up{' '}
                 <ExternalLink className="h-3 w-3" aria-hidden />

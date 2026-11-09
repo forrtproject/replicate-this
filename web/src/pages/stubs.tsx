@@ -15,11 +15,11 @@ export const NotFoundPage = () => {
       <div className="flex flex-wrap items-center gap-5">
         <Link
           to="/nominations"
-          className="rounded-md bg-green px-4 py-2 text-sm font-semibold text-white hover:bg-forest"
+          className="rounded-md bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-deep"
         >
           Browse nominations
         </Link>
-        <Link to="/guidelines" className="text-sm font-medium text-forest hover:underline">
+        <Link to="/guidelines" className="text-sm font-medium text-brand-deep hover:underline">
           How nominations work
         </Link>
       </div>

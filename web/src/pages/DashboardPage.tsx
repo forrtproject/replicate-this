@@ -59,7 +59,7 @@ export function DashboardPage() {
         <h1 className="font-display text-[2rem] font-semibold leading-tight">Dashboard</h1>
         <p className="mt-1 text-sm text-band-ink/80">
           Signed in as <span className="text-ink">{session?.user?.name}</span>.{' '}
-          <Link to="/profile" className="text-forest underline-offset-2 hover:underline">
+          <Link to="/profile" className="text-brand-deep underline-offset-2 hover:underline">
             Edit profile
           </Link>
         </p>
@@ -74,7 +74,7 @@ export function DashboardPage() {
               <h2 id="notifications" className="section-title">
                 Notifications
                 {unread > 0 && (
-                  <span className="ml-2 font-sans text-sm font-medium text-forest">{unread} new</span>
+                  <span className="ml-2 font-sans text-sm font-medium text-brand-deep">{unread} new</span>
                 )}
               </h2>
               {unread > 0 && (
@@ -102,7 +102,7 @@ export function DashboardPage() {
                   const body = (
                     <>
                       <span
-                        className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${n.readAt ? 'bg-transparent' : 'bg-green'}`}
+                        className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${n.readAt ? 'bg-transparent' : 'bg-brand'}`}
                         aria-hidden
                       />
                       <span className="min-w-0 flex-1">
@@ -143,7 +143,7 @@ export function DashboardPage() {
             {nominations.data?.length === 0 ? (
               <Empty>
                 You haven’t nominated anything yet.{' '}
-                <Link to="/nominate" className="font-medium text-forest underline">
+                <Link to="/nominate" className="font-medium text-brand-deep underline">
                   Nominate a study
                 </Link>
               </Empty>
@@ -261,10 +261,10 @@ function GetStarted() {
           <Link
             key={to}
             to={to}
-            className="group rounded-md border border-line p-4 transition-colors hover:border-green"
+            className="group rounded-md border border-line p-4 transition-colors hover:border-brand"
           >
-            <Icon className="h-5 w-5 text-green" />
-            <p className="mt-2 font-medium group-hover:text-green">{title}</p>
+            <Icon className="h-5 w-5 text-brand" />
+            <p className="mt-2 font-medium group-hover:text-brand">{title}</p>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{body}</p>
           </Link>
         ))}
@@ -296,7 +296,7 @@ function LookingForContributors() {
       {suggestions.length === 0 ? (
         <p className="mt-3 text-sm text-muted-foreground">
           No open studies need a team right now. Check back soon, or{' '}
-          <Link to="/nominate" className="text-forest underline">
+          <Link to="/nominate" className="text-brand-deep underline">
             nominate one
           </Link>
           .
@@ -322,7 +322,7 @@ function LookingForContributors() {
       )}
       <Link
         to="/nominations?status=approved"
-        className="mt-4 inline-block text-sm font-medium text-forest hover:underline"
+        className="mt-4 inline-block text-sm font-medium text-brand-deep hover:underline"
       >
         See all open studies
       </Link>

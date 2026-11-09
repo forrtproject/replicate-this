@@ -3,7 +3,7 @@
 
 /*
   Replicate This — "Scholarly & approachable."
-  Warm paper, deep ink, FORRT green. Newsreader (editorial serif) for page
+  Warm paper, deep ink, a friendly blue. Newsreader (editorial serif) for page
   titles and study titles, the things a reader would cite; Inter for everything
   else. Figures use Inter's tabular numerals. Calm and journal-like.
 */
@@ -14,16 +14,16 @@
   --color-muted-foreground: #56625d;
   --color-border: #e5e2d9;
   --color-input: #d7d3c8;
-  --color-ring: #047857;
+  --color-ring: #2858c8;
 
-  --color-primary: #047857;
+  --color-primary: #2858c8;
   --color-primary-foreground: #ffffff;
 
   --color-secondary: #f1efe8;
   --color-secondary-foreground: #17211f;
 
-  --color-accent: #ecf6f1; /* soft green surface */
-  --color-accent-foreground: #0a5c47;
+  --color-accent: #ebf1fc; /* soft blue surface */
+  --color-accent-foreground: #1c3a7d;
 
   --color-destructive: #a8322d; /* brick red, distinct from in-progress amber */
   --color-destructive-foreground: #ffffff;
@@ -34,16 +34,19 @@
   /* Named brand tokens */
   --color-ink: #17211f;
   --color-paper: #faf9f5;
-  --color-forest: #0a5c47;
-  --color-green: #047857; /* 4.97:1 or better on paper, white and tint */
-  --color-green-tint: #ecf6f1;
+  --color-brand-deep: #1c3a7d;
+  --color-brand: #2858c8; /* 5.4:1 or better on paper, band and tint; white on it 6.3:1 */
+  --color-brand-tint: #ebf1fc;
+  /* Text on the deep blue blocks (hero, result, footer). */
+  --color-on-deep: #dce6fa;
+  --color-on-deep-label: #b9ccf2;
   --color-amber: #b4531a;
   --color-line: #e5e2d9;
-  /* Colour blocks: a sage band behind every page header, forest for the
-     visitor hero and the footer. */
-  --color-band: #e4eee7;
-  --color-band-line: #cddfd3;
-  --color-band-ink: #0a3d30;
+  /* Colour blocks: a pale blue band behind every page header, deep blue for
+     the visitor hero, finished-study results and the footer. */
+  --color-band: #e6eefb;
+  --color-band-line: #cbd9f2;
+  --color-band-ink: #13284f;
 
   --radius: 0.5rem;
 
@@ -57,9 +60,9 @@
 
   /* Status scale: each lifecycle stage gets its own colour. */
   --color-status-pending: #8a8f8c;
-  --color-status-open: #047857;
+  --color-status-open: #2858c8;
   --color-status-progress: #b45309;
-  --color-status-done: #0a5c47;
+  --color-status-done: #1c3a7d;
 }
 
 html,
@@ -94,7 +97,7 @@ body {
 
 /* A disabled primary button reads as unavailable (neutral grey), never as a
    faded version of the active one. */
-button.bg-green:disabled {
+button.bg-brand:disabled {
   background-color: var(--color-card);
   color: var(--color-muted-foreground);
   opacity: 0.7;
@@ -117,7 +120,7 @@ button.bg-green:disabled {
 /* Native controls in the site's colours. */
 input[type='checkbox'],
 input[type='radio'] {
-  accent-color: var(--color-green);
+  accent-color: var(--color-brand);
   width: 1rem;
   height: 1rem;
 }
@@ -170,11 +173,11 @@ h3 {
   transition: background-color 0.15s, border-color 0.15s;
 }
 .btn-primary {
-  background: var(--color-green);
+  background: var(--color-brand);
   color: #fff;
 }
 .btn-primary:hover:not(:disabled) {
-  background: var(--color-forest);
+  background: var(--color-brand-deep);
 }
 .btn-primary:disabled {
   background: var(--color-card);
@@ -189,7 +192,7 @@ h3 {
   font-weight: 500;
 }
 .btn-secondary:hover:not(:disabled) {
-  border-color: var(--color-green);
+  border-color: var(--color-brand);
 }
 .btn-secondary:disabled {
   opacity: 0.55;
@@ -275,7 +278,7 @@ h3 {
   list-style: decimal;
 }
 .markdown a {
-  color: var(--color-forest);
+  color: var(--color-brand-deep);
   text-decoration: underline;
 }
 .markdown strong {
@@ -283,7 +286,7 @@ h3 {
   color: var(--color-ink);
 }
 .markdown blockquote {
-  border-left: 3px solid var(--color-green);
+  border-left: 3px solid var(--color-brand);
   margin: 0.8em 0;
   padding: 0.2em 0 0.2em 1em;
   color: var(--color-muted-foreground);

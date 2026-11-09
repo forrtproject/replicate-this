@@ -5,7 +5,7 @@ import { STATUS_HINTS, STATUS_LABELS } from './status'
 
 /**
  * Lifecycle status as a marker plus label, not a filled pill. One colour per
- * stage, so stages never look alike: grey ring = unreviewed, green dot = open
+ * stage, so stages never look alike: grey ring = unreviewed, blue dot = open
  * for contributors, amber dot = a team is working, circled check = completed,
  * open book = published in a journal. Plain ticks are kept for open materials.
  */

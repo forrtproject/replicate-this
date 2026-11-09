@@ -132,7 +132,7 @@ function ProviderButton({
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center justify-center gap-2.5 rounded-md border border-input bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:border-green"
+      className="flex w-full items-center justify-center gap-2.5 rounded-md border border-input bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:border-brand"
     >
       <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden>
         <path d={icon.path} fill={brand ? `#${icon.hex}` : 'currentColor'} />

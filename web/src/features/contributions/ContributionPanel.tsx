@@ -109,7 +109,7 @@ export function ContributionPanel({ nomination: n }: { nomination: NominationDet
           ) : (
             <p className="text-xs text-muted-foreground">
               Add a notification email in your{' '}
-              <Link to="/profile" className="text-forest underline">
+              <Link to="/profile" className="text-brand-deep underline">
                 profile
               </Link>{' '}
               to share it with teammates.
@@ -134,7 +134,7 @@ export function ContributionPanel({ nomination: n }: { nomination: NominationDet
             </p>
           ) : n.userContributed ? (
             <div className="flex items-center justify-between gap-2">
-              <span className="inline-flex items-center gap-1.5 text-sm font-medium text-forest">
+              <span className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-deep">
                 <Check className="h-4 w-4" aria-hidden /> You’re on the team
               </span>
               <button
@@ -194,7 +194,7 @@ export function ContributionPanel({ nomination: n }: { nomination: NominationDet
       {session && !isOwner && (
         <div className="mt-4 border-t border-line pt-4">
           {inquirySent ? (
-            <p className="text-sm text-forest">Message sent. The team will see it in their notifications.</p>
+            <p className="text-sm text-brand-deep">Message sent. The team will see it in their notifications.</p>
           ) : showInquiry ? (
             <div className="space-y-2">
               <label htmlFor="inquiry" className="block text-sm font-medium">
@@ -233,7 +233,7 @@ export function ContributionPanel({ nomination: n }: { nomination: NominationDet
           ) : (
             <button
               onClick={() => setShowInquiry(true)}
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-forest hover:underline"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-deep hover:underline"
             >
               <Mail className="h-4 w-4" aria-hidden /> {n.contributions > 0 ? 'Message the team' : 'Message the nominator'}
             </button>
@@ -263,7 +263,7 @@ function TeammateEmail({
       {ct.email ? (
         <span className="inline-flex items-center gap-1 text-muted-foreground">
           <Mail className="h-3 w-3" />
-          <a href={`mailto:${ct.email}`} className="text-green hover:underline">
+          <a href={`mailto:${ct.email}`} className="text-brand hover:underline">
             {ct.email}
           </a>
         </span>
@@ -271,14 +271,14 @@ function TeammateEmail({
         <span className="text-muted-foreground">Email not shared with you</span>
       )}
       {ct.youSharedWithThem ? (
-        <span className="inline-flex items-center gap-1 text-green">
+        <span className="inline-flex items-center gap-1 text-brand">
           <Check className="h-3 w-3" /> You shared your email
         </span>
       ) : (
         <button
           onClick={onShare}
           disabled={busy}
-          className="text-muted-foreground underline hover:text-green disabled:opacity-60"
+          className="text-muted-foreground underline hover:text-brand disabled:opacity-60"
         >
           Share your email
         </button>

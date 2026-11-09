@@ -100,7 +100,7 @@ export function NominationFormFields({
                 value={value}
                 checked={values.verificationType === value}
                 onChange={() => set({ verificationType: value })}
-                className="mt-1 accent-[var(--color-green)]"
+                className="mt-1 accent-[var(--color-brand)]"
               />
               <span>
                 {label}
@@ -174,7 +174,7 @@ export function NominationFormFields({
                     type="checkbox"
                     checked={checked}
                     onChange={() => toggleAvailability(o.key)}
-                    className="mt-0.5 accent-[var(--color-green)]"
+                    className="mt-0.5 accent-[var(--color-brand)]"
                   />
                   <span>
                     {o.label}
@@ -233,7 +233,7 @@ export function NominationFormFields({
               type="checkbox"
               checked={values.replicationWorkshop}
               onChange={(e) => set({ replicationWorkshop: e.target.checked })}
-              className="mt-0.5 accent-[var(--color-green)]"
+              className="mt-0.5 accent-[var(--color-brand)]"
             />
             <span>
               <label htmlFor="replication-workshop" className="cursor-pointer">
@@ -250,7 +250,7 @@ export function NominationFormFields({
               type="checkbox"
               checked={values.experimentalResearch}
               onChange={(e) => set({ experimentalResearch: e.target.checked })}
-              className="mt-0.5 accent-[var(--color-green)]"
+              className="mt-0.5 accent-[var(--color-brand)]"
             />
             <span>
               <label htmlFor="experimental-research" className="cursor-pointer">

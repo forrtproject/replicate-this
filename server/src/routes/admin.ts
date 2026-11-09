@@ -1,3 +1,4 @@
+import { excerpt } from '@/lib/excerpt'
 import { Hono } from 'hono'
 import { and, desc, eq, inArray, isNull, ne, sql } from 'drizzle-orm'
 import { db, schema } from '@/db'
@@ -233,6 +234,9 @@ adminRouter.get('/comments', async (c) => {
       metadata: schema.nominations.metadata,
       openFlags: sql<number>`(select count(*)::int from comment_flags f where f.comment_id = ${schema.comments.id} and f.resolved_at is null)`,
       flagReasons: sql<string[]>`coalesce((select array_agg(f.reason) from comment_flags f where f.comment_id = ${schema.comments.id} and f.resolved_at is null and f.reason <> ''), '{}')`,
+      // A reply is judged against what it answers: carry the parent comment.
+      parentContent: sql<string | null>`(select p.content from comments p where p.id = ${schema.comments.parentId})`,
+      parentAuthorName: sql<string | null>`(select u.name from comments p join "user" u on u.id = p.author_uid where p.id = ${schema.comments.parentId})`,
     })
     .from(schema.comments)
     .innerJoin(schema.nominations, eq(schema.nominations.id, schema.comments.nominationId))
@@ -256,6 +260,11 @@ adminRouter.get('/comments', async (c) => {
       authorName: r.authorName,
       openFlags: r.openFlags,
       flagReasons: r.flagReasons,
+      // Null for top-level comments; otherwise a short excerpt of the parent.
+      replyTo:
+        r.parentContent === null
+          ? null
+          : { authorName: r.parentAuthorName, excerpt: excerpt(r.parentContent, 180) },
     })),
   })
 })

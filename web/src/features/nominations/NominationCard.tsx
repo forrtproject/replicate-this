@@ -43,7 +43,7 @@ export function NominationCard({
             // Where the reader came from (filters, sort), so the study page's
             // back link returns there rather than to the bare list.
             state={{ from: location.pathname + location.search }}
-            className="text-ink [overflow-wrap:anywhere] after:absolute after:inset-0 group-hover:text-forest focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-[-2px] focus-visible:after:outline-green"
+            className="text-ink [overflow-wrap:anywhere] after:absolute after:inset-0 group-hover:text-brand-deep focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-[-2px] focus-visible:after:outline-brand"
           >
             {n.metadata.title || n.doi}
           </Link>

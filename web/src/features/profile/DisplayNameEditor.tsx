@@ -81,7 +81,7 @@ export function DisplayNameEditor({
           {update.isPending ? 'Saving…' : 'Save name'}
         </button>
         {saved ? (
-          <span role="status" className="text-sm text-forest">
+          <span role="status" className="text-sm text-brand-deep">
             Saved
           </span>
         ) : name === current ? null : (

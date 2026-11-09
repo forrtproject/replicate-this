@@ -85,7 +85,7 @@ export function UsersPage() {
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <span className={cn(isAdmin ? 'font-medium text-forest' : 'text-muted-foreground')}>
+                    <span className={cn(isAdmin ? 'font-medium text-brand-deep' : 'text-muted-foreground')}>
                       {isAdmin ? 'Maintainer' : 'Researcher'}
                     </span>
                   </td>

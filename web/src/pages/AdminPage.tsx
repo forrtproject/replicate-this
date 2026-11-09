@@ -83,7 +83,7 @@ function Row({ nomination: n, tab }: { nomination: AdminNomination; tab: 'pendin
         <div className="min-w-0 flex-1">
           <Link
             to={`/nominations/${n.id}`}
-            className="font-display text-[1.1875rem] font-semibold leading-snug text-ink hover:text-forest"
+            className="font-display text-[1.1875rem] font-semibold leading-snug text-ink hover:text-brand-deep"
           >
             {n.metadata.title || n.doi}
           </Link>
@@ -116,7 +116,7 @@ function Row({ nomination: n, tab }: { nomination: AdminNomination; tab: 'pendin
           {n.dataLocation && (
             <p className="mt-2 text-xs text-muted-foreground">
               <span className="font-medium text-ink">Data:</span>{' '}
-              <a href={n.dataLocation} target="_blank" rel="noreferrer" className="text-forest underline">
+              <a href={n.dataLocation} target="_blank" rel="noreferrer" className="text-brand-deep underline">
                 {n.dataLocation}
               </a>
             </p>

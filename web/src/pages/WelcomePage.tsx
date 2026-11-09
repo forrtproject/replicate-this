@@ -79,7 +79,7 @@ export function WelcomePage() {
         {STEPS.map((label, i) => (
           <li key={label} aria-current={i === step ? 'step' : undefined}>
             <span
-              className={`block h-1 rounded-full ${i <= step ? 'bg-green' : 'bg-line'}`}
+              className={`block h-1 rounded-full ${i <= step ? 'bg-brand' : 'bg-line'}`}
               aria-hidden
             />
             <span
@@ -87,7 +87,7 @@ export function WelcomePage() {
                 i === step ? 'font-semibold text-ink' : 'text-muted-foreground'
               }`}
             >
-              {i < step && <Check className="h-3 w-3 text-forest" aria-hidden />}
+              {i < step && <Check className="h-3 w-3 text-brand-deep" aria-hidden />}
               {i + 1}. {label}
             </span>
           </li>
@@ -262,11 +262,11 @@ function NotificationStep({
           onClick={save}
           disabled={update.isPending || !emailValid}
           title={emailValid ? undefined : 'Enter a valid email address first.'}
-          className="rounded-md bg-green px-3 py-2 text-sm font-medium text-white hover:bg-forest disabled:opacity-60"
+          className="rounded-md bg-brand px-3 py-2 text-sm font-medium text-white hover:bg-brand-deep disabled:opacity-60"
         >
           {update.isPending ? 'Saving…' : 'Save settings'}
         </button>
-        {saved && <span className="text-xs text-green">Saved</span>}
+        {saved && <span className="text-xs text-brand">Saved</span>}
       </div>
     </div>
   )

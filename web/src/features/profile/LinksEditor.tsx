@@ -118,7 +118,7 @@ export function LinksEditor({ initial }: { initial: ProfileLinks }) {
           {update.isPending ? 'Saving…' : 'Save links'}
         </button>
         {saved && (
-          <span role="status" className="text-sm text-forest">
+          <span role="status" className="text-sm text-brand-deep">
             Saved
           </span>
         )}

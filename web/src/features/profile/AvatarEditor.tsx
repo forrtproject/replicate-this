@@ -12,7 +12,7 @@ function isImageAvatar(image: string | undefined): boolean {
 
 // Emojis and initials sit on a flat, muted tint drawn from the site palette.
 // The tint is picked deterministically from the emoji or name, so it is stable.
-const EMOJI_GRADIENTS = ['#dcebe3', '#ebe5d6', '#dfe5ec', '#ecdfdc', '#e3e0ec', '#e2e8d8']
+const EMOJI_GRADIENTS = ['#dfe8f8', '#ebe5d6', '#dfe5ec', '#ecdfdc', '#e3e0ec', '#e2e8d8']
 function gradientFor(seed: string): string {
   let hash = 0
   for (const ch of seed) hash = (hash * 31 + ch.codePointAt(0)!) >>> 0
@@ -220,7 +220,7 @@ function EmojiPicker({
                     aria-label={`Use ${e}`}
                     aria-pressed={selected === e}
                     className={`flex h-8 w-8 items-center justify-center rounded-md text-xl leading-none hover:bg-muted ${
-                      selected === e ? 'bg-green-tint ring-1 ring-green' : ''
+                      selected === e ? 'bg-brand-tint ring-1 ring-brand' : ''
                     }`}
                   >
                     {e}

@@ -25,7 +25,7 @@ export function ProfilePage() {
         <p className="mt-1 text-sm text-band-ink/80">
           How others see you on the registry, and how we reach you.{' '}
           {token && (
-            <Link to={`/researchers/${token}`} className="text-forest underline-offset-2 hover:underline">
+            <Link to={`/researchers/${token}`} className="text-brand-deep underline-offset-2 hover:underline">
               View your public profile
             </Link>
           )}
@@ -103,9 +103,9 @@ function ResearcherIdFooter({ id }: { id: string }) {
             setTimeout(() => setCopied(false), 1500)
           })
         }
-        className="inline-flex items-center gap-1 rounded border border-line px-1.5 py-0.5 hover:border-green"
+        className="inline-flex items-center gap-1 rounded border border-line px-1.5 py-0.5 hover:border-brand"
       >
-        {copied ? <Check className="h-3 w-3 text-green" /> : <Copy className="h-3 w-3" />}
+        {copied ? <Check className="h-3 w-3 text-brand" /> : <Copy className="h-3 w-3" />}
         {copied ? 'Copied' : 'Copy'}
       </button>
     </p>
@@ -225,7 +225,7 @@ function EmailPrefsEditor({
                 type="checkbox"
                 checked={prefs[o.key] === true}
                 onChange={(e) => setPrefs((p) => ({ ...p, [o.key]: e.target.checked }))}
-                className="mt-1 accent-[var(--color-green)]"
+                className="mt-1 accent-[var(--color-brand)]"
               />
               <span>
                 {o.label}
@@ -248,7 +248,7 @@ function EmailPrefsEditor({
           {update.isPending ? 'Saving…' : 'Save email settings'}
         </button>
         {saved && (
-          <span role="status" className="text-sm text-forest">
+          <span role="status" className="text-sm text-brand-deep">
             Saved
           </span>
         )}

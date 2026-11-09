@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 
 /**
- * Full-width sage band behind a page's header (title, intro, page actions).
+ * Full-width pale blue band behind a page's header (title, intro, page actions).
  * Content below the band sits on the paper background.
  *
  * `bleed`: the band is rendered inside a page's centred container and

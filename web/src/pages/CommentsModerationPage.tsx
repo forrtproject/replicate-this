@@ -74,12 +74,18 @@ function Row({ comment: c }: { comment: AdminComment }) {
         <div className="min-w-0 flex-1">
           <p className="mb-1.5 text-sm text-muted-foreground">
             <ResearcherLink name={c.authorName} token={c.authorToken} className="font-medium text-ink" /> on{' '}
-            <Link to={`/nominations/${c.nominationId}`} className="text-forest hover:underline">
+            <Link to={`/nominations/${c.nominationId}`} className="text-brand-deep hover:underline">
               {c.nominationTitle || 'a nomination'}
             </Link>
             <span className="ml-2 text-xs">{formatWhen(c.createdAt)}</span>
             {c.hidden && <span className="ml-2 text-xs font-medium text-amber">Hidden</span>}
           </p>
+          {c.replyTo && (
+            <p className="mb-2 border-l-2 border-line pl-3 text-sm text-muted-foreground">
+              In reply to <span className="text-ink">{c.replyTo.authorName ?? 'a deleted account'}</span>:{' '}
+              <q className="italic">{c.replyTo.excerpt}</q>
+            </p>
+          )}
           <RichText className="text-[0.9375rem] leading-relaxed">{c.content}</RichText>
           {c.openFlags > 0 && (
             <div className="mt-3 rounded-md bg-amber/10 px-3 py-2 text-sm text-ink">

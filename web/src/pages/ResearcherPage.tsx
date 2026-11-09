@@ -39,7 +39,7 @@ export function ResearcherPage() {
       <div className="mx-auto max-w-5xl px-4 py-20">
         <h1 className="font-display text-[2rem] font-semibold">Researcher not found</h1>
         <p className="mt-2 text-sm text-muted-foreground">The account may have been deleted, or the link is incomplete.</p>
-        <Link to="/nominations" className="mt-4 inline-block text-sm font-medium text-forest underline">
+        <Link to="/nominations" className="mt-4 inline-block text-sm font-medium text-brand-deep underline">
           Back to nominations
         </Link>
       </div>
@@ -66,7 +66,7 @@ export function ResearcherPage() {
           </p>
           {r.isSelf && (
             <p className="mt-0.5 text-sm">
-              <Link to="/profile" className="text-forest underline-offset-2 hover:underline">
+              <Link to="/profile" className="text-brand-deep underline-offset-2 hover:underline">
                 Edit your profile
               </Link>
             </p>
@@ -82,7 +82,7 @@ export function ResearcherPage() {
                 href={r.links[l.key]}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="inline-flex items-center gap-1.5 text-sm text-ink hover:text-forest hover:underline"
+                className="inline-flex items-center gap-1.5 text-sm text-ink hover:text-brand-deep hover:underline"
                 title={l.label}
               >
                 <LinkIcon kind={l.key} mono={l.key !== 'orcid'} className="h-4 w-4 text-muted-foreground" />

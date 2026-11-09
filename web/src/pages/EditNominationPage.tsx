@@ -44,7 +44,7 @@ export function EditNominationPage() {
         <p className="text-sm text-muted-foreground">{blocked}</p>
         <Link
           to={n ? `/nominations/${n.id}` : '/nominations'}
-          className="mt-2 inline-block text-sm text-green underline"
+          className="mt-2 inline-block text-sm text-brand underline"
         >
           {n ? 'Back to nomination' : 'Back to nominations'}
         </Link>
@@ -91,7 +91,7 @@ function EditForm({ nomination: n }: { nomination: NominationDetail }) {
       <PageBand bleed inner="pt-8">
       <Link
         to={`/nominations/${n.id}`}
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-forest"
+        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-brand-deep"
       >
         <ArrowLeft className="h-3.5 w-3.5" aria-hidden /> Back to the nomination
       </Link>

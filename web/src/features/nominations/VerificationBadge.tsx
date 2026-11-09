@@ -24,7 +24,7 @@ export function DefinedTerm({
 export function VerificationBadge({ type }: { type: VerificationType }) {
   const { short } = VERIFICATION_CONFIG[type]
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-green-tint px-2 py-0.5 text-xs font-medium text-forest">
+    <span className="inline-flex items-center gap-1 rounded-full bg-brand-tint px-2 py-0.5 text-xs font-medium text-brand-deep">
       <FlaskConical className="h-3 w-3" />
       {short}
     </span>

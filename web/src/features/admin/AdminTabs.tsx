@@ -5,7 +5,7 @@ import { PageBand } from '@/components/layout/PageBand'
 const tab = ({ isActive }: { isActive: boolean }) =>
   cn(
     '-mb-px border-b-2 px-1 pb-2.5 text-sm font-medium transition-colors',
-    isActive ? 'border-forest text-ink' : 'border-transparent text-band-ink/75 hover:text-ink',
+    isActive ? 'border-brand-deep text-ink' : 'border-transparent text-band-ink/75 hover:text-ink',
   )
 
 /** Shared frame for the maintainer pages: one title, section tabs, and a short brief. */

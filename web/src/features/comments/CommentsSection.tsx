@@ -140,7 +140,7 @@ export function CommentsSection({
         <p className="mt-6 text-sm text-muted-foreground">
           <button
             onClick={() => navigate(`/sign-in?redirect=/nominations/${nominationId}`)}
-            className="font-medium text-forest underline underline-offset-2"
+            className="font-medium text-brand-deep underline underline-offset-2"
           >
             Sign in
           </button>{' '}
@@ -247,7 +247,7 @@ function CommentThread({
                   title={c.isOwn ? 'Likes on your comment' : c.viewerLiked ? 'Unlike' : 'Like'}
                   className={cn(
                     'inline-flex items-center gap-1 disabled:cursor-default',
-                    c.viewerLiked ? 'font-medium text-green' : 'enabled:hover:text-green',
+                    c.viewerLiked ? 'font-medium text-brand' : 'enabled:hover:text-brand',
                   )}
                 >
                   <ThumbsUp className={cn('h-3.5 w-3.5', c.viewerLiked && 'fill-current')} />
@@ -257,7 +257,7 @@ function CommentThread({
               {signedIn && (
                 <button
                   onClick={() => setReplying((v) => !v)}
-                  className="hover:text-green"
+                  className="hover:text-brand"
                 >
                   {replying ? 'Cancel' : 'Reply'}
                 </button>

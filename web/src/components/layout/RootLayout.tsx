@@ -14,7 +14,7 @@ function NavItem({ to, children }: { to: string; children: React.ReactNode }) {
         cn(
           'relative text-sm transition-colors hover:text-ink sm:py-[1.125rem]',
           isActive
-            ? 'font-medium text-ink sm:after:absolute sm:after:inset-x-0 sm:after:bottom-0 sm:after:h-0.5 sm:after:bg-green'
+            ? 'font-medium text-ink sm:after:absolute sm:after:inset-x-0 sm:after:bottom-0 sm:after:h-0.5 sm:after:bg-brand'
             : 'text-muted-foreground',
         )
       }
@@ -33,11 +33,11 @@ function NotificationBell() {
       onClick={() => navigate('/dashboard')}
       aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`}
       title="Notifications"
-      className="relative -m-2.5 rounded-md p-2.5 text-muted-foreground transition-colors hover:text-green"
+      className="relative -m-2.5 rounded-md p-2.5 text-muted-foreground transition-colors hover:text-brand"
     >
       <Bell className="h-5 w-5" />
       {unread > 0 && (
-        <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-green px-1 text-[10px] font-bold text-white ring-2 ring-paper">
+        <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-bold text-white ring-2 ring-paper">
           {unread > 9 ? '9+' : unread}
         </span>
       )}
@@ -109,7 +109,7 @@ export function RootLayout() {
               aria-expanded={menuOpen}
               aria-controls="mobile-menu"
               aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-              className="-m-2.5 rounded-md p-2.5 text-muted-foreground hover:text-green sm:hidden"
+              className="-m-2.5 rounded-md p-2.5 text-muted-foreground hover:text-brand sm:hidden"
             >
               {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
@@ -137,7 +137,7 @@ export function RootLayout() {
         <Outlet />
       </main>
 
-      <footer className="bg-forest text-[#d7e7df]">
+      <footer className="bg-brand-deep text-on-deep">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-xs">
           <span>
             Run by <a href="https://forrt.org" className="text-white hover:underline">FORRT</a> and the

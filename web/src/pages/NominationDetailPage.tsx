@@ -43,7 +43,7 @@ export function NominationDetailPage() {
         <p className="mt-2 text-sm text-muted-foreground">
           {(error as Error)?.message ?? 'It may have been removed, or the link is incomplete.'}
         </p>
-        <Link to="/nominations" className="mt-4 inline-block text-sm font-medium text-forest underline">
+        <Link to="/nominations" className="mt-4 inline-block text-sm font-medium text-brand-deep underline">
           Back to nominations
         </Link>
       </div>
@@ -107,7 +107,7 @@ export function NominationDetailPage() {
               href={`https://doi.org/${n.doi}`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 text-forest hover:underline"
+              className="inline-flex items-center gap-1 text-brand-deep hover:underline"
             >
               doi.org/{n.doi} <ExternalLink className="h-3 w-3" aria-hidden />
             </a>
@@ -116,7 +116,7 @@ export function NominationDetailPage() {
               href={n.metadata.url}
               target="_blank"
               rel="noreferrer nofollow"
-              className="inline-flex items-center gap-1 break-all text-forest hover:underline"
+              className="inline-flex items-center gap-1 break-all text-brand-deep hover:underline"
             >
               {n.metadata.url} <ExternalLink className="h-3 w-3 flex-shrink-0" aria-hidden />
             </a>
@@ -295,21 +295,21 @@ function Outcome({ nomination: n }: { nomination: NominationDetail }) {
   return (
     <section
       aria-labelledby="outcome"
-      className="rounded-lg bg-forest px-6 py-5 text-white"
+      className="rounded-lg bg-brand-deep px-6 py-5 text-white"
     >
-      <h2 id="outcome" className="label text-[0.9375rem]! text-[#bfe0d0]!">
+      <h2 id="outcome" className="label text-[0.9375rem]! text-on-deep-label!">
         {n.status === 'published' ? `Result, published` : `Result`}
       </h2>
       {result ? (
         <>
           <RichText className="mt-2 text-[1.0625rem] leading-relaxed text-white [&_a]:text-white">{result.content}</RichText>
-          <p className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-[#d7e7df]">
+          <p className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-on-deep">
             {result.articleUrl && (
               <a
                 href={result.articleUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-md bg-paper px-3 py-1.5 font-semibold text-forest hover:bg-white"
+                className="inline-flex items-center gap-1.5 rounded-md bg-paper px-3 py-1.5 font-semibold text-brand-deep hover:bg-white"
               >
                 <FileText className="h-4 w-4" aria-hidden /> Read the write-up
                 <ExternalLink className="h-3 w-3" aria-hidden />
@@ -322,7 +322,7 @@ function Outcome({ nomination: n }: { nomination: NominationDetail }) {
           </p>
         </>
       ) : (
-        <p className="mt-2 text-sm text-[#d7e7df]">The team has not posted a summary yet.</p>
+        <p className="mt-2 text-sm text-on-deep">The team has not posted a summary yet.</p>
       )}
     </section>
   )
@@ -356,7 +356,7 @@ function PendingNotice({
           {asMaintainer ? 'This nomination needs a review' : 'Waiting for review'}
         </h2>
         {asMaintainer && (
-          <Link to="/admin" className="text-sm font-medium text-forest hover:underline">
+          <Link to="/admin" className="text-sm font-medium text-brand-deep hover:underline">
             Review queue
           </Link>
         )}
@@ -444,7 +444,7 @@ function SubscribeButton({
           : 'Get notified of comments, updates, new team members and status changes.'
       }
       aria-pressed={n.userSubscribed}
-      className={`btn-secondary btn-sm ${n.userSubscribed ? 'border-green! bg-green-tint! text-forest!' : ''}`}
+      className={`btn-secondary btn-sm ${n.userSubscribed ? 'border-brand! bg-brand-tint! text-brand-deep!' : ''}`}
     >
       {n.userSubscribed ? <Check className="h-3.5 w-3.5" aria-hidden /> : <Bell className="h-3.5 w-3.5" aria-hidden />}
       {n.userSubscribed ? 'Following' : 'Follow'}
@@ -473,7 +473,7 @@ function BackLink() {
           navigate(-1)
         }
       }}
-      className="inline-flex items-center gap-1.5 text-sm text-band-ink/80 hover:text-forest"
+      className="inline-flex items-center gap-1.5 text-sm text-band-ink/80 hover:text-brand-deep"
     >
       <ArrowLeft className="h-3.5 w-3.5" aria-hidden /> {toList ? 'All nominations' : 'Back'}
     </Link>

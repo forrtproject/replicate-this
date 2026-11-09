@@ -63,8 +63,8 @@ export function StatusControls({
             disabled={setStatus.isPending}
             className={
               a.revert
-                ? 'rounded-md border border-line px-3 py-1.5 text-sm hover:border-green disabled:opacity-60'
-                : 'rounded-md bg-green px-3 py-1.5 text-sm font-semibold text-white hover:bg-forest disabled:opacity-60'
+                ? 'rounded-md border border-line px-3 py-1.5 text-sm hover:border-brand disabled:opacity-60'
+                : 'rounded-md bg-brand px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-deep disabled:opacity-60'
             }
           >
             {a.label}

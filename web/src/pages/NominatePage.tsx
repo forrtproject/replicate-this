@@ -206,7 +206,7 @@ export function NominatePage() {
             <button
               type="button"
               onClick={startOver}
-              className="font-medium text-green underline hover:text-forest"
+              className="font-medium text-brand underline hover:text-brand-deep"
             >
               Start over
             </button>
@@ -303,7 +303,7 @@ export function NominatePage() {
           />
           <span>
             I have read and agree to the{' '}
-            <Link to="/code-of-conduct" target="_blank" className="text-green underline">
+            <Link to="/code-of-conduct" target="_blank" className="text-brand underline">
               Code of Conduct
             </Link>
             , and this nomination is constructive and about the work, not the authors.
@@ -329,7 +329,7 @@ export function NominatePage() {
         <button
           type="submit"
           disabled={submit.isPending}
-          className="rounded-md bg-green px-5 py-2.5 text-sm font-semibold text-white hover:bg-forest"
+          className="rounded-md bg-brand px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-deep"
         >
           {submit.isPending ? 'Submitting…' : 'Submit nomination'}
         </button>
@@ -368,7 +368,7 @@ function DoiPreview({
         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber" />
         <span>
           This study has already been nominated.{' '}
-          <Link to={`/nominations/${duplicateId}`} className="font-medium text-green underline">
+          <Link to={`/nominations/${duplicateId}`} className="font-medium text-brand underline">
             Upvote it there instead
           </Link>
           .
@@ -378,12 +378,12 @@ function DoiPreview({
   }
   if (metadata) {
     return (
-      <div className="flex items-start gap-2 rounded-md border border-green/30 bg-green-tint px-3 py-2">
-        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green" />
+      <div className="flex items-start gap-2 rounded-md border border-brand/30 bg-brand-tint px-3 py-2">
+        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
         <div className="min-w-0 text-sm">
           <p className="font-medium text-ink">{metadata.title || 'Untitled'}</p>
           <p className="text-xs text-muted-foreground">{formatReference(metadata)}</p>
-          <p className="mt-1 text-xs text-forest">Not yet in the registry.</p>
+          <p className="mt-1 text-xs text-brand-deep">Not yet in the registry.</p>
         </div>
       </div>
     )
@@ -395,7 +395,7 @@ function DoiPreview({
         <span>
           {error}{' '}
           {canEnterManually && (
-            <button type="button" onClick={onEnterManually} className="font-medium text-green underline">
+            <button type="button" onClick={onEnterManually} className="font-medium text-brand underline">
               Enter the reference manually
             </button>
           )}
