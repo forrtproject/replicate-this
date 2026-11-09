@@ -15,7 +15,6 @@ import { formatReference } from '@/features/nominations/format'
 import { yearError } from '@/features/nominations/reference'
 import { useDebounced } from '@/lib/hooks'
 import { ApiError } from '@/lib/api'
-import { MarkdownDoc } from '@/components/ui/MarkdownDoc'
 import type { NominationMetadata } from '@/types'
 import { usePageTitle } from '@/lib/page-title'
 
@@ -92,7 +91,6 @@ export function NominatePage() {
   const [agreed, setAgreed] = useState(false)
   const [agreeError, setAgreeError] = useState(false)
   const [restored, setRestored] = useState(!!draft)
-  const [showGuidelines, setShowGuidelines] = useState(true)
 
   const [error, setError] = useState<string | null>(null)
   const [existingId, setExistingId] = useState<string | null>(null)
@@ -183,40 +181,46 @@ export function NominatePage() {
   }
 
   return (
-    <div className="mx-auto max-w-xl px-4 py-10">
-      <p className="eyebrow">Add to the registry</p>
-      <h1 className="mb-4 mt-1 font-display text-3xl font-semibold">Nominate a study</h1>
+    <div className="mx-auto max-w-5xl px-4 pb-16 pt-10">
+      <h1 className="font-display text-[2rem] font-semibold leading-tight">Nominate a study</h1>
+      <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+        Suggest a published finding that deserves a second look. It appears in the registry
+        straight away, marked “Pending review” until a maintainer has checked it.
+      </p>
 
-      {/* Read before writing: the guidelines and Code of Conduct come first. */}
-      <div className="mb-6 rounded-lg border border-line bg-muted/40">
-        <button
-          type="button"
-          onClick={() => setShowGuidelines((v) => !v)}
-          aria-expanded={showGuidelines}
-          className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium"
-        >
-          <span>Before you start: nomination guidelines</span>
-          <span className="text-xs text-green">{showGuidelines ? 'Hide' : 'Read'}</span>
-        </button>
-        {showGuidelines && (
-          <div className="max-h-72 overflow-y-auto border-t border-line px-4 py-3">
-            <MarkdownDoc src="/nomination-guidelines.md" nested />
-          </div>
-        )}
-        <p className="flex items-start gap-2 border-t border-line px-4 py-3 text-sm">
-          <span aria-hidden>🚨</span>
-          <span className="text-ink">
-            All nominations must respect the{' '}
-            <Link to="/code-of-conduct" target="_blank" className="font-medium text-green underline">
-              Code of Conduct
+      <div className="mt-8 grid gap-x-12 gap-y-8 lg:grid-cols-[minmax(0,36rem)_minmax(0,1fr)]">
+      {/* Read before writing: on wide screens the guidance sits beside the form. */}
+      <aside className="lg:order-2">
+        <div className="rounded-lg border border-line bg-card p-5 text-sm leading-relaxed lg:sticky lg:top-20">
+          <h2 className="label">A good nomination</h2>
+          <ul className="mt-2 list-disc space-y-1.5 pl-4 text-ink/85 marker:text-muted-foreground">
+            <li>Gives the DOI, so everyone looks at the same paper.</li>
+            <li>
+              Says why a second look is valuable: the finding is influential, later work rests
+              on it, or the evidence is thin.
+            </li>
+            <li>Notes what is openly available, so others can judge feasibility.</li>
+            <li>Is about the evidence, never the authors. No allegations of misconduct.</li>
+          </ul>
+          <p className="mt-3 text-muted-foreground">
+            Search the{' '}
+            <Link to="/nominations" className="text-forest underline">
+              registry
             </Link>{' '}
-            or they won’t be approved. Nominations appear right away marked “Pending review”
-            until a maintainer reviews them.
-          </span>
-        </p>
-      </div>
+            first: if the study is listed, upvote it instead.
+          </p>
+          <p className="mt-4 flex gap-4 border-t border-line pt-3">
+            <Link to="/guidelines" target="_blank" className="font-medium text-forest hover:underline">
+              Full guidelines
+            </Link>
+            <Link to="/code-of-conduct" target="_blank" className="font-medium text-forest hover:underline">
+              Code of Conduct
+            </Link>
+          </p>
+        </div>
+      </aside>
 
-      <form onSubmit={onSubmit} className="space-y-5">
+      <form onSubmit={onSubmit} className="space-y-6 lg:order-1">
         {restored && (
           <p className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-line bg-muted/40 px-3 py-2 text-sm">
             <span>We restored the nomination you were writing in this tab.</span>
@@ -230,7 +234,7 @@ export function NominatePage() {
           </p>
         )}
         <fieldset className="space-y-3">
-          <legend className="mb-1 text-sm font-medium">The paper</legend>
+          <legend className="section-title mb-2 text-lg">The paper</legend>
           {!noDoi && (
             <Field
               label="DOI"
@@ -346,11 +350,12 @@ export function NominatePage() {
         <button
           type="submit"
           disabled={submit.isPending}
-          className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+          className="rounded-md bg-green px-5 py-2.5 text-sm font-semibold text-white hover:bg-forest"
         >
           {submit.isPending ? 'Submitting…' : 'Submit nomination'}
         </button>
       </form>
+      </div>
     </div>
   )
 }

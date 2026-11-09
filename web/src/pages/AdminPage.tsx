@@ -7,40 +7,53 @@ import {
   useUndoReject,
   type AdminNomination,
 } from '@/features/admin/api'
-import { AdminTabs } from '@/features/admin/AdminTabs'
-import { VerificationBadge } from '@/features/nominations/VerificationBadge'
+import { AdminPageHeader } from '@/features/admin/AdminTabs'
+import { VERIFICATION_CONFIG } from '@/features/nominations/verification'
+import { useNominations } from '@/features/nominations/api'
+import { ResearcherLink } from '@/features/profile/ResearcherLink'
+import { formatDate } from '@/lib/dates'
 import { AvailabilityTags } from '@/features/nominations/Availability'
 import { disciplineLabel, formatReference } from '@/features/nominations/format'
 import { RichText } from '@/components/ui/RichText'
 import { usePageTitle } from '@/lib/page-title'
 
 export function AdminPage() {
-  usePageTitle('Moderation queue')
+  usePageTitle('Review nominations')
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
-      <p className="eyebrow">Maintainers only</p>
-      <h1 className="mb-6 mt-1 font-display text-3xl font-semibold">Moderation Queue</h1>
-      <AdminTabs />
-      <Section title="Pending" tab="pending" />
-      <Section title="Archived / Rejected" tab="archived" />
+    <div className="mx-auto max-w-5xl px-4 pb-16 pt-10">
+      <AdminPageHeader
+        title="Review nominations"
+        intro="New and edited nominations wait here until a maintainer approves them, which opens them to contributors. Rejecting needs a reason, which the nominator sees."
+      />
+      <Section title="Waiting for review" tab="pending" empty="Nothing to review. New nominations will appear here." />
+      <Section title="Rejected" tab="archived" empty="No rejected nominations." />
     </div>
   )
 }
 
-function Section({ title, tab }: { title: string; tab: 'pending' | 'archived' }) {
+function Section({
+  title,
+  tab,
+  empty,
+}: {
+  title: string
+  tab: 'pending' | 'archived'
+  empty: string
+}) {
   const { data, isLoading } = useAdminNominations(tab)
   return (
-    <section className="mb-10">
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-        {title} {data && `(${data.length})`}
+    <section className="mb-12" aria-label={title}>
+      <h2 className="section-title mb-3">
+        {title}
+        {data && data.length > 0 && (
+          <span className="data ml-2 font-sans text-base font-normal text-muted-foreground">{data.length}</span>
+        )}
       </h2>
       {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
       {data?.length === 0 && (
-        <p className="rounded-lg border border-dashed border-border py-6 text-center text-sm text-muted-foreground">
-          Nothing here.
-        </p>
+        <p className="rounded-lg border border-line bg-card px-4 py-5 text-sm text-muted-foreground">{empty}</p>
       )}
-      <div className="space-y-3">
+      <div className="space-y-4">
         {data?.map((n) => <Row key={n.id} nomination={n} tab={tab} />)}
       </div>
     </section>
@@ -54,34 +67,47 @@ function Row({ nomination: n, tab }: { nomination: AdminNomination; tab: 'pendin
   const [rejecting, setRejecting] = useState(false)
   const [reason, setReason] = useState('')
   const [error, setError] = useState('')
+  // The queue's own payload carries only internal ids; the public list has the
+  // nominator's display name and profile token.
+  const { data: publicList } = useNominations()
+  const pub = publicList?.find((p) => p.id === n.id)
 
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
-      <div className="flex items-start justify-between gap-4">
+    <div className="rounded-lg border border-line bg-card p-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
-          <p className="mb-1 text-xs text-muted-foreground">
-            {disciplineLabel(n)} · Researcher #{n.nominatorUid?.slice(0, 6) ?? '??????'} ·{' '}
-            {new Date(n.createdAt).toLocaleDateString()}
-            {n.metadataManual && ' · manual reference'}
-          </p>
-          <Link to={`/nominations/${n.id}`} className="font-medium hover:text-primary">
+          <Link
+            to={`/nominations/${n.id}`}
+            className="font-display text-[1.1875rem] font-semibold leading-snug text-ink hover:text-forest"
+          >
             {n.metadata.title || n.doi}
           </Link>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {formatReference(n.metadata)} · {n.doi ?? 'no DOI'}
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            {formatReference(n.metadata)}
+            {n.doi ? `, doi:${n.doi}` : ', no DOI'}
+            {n.metadataManual && ' (reference entered by hand)'}
+          </p>
+          <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[0.8125rem] text-muted-foreground">
+            <span className="text-ink/80">{VERIFICATION_CONFIG[n.verificationType].short}</span>
+            <span>{disciplineLabel(n)}</span>
+            <span>
+              Nominated by{' '}
+              {pub ? (
+                <ResearcherLink name={pub.nominatorName} token={pub.nominatorToken} className="text-ink" />
+              ) : (
+                'a researcher'
+              )}{' '}
+              on {formatDate(n.createdAt)}
+            </span>
+            <AvailabilityTags items={n.availability} links={n.availabilityLinks} />
           </p>
 
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <VerificationBadge type={n.verificationType} />
-            <AvailabilityTags items={n.availability} links={n.availabilityLinks} />
-          </div>
-
-          <RichText className="mt-2 text-sm leading-relaxed">{n.justification}</RichText>
+          <RichText className="mt-3 max-w-[70ch] text-[0.9375rem] leading-relaxed">{n.justification}</RichText>
 
           {n.dataLocation && (
             <p className="mt-2 text-xs text-muted-foreground">
               <span className="font-medium text-ink">Data:</span>{' '}
-              <a href={n.dataLocation} target="_blank" rel="noreferrer" className="text-green underline">
+              <a href={n.dataLocation} target="_blank" rel="noreferrer" className="text-forest underline">
                 {n.dataLocation}
               </a>
             </p>
@@ -97,18 +123,12 @@ function Row({ nomination: n, tab }: { nomination: AdminNomination; tab: 'pendin
             </p>
           )}
         </div>
-        <div className="flex flex-shrink-0 gap-2">
+        <div className="flex flex-shrink-0 flex-wrap gap-2">
           {tab === 'pending' ? (
             <>
-              <Link
-                to={`/nominations/${n.id}/edit`}
-                className="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted"
-              >
-                Edit
-              </Link>
               <button
                 onClick={() => approve.mutate(n.id)}
-                className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90"
+                className="rounded-md bg-green px-3 py-1.5 text-sm font-semibold text-white hover:bg-forest"
               >
                 Approve
               </button>
@@ -117,17 +137,23 @@ function Row({ nomination: n, tab }: { nomination: AdminNomination; tab: 'pendin
                   setRejecting(true)
                   setError('')
                 }}
-                className="rounded-md border border-destructive/40 px-3 py-1.5 text-sm font-medium text-destructive hover:bg-destructive/10"
+                className="rounded-md border border-line px-3 py-1.5 text-sm font-medium text-destructive hover:border-destructive"
               >
-                Reject
+                Reject…
               </button>
+              <Link
+                to={`/nominations/${n.id}/edit`}
+                className="rounded-md px-2 py-1.5 text-sm text-muted-foreground hover:text-ink hover:underline"
+              >
+                Edit
+              </Link>
             </>
           ) : (
             <button
               onClick={() => undo.mutate(n.id)}
-              className="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted"
+              className="rounded-md border border-line px-3 py-1.5 text-sm font-medium hover:border-green"
             >
-              Undo
+              Undo rejection
             </button>
           )}
         </div>
@@ -157,7 +183,7 @@ function Row({ nomination: n, tab }: { nomination: AdminNomination; tab: 'pendin
               }}
               className="rounded-md bg-destructive px-3 py-1.5 text-sm font-medium text-destructive-foreground hover:opacity-90"
             >
-              Confirm reject
+              Reject nomination
             </button>
             <button
               onClick={() => setRejecting(false)}

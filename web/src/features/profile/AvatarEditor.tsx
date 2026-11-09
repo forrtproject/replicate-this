@@ -12,18 +12,9 @@ function isImageAvatar(image: string | undefined): boolean {
   return !!image && image.startsWith('data:image/')
 }
 
-// Apple-style: emojis sit centered on a soft colored gradient circle. Pick a
-// gradient deterministically from the emoji so each one gets a stable colour.
-const EMOJI_GRADIENTS = [
-  'linear-gradient(135deg, #60a5fa, #6366f1)',
-  'linear-gradient(135deg, #f472b6, #db2777)',
-  'linear-gradient(135deg, #34d399, #059669)',
-  'linear-gradient(135deg, #fbbf24, #f97316)',
-  'linear-gradient(135deg, #a78bfa, #7c3aed)',
-  'linear-gradient(135deg, #22d3ee, #0891b2)',
-  'linear-gradient(135deg, #f87171, #dc2626)',
-  'linear-gradient(135deg, #94a3b8, #475569)',
-]
+// Emojis and initials sit on a flat, muted tint drawn from the site palette.
+// The tint is picked deterministically from the emoji or name, so it is stable.
+const EMOJI_GRADIENTS = ['#dcebe3', '#ebe5d6', '#dfe5ec', '#ecdfdc', '#e3e0ec', '#e2e8d8']
 function gradientFor(seed: string): string {
   let hash = 0
   for (const ch of seed) hash = (hash * 31 + ch.codePointAt(0)!) >>> 0
@@ -46,17 +37,14 @@ export function AvatarBubble({
   }
   if (image) {
     return (
-      <span
-        className={`${base} leading-none text-white shadow-inner`}
-        style={{ background: gradientFor(image) }}
-      >
+      <span className={`${base} leading-none`} style={{ background: gradientFor(image) }}>
         {image}
       </span>
     )
   }
   return (
     <span
-      className={`${base} font-medium text-white`}
+      className={`${base} font-display font-semibold text-ink/75`}
       style={{ background: gradientFor(name ?? '?') }}
     >
       {(name ?? '?').slice(0, 1).toUpperCase()}

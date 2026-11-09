@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { ArrowLeft } from 'lucide-react'
+import { formatReference } from '@/features/nominations/format'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useNomination, useUpdateNomination } from '@/features/nominations/api'
 import {
@@ -21,9 +23,7 @@ export function EditNominationPage() {
 
   if (isLoading) {
     return (
-      <p className="mx-auto max-w-xl px-4 py-20 text-center font-mono text-sm text-muted-foreground">
-        Loading…
-      </p>
+      <p className="mx-auto max-w-5xl px-4 py-20 text-sm text-muted-foreground">Loading…</p>
     )
   }
 
@@ -37,7 +37,7 @@ export function EditNominationPage() {
 
   if (blocked || !n) {
     return (
-      <div className="mx-auto max-w-xl px-4 py-20 text-center">
+      <div className="mx-auto max-w-5xl px-4 py-20">
         <p className="text-sm text-muted-foreground">{blocked}</p>
         <Link
           to={n ? `/nominations/${n.id}` : '/nominations'}
@@ -84,38 +84,48 @@ function EditForm({ nomination: n }: { nomination: NominationDetail }) {
   }
 
   return (
-    <div className="mx-auto max-w-xl px-4 py-10">
+    <div className="mx-auto max-w-5xl px-4 pb-16 pt-8">
       <Link
         to={`/nominations/${n.id}`}
-        className="text-sm text-muted-foreground hover:text-green"
+        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-forest"
       >
-        ← Back to nomination
+        <ArrowLeft className="h-3.5 w-3.5" aria-hidden /> Back to the nomination
       </Link>
 
-      <p className="eyebrow mt-4">Edit nomination</p>
-      <h1 className="mb-1 mt-1 font-display text-3xl font-semibold leading-tight">
-        {n.metadata.title || n.doi}
-      </h1>
-      <p className="data mb-4 text-sm text-muted-foreground">{n.doi ?? 'No DOI'}</p>
+      <div className="max-w-[36rem]">
+      <h1 className="mt-5 font-display text-[2rem] font-semibold leading-tight">Edit nomination</h1>
+      <div className="mt-4 rounded-lg border border-line bg-card px-4 py-3">
+        <p className="font-display text-[1.0625rem] font-semibold leading-snug">{n.metadata.title || n.doi}</p>
+        <p className="mt-0.5 text-sm text-muted-foreground">
+          {formatReference(n.metadata)}
+          {n.doi ? `, doi:${n.doi}` : ''}
+        </p>
+      </div>
 
-      <p className="mb-6 text-sm text-muted-foreground">
-        The paper’s reference can’t be changed. If you picked the wrong paper, nominate the
-        right one instead. Saving your changes sends the nomination back for review.
+      <p className="mb-6 mt-3 text-sm leading-relaxed text-muted-foreground">
+        The paper itself can’t be changed; if it’s the wrong one, nominate the right paper
+        instead. Saving sends the nomination back for review.
       </p>
 
-      <form onSubmit={onSubmit} className="space-y-5">
+      <form onSubmit={onSubmit} className="space-y-6">
         <NominationFormFields values={values} onChange={setValues} />
 
         {error && <p className="text-sm text-destructive">{error}</p>}
 
-        <button
-          type="submit"
-          disabled={update.isPending}
-          className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
-        >
-          {update.isPending ? 'Saving…' : 'Save changes'}
-        </button>
+        <div className="flex items-center gap-4">
+          <button
+            type="submit"
+            disabled={update.isPending}
+            className="rounded-md bg-green px-5 py-2.5 text-sm font-semibold text-white hover:bg-forest"
+          >
+            {update.isPending ? 'Saving…' : 'Save changes'}
+          </button>
+          <Link to={`/nominations/${n.id}`} className="text-sm text-muted-foreground hover:text-ink">
+            Cancel
+          </Link>
+        </div>
       </form>
+      </div>
     </div>
   )
 }

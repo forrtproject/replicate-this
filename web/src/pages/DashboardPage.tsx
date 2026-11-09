@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Compass, FilePlus2, Sparkles, UserRound, Users } from 'lucide-react'
+import { Compass, FilePlus2, UserRound } from 'lucide-react'
 import { api } from '@/lib/api'
 import { useSession } from '@/lib/auth-client'
 import { useMyContributions } from '@/features/contributions/api'
@@ -13,7 +13,8 @@ import {
   notificationHref,
 } from '@/features/notifications/api'
 import { StatusBadge } from '@/features/nominations/StatusBadge'
-import { VerificationBadge } from '@/features/nominations/VerificationBadge'
+import { VERIFICATION_CONFIG } from '@/features/nominations/verification'
+import { formatDate, formatWhen } from '@/lib/dates'
 import type { NominationSummary, NominationStatus } from '@/types'
 import { usePageTitle } from '@/lib/page-title'
 
@@ -42,127 +43,173 @@ export function DashboardPage() {
   const notifications = useNotifications()
   const markRead = useMarkNotificationsRead()
   const markOneRead = useMarkNotificationRead()
+  const { data: all } = useNominations()
+  const titles = new Map((all ?? []).map((n) => [n.id, n.metadata.title || n.doi || 'Untitled']))
+  for (const n of nominations.data ?? []) titles.set(n.id, n.metadata?.title || n.doi || 'Untitled')
 
   const isNew =
     nominations.data?.length === 0 && contributions.data?.length === 0
+  const unread = notifications.data?.unread ?? 0
 
   return (
-    <div className="mx-auto max-w-4xl space-y-10 px-4 py-10">
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <p className="eyebrow">Your workspace</p>
-          <h1 className="mt-1 font-display text-3xl font-semibold">
-            {session?.user?.name ? `Hello, ${session.user.name}` : 'Dashboard'}
-          </h1>
-        </div>
-        <Link to="/profile" className="text-sm text-green hover:underline">
-          Edit your profile →
-        </Link>
+    <div className="mx-auto max-w-5xl px-4 pb-16 pt-10">
+      <div className="mb-8">
+        <h1 className="font-display text-[2rem] font-semibold leading-tight">Dashboard</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Signed in as <span className="text-ink">{session?.user?.name}</span>.{' '}
+          <Link to="/profile" className="text-forest underline-offset-2 hover:underline">
+            Edit profile
+          </Link>
+        </p>
       </div>
 
       {isNew && <GetStarted />}
 
-      <section>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Notifications {notifications.data?.unread ? `(${notifications.data.unread} new)` : ''}
-          </h2>
-          {!!notifications.data?.unread && (
-            <button
-              onClick={() => markRead.mutate()}
-              className="text-xs text-primary underline"
-            >
-              Mark all read
-            </button>
-          )}
-        </div>
-        <div className="space-y-1.5">
-          {notifications.data?.notifications.length === 0 && (
-            <Empty>No notifications.</Empty>
-          )}
-          {notifications.data?.notifications.slice(0, 10).map((n) => {
-            const href = notificationHref(n)
-            const welcome = n.type === 'welcome'
-            const className = `flex w-full items-start gap-2 rounded-md border px-3 py-2 text-left text-sm transition-colors ${
-              n.readAt
-                ? 'border-border text-muted-foreground'
-                : 'border-primary/40 bg-accent hover:border-primary'
-            }`
-            const markIfUnread = () => {
-              if (!n.readAt) markOneRead.mutate(n.id)
-            }
-            const body = (
-              <>
-                {welcome && <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-green" />}
-                <span>{notificationLabel(n)}</span>
-              </>
-            )
-            return href ? (
-              <Link key={n.id} to={href} onClick={markIfUnread} className={className}>
-                {body}
-              </Link>
-            ) : (
-              <button key={n.id} onClick={markIfUnread} className={className}>
-                {body}
-              </button>
-            )
-          })}
-        </div>
-      </section>
-
-      <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          My nominations
-        </h2>
-        <div className="space-y-2">
-          {nominations.data?.length === 0 && (
-            <Empty>
-              You haven’t nominated anything yet.{' '}
-              <Link to="/nominate" className="text-primary underline">
-                Nominate a study.
-              </Link>
-            </Empty>
-          )}
-          {nominations.data?.map((n) => (
-            <div
-              key={n.id}
-              className="flex items-center justify-between gap-3 rounded-md border border-border bg-card px-3 py-2"
-            >
-              <Link to={`/nominations/${n.id}`} className="truncate text-sm hover:text-primary">
-                {n.metadata?.title || n.doi}
-              </Link>
-              <StatusBadge status={n.status} />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Studies I’m contributing to
-        </h2>
-        <div className="space-y-2">
-          {contributions.data?.map((c) => {
-            const n = c.nomination as NominationSummary
-            return (
-              <div
-                key={c.nominationId}
-                className="flex items-center justify-between gap-3 rounded-md border border-border bg-card px-3 py-2"
-              >
-                <Link
-                  to={`/nominations/${n.id}`}
-                  className="truncate text-sm hover:text-primary"
+      <div className="grid gap-x-12 gap-y-12 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="min-w-0 space-y-12">
+          <section aria-labelledby="notifications">
+            <div className="mb-3 flex items-baseline justify-between gap-4">
+              <h2 id="notifications" className="section-title">
+                Notifications
+                {unread > 0 && (
+                  <span className="ml-2 font-sans text-sm font-medium text-forest">{unread} new</span>
+                )}
+              </h2>
+              {unread > 0 && (
+                <button
+                  onClick={() => markRead.mutate()}
+                  className="text-sm text-muted-foreground hover:text-ink hover:underline"
                 >
-                  {n.metadata?.title || n.doi}
+                  Mark all as read
+                </button>
+              )}
+            </div>
+            {notifications.data?.notifications.length === 0 ? (
+              <Empty>Nothing new. You’ll hear here when someone joins, comments or reviews your nominations.</Empty>
+            ) : (
+              <ul className="divide-y divide-line rounded-lg border border-line bg-card">
+                {notifications.data?.notifications.slice(0, 10).map((n) => {
+                  const href = notificationHref(n)
+                  const id = typeof n.data.nominationId === 'string' ? n.data.nominationId : null
+                  const study = id ? titles.get(id) : null
+                  const className =
+                    'flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-[#f6f5ef]'
+                  const markIfUnread = () => {
+                    if (!n.readAt) markOneRead.mutate(n.id)
+                  }
+                  const body = (
+                    <>
+                      <span
+                        className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${n.readAt ? 'bg-transparent' : 'bg-green'}`}
+                        aria-hidden
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className={`block text-sm ${n.readAt ? 'text-muted-foreground' : 'font-medium text-ink'}`}>
+                          {notificationLabel(n)}
+                          {!n.readAt && <span className="sr-only"> (unread)</span>}
+                        </span>
+                        {study && (
+                          <span className="mt-0.5 block truncate font-display text-[0.9375rem] text-ink/80">
+                            {study}
+                          </span>
+                        )}
+                      </span>
+                      <span className="shrink-0 pt-0.5 text-xs text-muted-foreground">{formatWhen(n.createdAt)}</span>
+                    </>
+                  )
+                  return (
+                    <li key={n.id}>
+                      {href ? (
+                        <Link to={href} onClick={markIfUnread} className={className}>
+                          {body}
+                        </Link>
+                      ) : (
+                        <button onClick={markIfUnread} className={className}>
+                          {body}
+                        </button>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </section>
+
+          <section aria-labelledby="mine">
+            <h2 id="mine" className="section-title mb-3">
+              Your nominations
+            </h2>
+            {nominations.data?.length === 0 ? (
+              <Empty>
+                You haven’t nominated anything yet.{' '}
+                <Link to="/nominate" className="font-medium text-forest underline">
+                  Nominate a study
                 </Link>
-                <StatusBadge status={n.status} />
-              </div>
-            )
-          })}
+              </Empty>
+            ) : (
+              <StudyList
+                items={(nominations.data ?? []).map((n) => ({
+                  id: n.id,
+                  title: n.metadata?.title || n.doi || 'Untitled',
+                  status: n.status,
+                  note: `Nominated ${formatDate(n.createdAt)}`,
+                }))}
+              />
+            )}
+          </section>
+
+          <section aria-labelledby="teams">
+            <h2 id="teams" className="section-title mb-3">
+              Your study teams
+            </h2>
+            {contributions.data?.length === 0 ? (
+              <Empty>You haven’t joined a study team yet. Studies looking for contributors are listed alongside.</Empty>
+            ) : (
+              <StudyList
+                items={(contributions.data ?? []).map((c) => {
+                  const n = c.nomination as NominationSummary
+                  return {
+                    id: n.id,
+                    title: n.metadata?.title || n.doi || 'Untitled',
+                    status: n.status,
+                    note: `${n.contributions} on the team`,
+                  }
+                })}
+              />
+            )}
+          </section>
         </div>
-        {contributions.data && <LookingForContributors />}
-      </section>
+
+        <aside>{contributions.data && <LookingForContributors />}</aside>
+      </div>
     </div>
+  )
+}
+
+function StudyList({
+  items,
+}: {
+  items: { id: string; title: string; status: NominationStatus; note: string }[]
+}) {
+  return (
+    <ul className="divide-y divide-line rounded-lg border border-line bg-card">
+      {items.map((n) => (
+        <li key={n.id}>
+          <Link
+            to={`/nominations/${n.id}`}
+            className="flex items-center justify-between gap-4 px-4 py-3 transition-colors hover:bg-[#f6f5ef]"
+          >
+            <span className="min-w-0">
+              <span className="block truncate font-display text-[1.0625rem] font-semibold text-ink">
+                {n.title}
+              </span>
+              <span className="text-xs text-muted-foreground">{n.note}</span>
+            </span>
+            <StatusBadge status={n.status} className="shrink-0" />
+          </Link>
+        </li>
+      ))}
+    </ul>
   )
 }
 
@@ -189,17 +236,16 @@ function GetStarted() {
     },
   ]
   return (
-    <section className="rounded-xl border border-green/30 bg-green-tint p-5">
-      <p className="eyebrow">Get started</p>
-      <h2 className="mt-1 font-display text-xl font-semibold">
-        Three ways to start
+    <section className="mb-12 rounded-lg border border-line bg-card p-5" aria-labelledby="start">
+      <h2 id="start" className="section-title">
+        Where to start
       </h2>
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         {steps.map(({ to, icon: Icon, title, body }) => (
           <Link
             key={to}
             to={to}
-            className="group rounded-lg border border-line bg-card p-4 transition-colors hover:border-green"
+            className="group rounded-md border border-line p-4 transition-colors hover:border-green"
           >
             <Icon className="h-5 w-5 text-green" />
             <p className="mt-2 font-medium group-hover:text-green">{title}</p>
@@ -220,56 +266,55 @@ function LookingForContributors() {
   const suggestions = (all ?? [])
     .filter((n) => n.status === 'approved' && !n.userContributed && !n.viewerIsNominator)
     .sort((a, b) => a.contributions - b.contributions || b.upvotes - a.upvotes)
-    .slice(0, 3)
+    .slice(0, 4)
 
   if (!all) return null
   return (
-    <div className="mt-4 rounded-lg border border-dashed border-line p-4">
-      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-        <p className="text-sm font-medium">Looking for contributors</p>
-        <Link to="/nominations?status=approved" className="text-xs text-green hover:underline">
-          All open studies →
-        </Link>
-      </div>
+    <section aria-labelledby="open-studies">
+      <h2 id="open-studies" className="label">
+        Looking for contributors
+      </h2>
+      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+        Open studies with the smallest teams, where another person helps most.
+      </p>
       {suggestions.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
+        <p className="mt-3 text-sm text-muted-foreground">
           No open studies need a team right now. Check back soon, or{' '}
-          <Link to="/nominate" className="text-green underline">
+          <Link to="/nominate" className="text-forest underline">
             nominate one
           </Link>
           .
         </p>
       ) : (
-        <ul className="space-y-2">
+        <ul className="mt-3 space-y-4">
           {suggestions.map((n) => (
             <li key={n.id}>
-              <Link
-                to={`/nominations/${n.id}`}
-                className="flex items-center justify-between gap-3 rounded-md border border-line bg-card px-3 py-2 hover:border-green"
-              >
-                <span className="min-w-0">
-                  <span className="block truncate text-sm">{n.metadata.title || n.doi}</span>
-                  <span className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
-                    <VerificationBadge type={n.verificationType} />
-                    <span className="inline-flex items-center gap-1">
-                      <Users className="h-3 w-3" />
-                      {n.contributions === 0 ? 'No team yet' : `${n.contributions} contributing`}
-                    </span>
-                  </span>
+              <Link to={`/nominations/${n.id}`} className="group block">
+                <span className="block font-display text-[0.9875rem] font-semibold leading-snug text-ink group-hover:text-forest">
+                  {n.metadata.title || n.doi}
                 </span>
-                <span className="shrink-0 text-xs font-medium text-green">Join →</span>
+                <span className="mt-0.5 block text-xs text-muted-foreground">
+                  {VERIFICATION_CONFIG[n.verificationType].short},{' '}
+                  {n.contributions === 0 ? 'no team yet' : `${n.contributions} on the team`}
+                </span>
               </Link>
             </li>
           ))}
         </ul>
       )}
-    </div>
+      <Link
+        to="/nominations?status=approved"
+        className="mt-4 inline-block text-sm font-medium text-forest hover:underline"
+      >
+        See all open studies
+      </Link>
+    </section>
   )
 }
 
 function Empty({ children }: { children: React.ReactNode }) {
   return (
-    <p className="rounded-md border border-dashed border-border px-3 py-4 text-center text-sm text-muted-foreground">
+    <p className="rounded-lg border border-line bg-card px-4 py-5 text-sm text-muted-foreground">
       {children}
     </p>
   )

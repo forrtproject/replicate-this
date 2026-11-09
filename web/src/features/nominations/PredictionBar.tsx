@@ -5,7 +5,7 @@ import { useSession } from '@/lib/auth-client'
 import { useToast } from '@/lib/toast'
 import { savePendingAction, takePendingAction } from '@/lib/pending-action'
 import { useSetPrediction } from './api'
-import { FORECAST_CONSENSUS_MIN, FORECAST_QUESTION, forecastSummary } from './verification'
+import { FORECAST_CONSENSUS_MIN, forecastSummary } from './verification'
 import type { VerificationType } from '@/types'
 
 interface Props {
@@ -14,6 +14,8 @@ interface Props {
   predictYes: number
   predictNo: number
   userPrediction: boolean | null
+  /** The check is done: show the forecast as it stood, without voting. */
+  closed?: boolean
 }
 
 /**
@@ -26,6 +28,7 @@ export function PredictionBar({
   predictYes,
   predictNo,
   userPrediction,
+  closed = false,
 }: Props) {
   const { data: session } = useSession()
   const navigate = useNavigate()
@@ -88,52 +91,54 @@ export function PredictionBar({
     setPrediction.mutate(next, { onSettled: () => setOptimistic(null) })
   }
 
-  const forecast = FORECAST_QUESTION[verificationType] ?? FORECAST_QUESTION.replication
   // Plain-language read of the split, worded for how many responses there are.
   const consensus = forecastSummary(verificationType, yes, no)
-  // With only a handful of responses a percentage overstates them: show counts.
+  // With only a handful of responses a percentage or a bar overstates them:
+  // show counts, and draw the bar only once there are enough to mean something.
   const few = total < FORECAST_CONSENSUS_MIN
 
-  return (
-    <div className="flex flex-1 flex-col">
-      <div className="space-y-1.5">
-        {/* h-7 matches the interest panel's label row, so both bars land on one line. */}
-        <div className="flex h-7 items-baseline justify-between text-xs text-muted-foreground">
-          <span>{forecast.question}</span>
-          <span>
-            <span className="data">{total}</span>{' '}
-            {total === 1 ? 'prediction' : 'predictions'}
-          </span>
-        </div>
-
-        {/* Empty until someone predicts; otherwise a zero-response bar reads as all "No". */}
-        <div className="flex h-2.5 overflow-hidden rounded-full bg-muted" aria-hidden>
-          {total > 0 && (
-            <>
-              <div className="bg-green transition-all" style={{ width: `${yesPct}%` }} />
-              <div className="bg-amber transition-all" style={{ width: `${100 - yesPct}%` }} />
-            </>
-          )}
-        </div>
-
-        <div className="flex gap-2">
-          <PredictButton active={mine === true} onClick={() => choose(true)}>
-            Yes {total > 0 && <span className="data">· {few ? yes : `${yesPct}%`}</span>}
-          </PredictButton>
-          <PredictButton active={mine === false} onClick={() => choose(false)}>
-            No {total > 0 && <span className="data">· {few ? no : `${100 - yesPct}%`}</span>}
-          </PredictButton>
-        </div>
-      </div>
-
-      <div className="mt-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-1 pt-4 text-xs text-muted-foreground">
-        <span>{consensus}</span>
-        {mine !== null && (
-          <span>
-            Your call: <span className="font-medium text-ink">{mine ? 'Yes' : 'No'}</span>
-          </span>
+  if (closed) {
+    return (
+      <p className="mt-2 text-sm text-muted-foreground">
+        {total === 0 ? (
+          'No one made a prediction before the result.'
+        ) : (
+          <>
+            Before the result: <span className="data font-medium text-ink">{yes}</span> said yes,{' '}
+            <span className="data font-medium text-ink">{no}</span> said no.
+          </>
         )}
+      </p>
+    )
+  }
+
+  return (
+    <div className="mt-3">
+      {!few && (
+        <div className="mb-2 flex h-2 overflow-hidden rounded-full bg-muted" aria-hidden>
+          <div className="bg-green" style={{ width: `${yesPct}%` }} />
+          <div className="bg-[#c9c4b6]" style={{ width: `${100 - yesPct}%` }} />
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <PredictButton active={mine === true} onClick={() => choose(true)}>
+          Yes {total > 0 && <span className="data font-normal text-muted-foreground">{few ? yes : `${yesPct}%`}</span>}
+        </PredictButton>
+        <PredictButton active={mine === false} onClick={() => choose(false)}>
+          No {total > 0 && <span className="data font-normal text-muted-foreground">{few ? no : `${100 - yesPct}%`}</span>}
+        </PredictButton>
       </div>
+
+      <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+        {consensus}
+        {mine !== null && (
+          <>
+            {' '}
+            You said <span className="font-medium text-ink">{mine ? 'yes' : 'no'}</span>.
+          </>
+        )}
+      </p>
     </div>
   )
 }
@@ -152,10 +157,10 @@ function PredictButton({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        'flex-1 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors',
+        'inline-flex flex-1 items-center justify-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors',
         active
           ? 'border-green bg-green-tint text-forest'
-          : 'border-line text-muted-foreground hover:border-green hover:text-ink',
+          : 'border-line text-ink hover:border-green',
       )}
     >
       {children}

@@ -9,6 +9,7 @@ import { matchesSearch } from '@/features/nominations/search'
 import { useDebounced } from '@/lib/hooks'
 import { DISCIPLINES, type NominationStatus, type NominationSummary } from '@/types'
 import { usePageTitle } from '@/lib/page-title'
+import { useSession } from '@/lib/auth-client'
 
 // "Newest" is the default on purpose: ranking by votes first would keep the
 // already-popular nominations on top and make them ever more popular (a
@@ -40,6 +41,7 @@ const STATUSES: NominationStatus[] = ['pending', 'approved', 'in_progress', 'com
 
 export function RegistryPage() {
   usePageTitle('Nominations')
+  const { data: session } = useSession()
   const { data: nominations, isLoading, isError, error } = useNominations()
   // Search, filters and sort live in the URL, so they survive opening a
   // nomination and coming back, and a filtered view can be shared as a link.
@@ -89,64 +91,60 @@ export function RegistryPage() {
   const resultText = `${filtered.length} ${filtered.length === 1 ? 'nomination' : 'nominations'}`
   const announced = useDebounced(isLoading ? '' : resultText, 600)
 
-  return (
-    <div>
-      {/* Hero */}
-      <section className="border-b border-line bg-green-tint">
-        <div className="mx-auto max-w-5xl px-4 py-14 sm:py-16">
-          <p className="eyebrow">FORRT · Replication Journal Federation</p>
-          <h1 className="mt-3 max-w-3xl font-display text-4xl font-semibold leading-[1.1] text-ink sm:text-5xl">
-            The studies worth <span className="italic text-green">checking twice.</span>
-          </h1>
-          <p className="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
-            A community registry of papers researchers would like to see checked through{' '}
-            <span className="font-medium text-ink">replication</span> or{' '}
-            <span className="font-medium text-ink">reproduction</span>. Nominate a study,
-            upvote others you’d like revisited, and organise a team to do the work.
-          </p>
+  // The introduction is for first-time, signed-out visitors browsing the whole
+  // list. Signed in, or mid-search, the results come first.
+  const showIntro = !session && !filtering
 
-          <div className="mt-7 flex flex-wrap items-center gap-3">
+  return (
+    <div className="mx-auto max-w-5xl px-4 pb-16">
+      {showIntro ? (
+        <section className="border-b border-line pb-10 pt-14 sm:pt-20">
+          <h1 className="max-w-3xl font-display text-[2.5rem] font-medium leading-[1.05] tracking-[-0.02em] text-ink sm:text-[3.5rem]">
+            Studies worth checking twice
+          </h1>
+          <p className="mt-5 max-w-2xl text-[1.0625rem] leading-relaxed text-ink/80">
+            A community registry of published findings that researchers want to see
+            replicated with new data or reproduced from the original data. Nominate a
+            study, back the ones you want checked, and form a team to do the work.
+          </p>
+          <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3">
             <Link
               to="/nominate"
               className="rounded-md bg-green px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-forest"
             >
               Nominate a study
             </Link>
-            <a
-              href="#registry"
-              className="rounded-md border border-line bg-card px-5 py-2.5 text-sm font-semibold text-ink transition-colors hover:border-green"
-            >
-              Browse nominations
-            </a>
-            {typeof nominations?.length === 'number' && (
-              <span className="ml-1 text-sm text-muted-foreground">
-                {nominations.length} studies nominated
-              </span>
-            )}
+            <Link to="/guidelines" className="text-sm font-medium text-forest underline-offset-4 hover:underline">
+              How nominations work
+            </Link>
           </div>
+        </section>
+      ) : (
+        <div className="flex flex-wrap items-end justify-between gap-4 pb-6 pt-10">
+          <div>
+            <h1 className="font-display text-[2rem] font-semibold leading-tight">Nominations</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Published findings the community wants replicated or reproduced.
+            </p>
+          </div>
+          {session && (
+            <Link
+              to="/nominate"
+              className="rounded-md bg-green px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-forest"
+            >
+              Nominate a study
+            </Link>
+          )}
         </div>
-      </section>
+      )}
 
       {/* Registry list */}
-      <section id="registry" className="mx-auto max-w-5xl px-4 py-12">
-        <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="eyebrow">The registry</p>
-            <h2 className="mt-1 font-display text-2xl font-semibold">Nominations</h2>
-          </div>
-          <span className="text-sm text-muted-foreground" aria-hidden>
-            {resultText}
-          </span>
-          <span role="status" aria-live="polite" className="sr-only">
-            {announced}
-          </span>
-        </div>
-
-        <div className="mb-6 space-y-3 border-y border-line py-4">
+      <section id="registry" aria-label="Registry" className={showIntro ? 'pt-8' : ''}>
+        <div className="mb-4 space-y-3">
           {/* Search first: the guidelines ask nominators to check for an existing entry. */}
-          <label className="block">
-            <span className="mb-1 block text-sm font-medium">Search</span>
-            <span className="relative block">
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+            <label className="relative block min-w-0 flex-1">
+              <span className="sr-only">Search nominations</span>
               <Search
                 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
                 aria-hidden
@@ -155,15 +153,12 @@ export function RegistryPage() {
                 type="search"
                 value={query}
                 onChange={(e) => setParam('q', e.target.value)}
-                placeholder="Title, author, journal or DOI"
+                placeholder="Search by title, author, journal or DOI"
                 className="input pl-9!"
               />
-            </span>
-          </label>
-
-          <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-            <fieldset className="flex min-w-0 flex-wrap items-end gap-2">
-              <legend className="mb-1 text-sm font-medium">Filter</legend>
+            </label>
+            <fieldset className="grid min-w-0 grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center">
+              <legend className="sr-only">Filter</legend>
               <Select label="Discipline" value={discipline} onChange={(v) => setParam('discipline', v)}>
                 <option value="">All disciplines</option>
                 {DISCIPLINES.map((d) => (
@@ -186,24 +181,41 @@ export function RegistryPage() {
                   </option>
                 ))}
               </Select>
+            </fieldset>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+            <p className="flex flex-wrap items-center gap-x-3 text-sm text-muted-foreground">
+              <span aria-hidden>
+                <span className="data font-medium text-ink">{isLoading ? '–' : filtered.length}</span>{' '}
+                {filtered.length === 1 ? 'nomination' : 'nominations'}
+                {filtering && nominations ? ` of ${nominations.length}` : ''}
+              </span>
+              <span role="status" aria-live="polite" className="sr-only">
+                {announced}
+              </span>
               {filtering && (
                 <button
                   onClick={clearFilters}
-                  className="mb-1.5 inline-flex items-center gap-1 rounded text-sm text-muted-foreground hover:text-ink focus-visible:outline-2 focus-visible:outline-green"
+                  className="inline-flex items-center gap-1 rounded text-sm font-medium text-forest hover:underline focus-visible:outline-2 focus-visible:outline-green"
                 >
                   <X className="h-3.5 w-3.5" aria-hidden /> Clear search and filters
                 </button>
               )}
-            </fieldset>
+            </p>
 
             {/* Native radios: arrow keys move the selection and the group is a
                 single Tab stop, as screen-reader and keyboard users expect. */}
-            <fieldset>
-              <legend className="mb-1 text-sm font-medium">Sort by</legend>
+            <fieldset className="flex items-center gap-2">
+              <legend className="sr-only">Sort by</legend>
+              <span className="text-sm text-muted-foreground" aria-hidden>
+                Sort
+              </span>
               <div className="inline-flex rounded-md border border-line bg-card p-0.5">
                 {(Object.keys(SORTS) as SortKey[]).map((key) => (
                   <label
                     key={key}
+                    title={SORTS[key].hint}
                     className="cursor-pointer rounded px-2.5 py-1 text-sm text-muted-foreground transition-colors hover:text-ink has-checked:bg-green-tint has-checked:font-medium has-checked:text-forest has-focus-visible:outline-2 has-focus-visible:outline-offset-1 has-focus-visible:outline-green"
                   >
                     <input
@@ -220,7 +232,6 @@ export function RegistryPage() {
               </div>
             </fieldset>
           </div>
-          <p className="text-xs text-muted-foreground">{SORTS[sort].hint}</p>
         </div>
 
         {isLoading && <Placeholder>Loading nominations…</Placeholder>}
@@ -244,11 +255,15 @@ export function RegistryPage() {
           </Placeholder>
         )}
 
-        <div className="grid grid-cols-1 gap-3">
-          {filtered.map((n) => (
-            <NominationCard key={n.id} nomination={n} />
-          ))}
-        </div>
+        {filtered.length > 0 && (
+          <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-card">
+            {filtered.map((n) => (
+              <li key={n.id}>
+                <NominationCard nomination={n} />
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </div>
   )
@@ -266,13 +281,13 @@ function Select({
   children: React.ReactNode
 }) {
   return (
-    <label className="min-w-0 max-w-full text-xs">
+    <label className="min-w-0 flex-1 text-xs sm:flex-none">
       <span className="sr-only">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`max-w-full rounded-md border bg-card px-2.5 py-1.5 text-base text-ink sm:text-sm ${
-          value ? 'border-green' : 'border-line'
+        className={`max-w-full rounded-md border bg-card py-2 pl-2.5 pr-8 text-base text-ink w-full sm:w-44 sm:text-sm ${
+          value ? 'border-green' : 'border-input'
         }`}
       >
         {children}
@@ -283,7 +298,7 @@ function Select({
 
 function Placeholder({ children }: { children: React.ReactNode }) {
   return (
-    <p className="rounded-lg border border-dashed border-line px-4 py-12 text-center text-sm text-muted-foreground">
+    <p className="rounded-lg border border-line bg-card px-6 py-12 text-center text-sm leading-relaxed text-muted-foreground">
       {children}
     </p>
   )

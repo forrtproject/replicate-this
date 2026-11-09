@@ -20,6 +20,11 @@ export function LinksEditor({ initial }: { initial: ProfileLinks }) {
   )
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
+  // Compared with what was last saved, so Save is only live when there is a change.
+  const [baseline, setBaseline] = useState<ProfileLinks>(initial)
+  const dirty = PROFILE_LINKS.some(
+    ({ key }) => (links[key] ?? '').trim() !== (baseline[key] ?? '').trim(),
+  )
 
   const fields = PROFILE_LINKS.filter((l) => l.primary || shown.includes(l.key))
   const addable = PROFILE_LINKS.filter((l) => !l.primary && !shown.includes(l.key))
@@ -44,6 +49,7 @@ export function LinksEditor({ initial }: { initial: ProfileLinks }) {
       // Show the canonical form the server stored (e.g. a full ORCID URL).
       onSuccess: (res) => {
         setLinks(res.links)
+        setBaseline(res.links)
         setSaved(true)
         setTimeout(() => setSaved(false), 1500)
       },
@@ -55,7 +61,7 @@ export function LinksEditor({ initial }: { initial: ProfileLinks }) {
     <div className="space-y-2.5">
       {fields.map(({ key, label, placeholder, primary }) => (
         <label key={key} className="grid grid-cols-[8.5rem_1fr_auto] items-center gap-3 text-sm">
-          <span className="inline-flex items-center gap-2 text-muted-foreground">
+          <span className="inline-flex items-center gap-2 font-medium text-ink">
             <LinkIcon kind={key} />
             {label}
           </span>
@@ -105,12 +111,16 @@ export function LinksEditor({ initial }: { initial: ProfileLinks }) {
         <button
           type="button"
           onClick={save}
-          disabled={update.isPending}
-          className="rounded-md bg-green px-3 py-2 text-sm font-medium text-white hover:bg-forest disabled:opacity-60"
+          disabled={update.isPending || !dirty}
+          className="rounded-md bg-green px-3 py-2 text-sm font-semibold text-white hover:bg-forest"
         >
           {update.isPending ? 'Saving…' : 'Save links'}
         </button>
-        {saved && <span className="text-xs text-green">Saved</span>}
+        {saved ? (
+          <span role="status" className="text-sm text-forest">Saved</span>
+        ) : !dirty ? (
+          <span className="text-sm text-muted-foreground">No changes</span>
+        ) : null}
       </div>
     </div>
   )

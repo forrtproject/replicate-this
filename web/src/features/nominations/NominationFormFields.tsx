@@ -6,7 +6,7 @@ import {
   type VerificationType,
 } from '@/types'
 import { DefinedTerm } from './VerificationBadge'
-import { JournalTags } from './JournalTags'
+import { matchJournalTags } from './journal-tags'
 
 /** The nomination fields shared by the submit and edit forms. */
 export interface NominationFormValues {
@@ -47,6 +47,7 @@ export function NominationFormFields({
 
   return (
     <>
+      <h2 className="section-title border-t border-line pt-6 text-lg">Why it deserves a second look</h2>
       <Field label="Discipline" required>
         <select
           value={values.discipline}
@@ -80,9 +81,9 @@ export function NominationFormFields({
       <fieldset>
         <legend className="mb-1 text-sm font-medium">Replication or reproduction?</legend>
         <p className="mb-2 text-xs text-muted-foreground">
-          <DefinedTerm term="Reproduction" /> re-runs the original data or code (including
+          <DefinedTerm term="Reproduction" lowercase={false} /> re-runs the original data or code (including
           simulation and other computational studies) and/or checks the results hold up under
-          other reasonable analyses. <DefinedTerm term="Replication" /> collects new data.
+          other reasonable analyses. <DefinedTerm term="Replication" lowercase={false} /> collects new data.
         </p>
         <div className="space-y-1.5">
           {(
@@ -99,7 +100,7 @@ export function NominationFormFields({
                 value={value}
                 checked={values.verificationType === value}
                 onChange={() => set({ verificationType: value })}
-                className="accent-primary"
+                className="accent-[var(--color-green)]"
               />
               {label}
             </label>
@@ -162,8 +163,9 @@ export function NominationFormFields({
         </Field>
       )}
 
+      <h2 className="section-title border-t border-line pt-6 text-lg">Materials and tags</h2>
       <fieldset>
-        <legend className="mb-1 text-sm font-medium">
+        <legend className="mb-2 text-sm font-medium">
           What’s openly available?{' '}
           <span className="font-normal text-muted-foreground">(check all that apply)</span>
         </legend>
@@ -177,7 +179,7 @@ export function NominationFormFields({
                     type="checkbox"
                     checked={checked}
                     onChange={() => toggleAvailability(o.key)}
-                    className="mt-0.5 accent-primary"
+                    className="mt-0.5 accent-[var(--color-green)]"
                   />
                   <span>
                     {o.label}
@@ -213,7 +215,7 @@ export function NominationFormFields({
       </fieldset>
 
       <fieldset>
-        <legend className="mb-1 text-sm font-medium">
+        <legend className="mb-2 text-sm font-medium">
           Tags <span className="font-normal text-muted-foreground">(check all that apply)</span>
         </legend>
         <div className="space-y-2">
@@ -223,11 +225,11 @@ export function NominationFormFields({
               type="checkbox"
               checked={values.replicationWorkshop}
               onChange={(e) => set({ replicationWorkshop: e.target.checked })}
-              className="mt-0.5 accent-primary"
+              className="mt-0.5 accent-[var(--color-green)]"
             />
             <span>
               <label htmlFor="replication-workshop" className="cursor-pointer">
-                Workshop Suitability
+                Suits a replication workshop
               </label>
               <span className="block text-xs text-muted-foreground">
                 This paper could be reproduced by a team in a one-day workshop.
@@ -240,23 +242,33 @@ export function NominationFormFields({
               type="checkbox"
               checked={values.experimentalResearch}
               onChange={(e) => set({ experimentalResearch: e.target.checked })}
-              className="mt-0.5 accent-primary"
+              className="mt-0.5 accent-[var(--color-green)]"
             />
-            <label htmlFor="experimental-research" className="cursor-pointer">
-              Experimental research
-            </label>
+            <span>
+              <label htmlFor="experimental-research" className="cursor-pointer">
+                Experimental research
+              </label>
+              <span className="block text-xs text-muted-foreground">
+                The study manipulates conditions rather than observing them.
+              </span>
+            </span>
           </div>
         </div>
       </fieldset>
 
       {values.discipline && (
-        <div className="rounded-lg border border-line bg-muted/40 px-4 py-3">
-          <p className="text-sm font-medium">Target journals</p>
-          <p className="mb-2 mt-0.5 text-xs text-muted-foreground">
-            Based on your answers, the resulting study could be submitted to these outlets.
-            Tags update as you edit the form.
+        <div className="rounded-lg border border-line bg-card px-4 py-3">
+          <p className="text-sm font-medium">Where the result could be published</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Based on your answers so far; the list updates as you edit.
           </p>
-          <JournalTags nomination={values} />
+          <ul className="mt-2 space-y-0.5 text-sm">
+            {matchJournalTags(values).map((j) => (
+              <li key={j.key}>
+                {j.name} <span className="text-muted-foreground">({j.key})</span>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </>

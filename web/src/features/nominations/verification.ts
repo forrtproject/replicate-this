@@ -84,10 +84,9 @@ export const FORECAST_CONSENSUS_MIN = 5
  */
 export function forecastSummary(type: VerificationType, yes: number, no: number): string {
   const total = yes + no
-  if (total === 0) return 'Predictions are anonymous and you can change yours any time.'
-  if (total === 1) return `The one prediction so far is ${yes === 1 ? 'Yes' : 'No'}.`
+  if (total === 0) return 'No predictions yet. Predictions are anonymous and you can change yours.'
   if (total < FORECAST_CONSENSUS_MIN) {
-    return `${yes} Yes and ${no} No so far: too few predictions to call.`
+    return `${total} ${total === 1 ? 'prediction' : 'predictions'} so far, too few to call.`
   }
   const yesPct = (yes / total) * 100
   const copy = FORECAST_QUESTION[type] ?? FORECAST_QUESTION.replication

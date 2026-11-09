@@ -7,6 +7,7 @@ import { NominationCard } from '@/features/nominations/NominationCard'
 import { StatusBadge } from '@/features/nominations/StatusBadge'
 import { PROFILE_LINKS, type NominationStatus, type NominationSummary, type ProfileLinks } from '@/types'
 import { usePageTitle } from '@/lib/page-title'
+import { formatMonthYear } from '@/lib/dates'
 
 interface Researcher {
   token: string
@@ -34,9 +35,10 @@ export function ResearcherPage() {
   }
   if (isError || !r) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-20 text-center">
-        <p className="text-sm text-muted-foreground">Researcher not found.</p>
-        <Link to="/nominations" className="mt-2 inline-block text-sm text-green underline">
+      <div className="mx-auto max-w-5xl px-4 py-20">
+        <h1 className="font-display text-[2rem] font-semibold">Researcher not found</h1>
+        <p className="mt-2 text-sm text-muted-foreground">The account may have been deleted, or the link is incomplete.</p>
+        <Link to="/nominations" className="mt-4 inline-block text-sm font-medium text-forest underline">
           Back to nominations
         </Link>
       </div>
@@ -46,21 +48,23 @@ export function ResearcherPage() {
   const links = PROFILE_LINKS.filter((l) => r.links[l.key])
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <div className="flex flex-wrap items-center gap-4">
-        <AvatarBubble image={r.image} name={r.name} />
+    <div className="mx-auto max-w-5xl px-4 pb-16 pt-10">
+      <div className="flex flex-wrap items-center gap-5">
+        <AvatarBubble image={r.image} name={r.name} className="h-16 w-16 text-2xl" />
         <div className="min-w-0 flex-1">
-          <p className="eyebrow">Researcher</p>
-          <h1 className="font-display text-3xl font-semibold leading-tight">{r.name}</h1>
-          <p className="text-xs text-muted-foreground">
-            Joined {new Date(r.joinedAt).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
+          <h1 className="font-display text-[2rem] font-semibold leading-tight">{r.name}</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Researcher on Replicate This since {formatMonthYear(r.joinedAt)}
+            {r.isSelf && (
+              <>
+                {'. '}
+                <Link to="/profile" className="text-forest underline-offset-2 hover:underline">
+                  Edit your profile
+                </Link>
+              </>
+            )}
           </p>
         </div>
-        {r.isSelf && (
-          <Link to="/profile" className="text-sm text-green hover:underline">
-            Edit your profile →
-          </Link>
-        )}
       </div>
 
       {links.length > 0 && (
@@ -71,7 +75,7 @@ export function ResearcherPage() {
                 href={r.links[l.key]}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="inline-flex items-center gap-1.5 rounded-full border border-line bg-card px-3 py-1 text-sm hover:border-green"
+                className="inline-flex items-center gap-1.5 rounded-md border border-line bg-card px-3 py-1.5 text-sm hover:border-green"
               >
                 <LinkIcon kind={l.key} />
                 {l.label}
@@ -81,41 +85,45 @@ export function ResearcherPage() {
         </ul>
       )}
 
-      <section className="mt-10">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Nominations ({r.nominations.length})
+      <section className="mt-12" aria-labelledby="nominated">
+        <h2 id="nominated" className="section-title mb-3">
+          Nominated
+          <span className="data ml-2 font-sans text-base font-normal text-muted-foreground">{r.nominations.length}</span>
         </h2>
         {r.nominations.length === 0 ? (
           <Empty>No public nominations yet.</Empty>
         ) : (
-          <div className="grid grid-cols-1 gap-3">
+          <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-card">
             {r.nominations.map((n) => (
-              <NominationCard key={n.id} nomination={n} />
+              <li key={n.id}>
+                <NominationCard nomination={n} />
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </section>
 
-      <section className="mt-10">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Contributing to ({r.contributions.length})
+      <section className="mt-12" aria-labelledby="teams">
+        <h2 id="teams" className="section-title mb-3">
+          On the team for
+          <span className="data ml-2 font-sans text-base font-normal text-muted-foreground">{r.contributions.length}</span>
         </h2>
         {r.contributions.length === 0 ? (
-          <Empty>Not contributing to any studies yet.</Empty>
+          <Empty>Not on any study team yet.</Empty>
         ) : (
-          <div className="space-y-2">
+          <ul className="divide-y divide-line rounded-lg border border-line bg-card">
             {r.contributions.map((c) => (
-              <div
-                key={c.id}
-                className="flex items-center justify-between gap-3 rounded-md border border-line bg-card px-3 py-2"
-              >
-                <Link to={`/nominations/${c.id}`} className="truncate text-sm hover:text-green">
-                  {c.title || c.doi}
+              <li key={c.id}>
+                <Link
+                  to={`/nominations/${c.id}`}
+                  className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-[#f6f5ef]"
+                >
+                  <span className="truncate font-display text-[1.0625rem] font-semibold">{c.title || c.doi}</span>
+                  <StatusBadge status={c.status} className="shrink-0" />
                 </Link>
-                <StatusBadge status={c.status} />
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </section>
     </div>
@@ -124,7 +132,7 @@ export function ResearcherPage() {
 
 function Empty({ children }: { children: React.ReactNode }) {
   return (
-    <p className="rounded-md border border-dashed border-line px-3 py-4 text-center text-sm text-muted-foreground">
+    <p className="rounded-lg border border-line bg-card px-4 py-5 text-sm text-muted-foreground">
       {children}
     </p>
   )

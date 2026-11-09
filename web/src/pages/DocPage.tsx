@@ -5,8 +5,10 @@ import { usePageTitle } from '@/lib/page-title'
 export function DocPage({ src, title }: { src: string; title: string }) {
   usePageTitle(title)
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12">
-      <MarkdownDoc src={src} />
+    <div className="mx-auto max-w-5xl px-4 pb-16 pt-10">
+      <div className="max-w-[42rem]">
+        <MarkdownDoc src={src} />
+      </div>
     </div>
   )
 }

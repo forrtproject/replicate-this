@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
 import { EyeOff, Eye, Flag, Check } from 'lucide-react'
 import { useAdminComments, useHideComment, type AdminComment } from '@/features/admin/api'
-import { AdminTabs } from '@/features/admin/AdminTabs'
-import { researcherLabel } from '@/features/nominations/format'
+import { AdminPageHeader } from '@/features/admin/AdminTabs'
+import { ResearcherLink } from '@/features/profile/ResearcherLink'
+import { formatWhen } from '@/lib/dates'
 import { RichText } from '@/components/ui/RichText'
 import { usePageTitle } from '@/lib/page-title'
 
@@ -11,21 +12,15 @@ export function CommentsModerationPage() {
   const { data: comments, isLoading } = useAdminComments()
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
-      <p className="eyebrow">Maintainers only</p>
-      <h1 className="mb-6 mt-1 font-display text-3xl font-semibold">Comments</h1>
-      <AdminTabs />
-
-      <p className="mb-4 text-sm text-muted-foreground">
-        Recent comments across all nominations, with any flagged by users first. Hide
-        anything off-topic or against the Code of Conduct. Hidden comments disappear from
-        the public thread but are kept for the record. Hiding a flagged comment, or
-        keeping it, closes its flags.
-      </p>
+    <div className="mx-auto max-w-5xl px-4 pb-16 pt-10">
+      <AdminPageHeader
+        title="Moderate comments"
+        intro="Recent comments on all nominations, flagged ones first. Hide anything off-topic or against the Code of Conduct: it leaves the public thread but is kept for the record. Hiding or keeping a flagged comment closes its flags."
+      />
 
       {isLoading && <p className="text-sm text-muted-foreground">Loading comments…</p>}
       {comments?.length === 0 && (
-        <p className="rounded-lg border border-dashed border-line py-8 text-center text-sm text-muted-foreground">
+        <p className="rounded-lg border border-line bg-card px-4 py-5 text-sm text-muted-foreground">
           No comments yet.
         </p>
       )}
@@ -41,33 +36,26 @@ function Row({ comment: c }: { comment: AdminComment }) {
   const hide = useHideComment()
   return (
     <div
-      className={`rounded-lg border p-4 ${
-        c.hidden
-          ? 'border-amber/30 bg-amber/5'
-          : c.openFlags > 0
-            ? 'border-amber bg-card'
-            : 'border-line bg-card'
-      }`}
+      className={`rounded-lg border bg-card p-5 ${
+        c.openFlags > 0 && !c.hidden ? 'border-amber/50 border-l-4 border-l-amber' : 'border-line'
+      } ${c.hidden ? 'opacity-75' : ''}`}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <p className="mb-1 text-xs text-muted-foreground">
-            {researcherLabel(c.authorName, c.authorToken)} · on{' '}
-            <Link
-              to={`/nominations/${c.nominationId}`}
-              className="text-green hover:underline"
-            >
+          <p className="mb-1.5 text-sm text-muted-foreground">
+            <ResearcherLink name={c.authorName} token={c.authorToken} className="font-medium text-ink" /> on{' '}
+            <Link to={`/nominations/${c.nominationId}`} className="font-display text-ink hover:text-forest hover:underline">
               {c.nominationTitle || 'a nomination'}
-            </Link>{' '}
-            · {new Date(c.createdAt).toLocaleDateString()}
-            {c.hidden && <span className="ml-1 font-medium text-amber">· hidden</span>}
+            </Link>
+            <span className="ml-2 text-xs">{formatWhen(c.createdAt)}</span>
+            {c.hidden && <span className="ml-2 text-xs font-medium text-amber">Hidden</span>}
           </p>
-          <RichText className="text-sm leading-relaxed">{c.content}</RichText>
+          <RichText className="text-[0.9375rem] leading-relaxed">{c.content}</RichText>
           {c.openFlags > 0 && (
-            <div className="mt-2 rounded-md bg-amber/10 px-3 py-2 text-xs text-ink">
-              <p className="inline-flex items-center gap-1 font-medium text-amber">
-                <Flag className="h-3.5 w-3.5" />
-                Flagged by {c.openFlags} {c.openFlags === 1 ? 'user' : 'users'}
+            <div className="mt-3 rounded-md bg-amber/10 px-3 py-2 text-sm text-ink">
+              <p className="inline-flex items-center gap-1.5 font-medium text-amber">
+                <Flag className="h-3.5 w-3.5" aria-hidden />
+                Flagged by {c.openFlags} {c.openFlags === 1 ? 'person' : 'people'}
               </p>
               {c.flagReasons.length > 0 && (
                 <ul className="mt-1 list-disc space-y-0.5 pl-5">

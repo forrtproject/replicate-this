@@ -45,35 +45,45 @@ export function WelcomePage() {
   const isLast = step === STEPS.length - 1
 
   return (
-    <div className="mx-auto max-w-xl px-4 py-10">
-      <p className="eyebrow">Welcome to Replicate This</p>
-      <h1 className="mt-1 font-display text-3xl font-semibold">Let’s set up your profile</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        A minute now makes it easier for teammates to recognise and reach you. You can change
-        any of this later in your profile.
+    <div className="mx-auto max-w-5xl px-4 pb-16 pt-10">
+      <div className="max-w-2xl">
+      <h1 className="font-display text-[2rem] font-semibold leading-tight">Welcome. Set up your profile</h1>
+      <p className="mt-2 text-[0.9375rem] leading-relaxed text-muted-foreground">
+        Four quick steps that help teammates recognise and reach you. Everything is optional
+        and can be changed later in your profile.
       </p>
 
-      <ol className="mt-6 flex flex-wrap gap-2">
+      {/* A real sequence, so the steps are numbered. */}
+      <ol className="mt-8 grid grid-cols-4 gap-2" aria-label="Setup steps">
         {STEPS.map((label, i) => (
-          <li
-            key={label}
-            className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${
-              i === step
-                ? 'border-green bg-green/10 text-green'
-                : i < step
-                  ? 'border-line text-muted-foreground'
-                  : 'border-line text-muted-foreground/60'
-            }`}
-          >
-            {i < step ? <Check className="h-3.5 w-3.5" /> : <span>{i + 1}</span>}
-            {label}
+          <li key={label} aria-current={i === step ? 'step' : undefined}>
+            <span
+              className={`block h-1 rounded-full ${i <= step ? 'bg-green' : 'bg-line'}`}
+              aria-hidden
+            />
+            <span
+              className={`mt-2 flex items-center gap-1 text-xs ${
+                i === step ? 'font-semibold text-ink' : 'text-muted-foreground'
+              }`}
+            >
+              {i < step && <Check className="h-3 w-3 text-forest" aria-hidden />}
+              {i + 1}. {label}
+            </span>
           </li>
         ))}
       </ol>
 
-      <section className="mt-6 rounded-lg border border-line bg-card p-5">
+      <section className="mt-6 rounded-lg border border-line bg-card p-6">
         {step === 0 && <NameStep current={profile.name} />}
-        {step === 1 && <AvatarEditor current={profile.image} name={profile.name} />}
+        {step === 1 && (
+          <div>
+            <StepIntro
+              title="Picture"
+              hint="Pick an emoji or upload a photo. It appears next to your name on study teams."
+            />
+            <AvatarEditor current={profile.image} name={profile.name} />
+          </div>
+        )}
         {step === 2 && <LinksStep initial={profile.links} />}
         {step === 3 && (
           <NotificationStep
@@ -89,7 +99,7 @@ export function WelcomePage() {
           disabled={complete.isPending}
           className="text-sm text-muted-foreground underline hover:text-ink disabled:opacity-60"
         >
-          Skip for now
+          Skip setup
         </button>
         <div className="flex items-center gap-2">
           {step > 0 && (
@@ -106,17 +116,18 @@ export function WelcomePage() {
               disabled={complete.isPending}
               className="rounded-md bg-green px-4 py-2 text-sm font-medium text-white hover:bg-forest disabled:opacity-60"
             >
-              {complete.isPending ? 'Finishing…' : 'Finish'}
+              {complete.isPending ? 'Finishing…' : 'Go to your dashboard'}
             </button>
           ) : (
             <button
               onClick={() => setStep((s) => s + 1)}
-              className="rounded-md bg-green px-4 py-2 text-sm font-medium text-white hover:bg-forest"
+              className="rounded-md bg-green px-4 py-2 text-sm font-semibold text-white hover:bg-forest"
             >
-              Next
+              Continue
             </button>
           )}
         </div>
+      </div>
       </div>
     </div>
   )
@@ -124,9 +135,9 @@ export function WelcomePage() {
 
 function StepIntro({ title, hint }: { title: string; hint: string }) {
   return (
-    <div className="mb-3">
-      <h2 className="font-display text-lg font-semibold">{title}</h2>
-      <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>
+    <div className="mb-4">
+      <h2 className="section-title text-lg">{title}</h2>
+      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{hint}</p>
     </div>
   )
 }
@@ -144,8 +155,8 @@ function LinksStep({ initial }: { initial: ProfileLinks }) {
   return (
     <div>
       <StepIntro
-        title="Add public links (optional)"
-        hint="Shown on your public profile, nominations and contributions so collaborators can find and credit you. Add only what you’re happy to share."
+        title="Public links"
+        hint="Shown next to your name so collaborators can find and credit you. Add only what you’re happy to share."
       />
       <LinksEditor initial={initial} />
     </div>
@@ -187,7 +198,7 @@ function NotificationStep({
     <div>
       <StepIntro
         title="Email notifications"
-        hint="We've filled in the address you signed in with. Change it if you'd rather use another. Everything also arrives in-app, so uncheck anything you don't want by email."
+        hint="We filled in the address you signed in with; any address works. Everything also appears in your dashboard."
       />
       <label className="block text-sm">
         <span className="mb-1 block text-muted-foreground">Notification email</span>

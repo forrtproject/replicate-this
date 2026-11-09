@@ -7,13 +7,13 @@ describe('forecastSummary', () => {
   })
 
   it('reports a single prediction as one response, not a consensus', () => {
-    expect(forecastSummary('replication', 1, 0)).toBe('The one prediction so far is Yes.')
-    expect(forecastSummary('reproduction', 0, 1)).toBe('The one prediction so far is No.')
+    expect(forecastSummary('replication', 1, 0)).toBe('1 prediction so far, too few to call.')
+    expect(forecastSummary('reproduction', 0, 1)).toBe('1 prediction so far, too few to call.')
   })
 
   it('reports counts while there are too few to call', () => {
     expect(forecastSummary('replication', 3, 1)).toBe(
-      '3 Yes and 1 No so far: too few predictions to call.',
+      '4 predictions so far, too few to call.',
     )
   })
 

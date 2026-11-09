@@ -8,6 +8,7 @@ import { ContactLinks } from '@/features/profile/ContactLinks'
 import { ResearcherLink } from '@/features/profile/ResearcherLink'
 import { useHideComment } from '@/features/admin/api'
 import { RichText } from '@/components/ui/RichText'
+import { formatWhen } from '@/lib/dates'
 import {
   useComments,
   usePostComment,
@@ -18,30 +19,9 @@ import {
 
 const MARKDOWN_HINT = (
   <>
-    Markdown works: **bold**, *italic*, `code`, lists, &gt; quotes and [links](https://…).
-    Bare URLs become links too.
+    Supports Markdown: **bold**, *italic*, lists, &gt; quotes and [links](https://…).
   </>
 )
-
-function timeAgo(iso: string): string {
-  const secs = Math.round((Date.now() - new Date(iso).getTime()) / 1000)
-  const units: [number, string][] = [
-    [60, 'second'],
-    [60, 'minute'],
-    [24, 'hour'],
-    [30, 'day'],
-    [12, 'month'],
-  ]
-  let value = secs
-  let unit = 'second'
-  for (const [factor, name] of units) {
-    if (Math.abs(value) < factor) break
-    value = Math.round(value / factor)
-    unit = name
-  }
-  if (unit === 'second') return 'just now'
-  return `${value} ${unit}${Math.abs(value) === 1 ? '' : 's'} ago`
-}
 
 interface CommentNode {
   comment: Comment
@@ -79,9 +59,14 @@ export function CommentsSection({ nominationId }: { nominationId: string }) {
   }
 
   return (
-    <section className="mt-6">
-      <h2 className="mb-3 font-display text-lg font-semibold">
-        Discussion {comments && comments.length > 0 && `(${comments.length})`}
+    <section aria-labelledby="discussion">
+      <h2 id="discussion" className="section-title mb-4">
+        Discussion
+        {comments && comments.length > 0 && (
+          <span className="data ml-2 font-sans text-base font-normal text-muted-foreground">
+            {comments.length}
+          </span>
+        )}
       </h2>
 
       {session ? (
@@ -108,7 +93,7 @@ export function CommentsSection({ nominationId }: { nominationId: string }) {
         <p className="mb-5 text-sm text-muted-foreground">
           <button
             onClick={() => navigate(`/sign-in?redirect=/nominations/${nominationId}`)}
-            className="text-green underline"
+            className="font-medium text-forest underline underline-offset-2"
           >
             Sign in
           </button>{' '}
@@ -118,7 +103,7 @@ export function CommentsSection({ nominationId }: { nominationId: string }) {
 
       {isLoading && <p className="text-sm text-muted-foreground">Loading comments…</p>}
       {comments && comments.length === 0 && (
-        <p className="text-sm text-muted-foreground">No comments yet.</p>
+        <p className="text-sm text-muted-foreground">No comments yet. Questions about the design, data or feasibility are welcome.</p>
       )}
 
       <ul className="space-y-4">
@@ -198,7 +183,7 @@ function CommentThread({
     <li
       className={
         depth === 0
-          ? 'border-t border-line pt-3 first:border-t-0 first:pt-0'
+          ? 'border-t border-line pt-4 first:border-t-0 first:pt-0'
           : 'border-l-2 border-line pl-3 sm:pl-4'
       }
     >
@@ -215,10 +200,10 @@ function CommentThread({
               {collapsed ? <Plus className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
             </button>
           )}
-          <ResearcherLink name={c.name} token={c.token} className="font-medium" />
+          <ResearcherLink name={c.name} token={c.token} className="font-medium text-ink" />
           {!deleted && <ContactLinks links={c.links} />}
-          <span className="text-xs text-muted-foreground">· {timeAgo(c.createdAt)}</span>
-          {c.hidden && <span className="text-xs font-medium text-amber">· hidden</span>}
+          <span className="text-xs text-muted-foreground">{formatWhen(c.createdAt)}</span>
+          {c.hidden && <span className="text-xs font-medium text-amber">Hidden</span>}
           {canModerate && (
             <button
               onClick={() => hide.mutate({ id: c.id, hidden: !c.hidden })}
@@ -233,7 +218,7 @@ function CommentThread({
 
         {!collapsed && (
           <>
-            <RichText className="mt-1 text-sm leading-relaxed">{c.content}</RichText>
+            <RichText className="mt-1 text-[0.9375rem] leading-relaxed">{c.content}</RichText>
             <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
               {!c.hidden && (
                 <button

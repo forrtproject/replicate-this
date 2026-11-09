@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAdminUsers, useSetUserRole, type AdminUser } from '@/features/admin/api'
-import { AdminTabs } from '@/features/admin/AdminTabs'
+import { AdminPageHeader } from '@/features/admin/AdminTabs'
+import { formatDate } from '@/lib/dates'
 import { researcherLabel } from '@/features/nominations/format'
 import { ContactLinks } from '@/features/profile/ContactLinks'
 import { useSession } from '@/lib/auth-client'
@@ -27,17 +28,11 @@ export function UsersPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
-      <p className="eyebrow">Maintainers only</p>
-      <h1 className="mb-6 mt-1 font-display text-3xl font-semibold">Users</h1>
-      <AdminTabs />
-
-      <p className="mb-4 text-sm text-muted-foreground">
-        People appear under the display name they chose; login emails are never stored.
-        You can grant or revoke
-        the <span className="font-medium text-ink">maintainer</span> role, which unlocks
-        this admin area and the moderation queue.
-      </p>
+    <div className="mx-auto max-w-5xl px-4 pb-16 pt-10">
+      <AdminPageHeader
+        title="Users"
+        intro="People appear under the display name they chose; login emails are never stored. The maintainer role gives access to these tools."
+      />
 
       {error && (
         <p className="mb-4 rounded-md border border-amber/30 bg-amber/10 px-3 py-2 text-sm text-amber">
@@ -47,15 +42,15 @@ export function UsersPage() {
 
       {isLoading && <p className="text-sm text-muted-foreground">Loading users…</p>}
 
-      <div className="overflow-hidden rounded-lg border border-line">
+      <div className="overflow-x-auto rounded-lg border border-line bg-card">
         <table className="w-full text-sm">
-          <thead className="bg-muted/60 text-left text-xs text-muted-foreground">
+          <thead className="border-b border-line text-left text-xs text-muted-foreground">
             <tr>
               <th className="px-4 py-2 font-medium">Researcher</th>
               <th className="px-4 py-2 font-medium">Role</th>
-              <th className="px-4 py-2 font-medium">Joined</th>
-              <th className="px-4 py-2 font-medium">Activity</th>
-              <th className="px-4 py-2 text-right font-medium">Actions</th>
+              <th className="hidden px-4 py-2 font-medium sm:table-cell">Joined</th>
+              <th className="hidden px-4 py-2 font-medium md:table-cell">Activity</th>
+              <th className="px-4 py-2 text-right font-medium"><span className="sr-only">Actions</span></th>
             </tr>
           </thead>
           <tbody>
@@ -72,47 +67,48 @@ export function UsersPage() {
                           {u.providers.join(', ')}
                         </span>
                       )}
-                      {isMe && <span className="text-xs text-green">you</span>}
+                      {isMe && <span className="text-xs text-muted-foreground">(you)</span>}
                     </div>
                     <div className="mt-0.5 text-xs">
                       <ContactLinks links={u.links} />
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <span
-                      className={cn(
-                        'rounded-full px-2 py-0.5 text-xs font-medium',
-                        isAdmin ? 'bg-green-tint text-forest' : 'bg-muted text-muted-foreground',
-                      )}
-                    >
-                      {isAdmin ? 'Maintainer' : 'User'}
+                    <span className={cn(isAdmin ? 'font-medium text-forest' : 'text-muted-foreground')}>
+                      {isAdmin ? 'Maintainer' : 'Researcher'}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {new Date(u.createdAt).toLocaleDateString()}
+                  <td className="hidden whitespace-nowrap px-4 py-3 text-muted-foreground sm:table-cell">
+                    {formatDate(u.createdAt)}
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    <span className="data">{u.nominations}</span> nom ·{' '}
-                    <span className="data">{u.contributions}</span> contrib
+                  <td className="hidden px-4 py-3 text-muted-foreground md:table-cell">
+                    <span className="data">{u.nominations}</span>{' '}
+                    {u.nominations === 1 ? 'nomination' : 'nominations'},{' '}
+                    <span className="data">{u.contributions}</span>{' '}
+                    {u.contributions === 1 ? 'team' : 'teams'}
                   </td>
                   <td className="px-4 py-3 text-right">
                     {isMe ? (
-                      <span className="text-xs text-muted-foreground">—</span>
+                      null
                     ) : isAdmin ? (
                       <button
                         onClick={() => change(u, 'user')}
                         disabled={maintainers <= 1}
                         title={maintainers <= 1 ? 'Cannot remove the last maintainer' : undefined}
-                        className="rounded-md border border-line px-2.5 py-1 text-xs font-medium hover:border-amber hover:text-amber disabled:opacity-40"
+                        className="text-xs font-medium text-muted-foreground underline-offset-2 hover:text-destructive hover:underline disabled:opacity-40"
                       >
-                        Revoke admin
+                        Remove maintainer role
                       </button>
                     ) : (
                       <button
-                        onClick={() => change(u, 'maintainer')}
-                        className="rounded-md bg-green px-2.5 py-1 text-xs font-medium text-white hover:bg-forest"
+                        onClick={() => {
+                          if (window.confirm(`Make ${researcherLabel(u.name, u.token)} a maintainer? They will be able to approve nominations and moderate comments.`)) {
+                            change(u, 'maintainer')
+                          }
+                        }}
+                        className="text-xs font-medium text-forest underline-offset-2 hover:underline"
                       >
-                        Make admin
+                        Make maintainer
                       </button>
                     )}
                   </td>
