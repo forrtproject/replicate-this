@@ -1,3 +1,5 @@
+import { PageBand } from '@/components/layout/PageBand'
+import { siGithub, siGoogle, siOrcid, type SimpleIcon } from 'simple-icons'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -60,46 +62,56 @@ export function SignInPage() {
   const anyEnabled = providers && (providers.google || providers.github || providers.orcid)
 
   return (
-    <div className="mx-auto max-w-sm px-4 py-16">
-      <h1 className="text-center font-display text-3xl font-bold">Sign in or register</h1>
-      <p className="mb-8 mt-2 text-center text-sm text-muted-foreground">
-        New here? Signing in for the first time creates your account, so there’s no separate
-        sign-up. We start you off with the name from your provider (you can change it, or
-        pick a pseudonym, in your profile) and use your sign-in address only for the
-        notifications you choose.
-      </p>
+    <div className="mx-auto max-w-5xl px-4 pb-16">
+      <PageBand bleed>
+        <div className="mx-auto max-w-sm">
+          <h1 className="font-display text-[2rem] font-semibold leading-tight">Sign in</h1>
+          <p className="mt-2 text-[0.9375rem] leading-relaxed text-band-ink/80">
+            Use an account you already have; ORCID also links your researcher identifier.
+            Signing in for the first time creates your Replicate This account.
+          </p>
+        </div>
+      </PageBand>
+      <div className="mx-auto max-w-sm">
 
       {isLoading && <p className="text-center text-sm text-muted-foreground">Loading…</p>}
 
       {providers && !anyEnabled && (
-        <p className="rounded-md border border-amber-200 bg-amber-50 p-3 text-center text-sm text-amber-800">
-          No sign-in providers are configured yet. Add OAuth credentials to the server
-          <code className="mx-1">.env</code> to enable sign-in.
+        <p className="rounded-md border border-line bg-card p-3 text-sm text-ink">
+          Sign-in is unavailable right now. Please try again later.
         </p>
       )}
 
       {error && (
-        <p className="mb-3 rounded-md border border-red-200 bg-red-50 p-3 text-center text-sm text-red-800">
+        <p className="mb-3 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
           {error}
         </p>
       )}
 
       <div className="space-y-3">
+        {providers?.orcid && (
+          <ProviderButton icon={siOrcid} brand onClick={() => start({ providerId: 'orcid' })}>
+            Continue with ORCID
+          </ProviderButton>
+        )}
         {providers?.google && (
-          <ProviderButton onClick={() => start({ provider: 'google' })}>
+          <ProviderButton icon={siGoogle} onClick={() => start({ provider: 'google' })}>
             Continue with Google
           </ProviderButton>
         )}
         {providers?.github && (
-          <ProviderButton onClick={() => start({ provider: 'github' })}>
+          <ProviderButton icon={siGithub} onClick={() => start({ provider: 'github' })}>
             Continue with GitHub
           </ProviderButton>
         )}
-        {providers?.orcid && (
-          <ProviderButton onClick={() => start({ providerId: 'orcid' })}>
-            Continue with ORCID
-          </ProviderButton>
-        )}
+      </div>
+
+
+      <p className="mt-8 border-t border-line pt-5 text-sm leading-relaxed text-muted-foreground">
+        Your display name starts as the name from your provider; you can change it or
+        pick a pseudonym in your profile. Your email is used only for the notifications
+        you choose.
+      </p>
       </div>
     </div>
   )
@@ -107,16 +119,24 @@ export function SignInPage() {
 
 function ProviderButton({
   onClick,
+  icon,
+  brand = false,
   children,
 }: {
   onClick: () => void
+  icon: SimpleIcon
+  /** Keep the brand colour (ORCID's green is meaningful to researchers). */
+  brand?: boolean
   children: React.ReactNode
 }) {
   return (
     <button
       onClick={onClick}
-      className="w-full rounded-md border border-border bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+      className="flex w-full items-center justify-center gap-2.5 rounded-md border border-input bg-card px-4 py-2.5 text-sm font-medium transition-colors hover:border-brand"
     >
+      <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden>
+        <path d={icon.path} fill={brand ? `#${icon.hex}` : 'currentColor'} />
+      </svg>
       {children}
     </button>
   )

@@ -16,22 +16,24 @@ export function AvailabilityList({
     return <p className="text-sm text-muted-foreground">Not specified by the nominator.</p>
   }
   return (
-    <ul className="flex flex-wrap gap-2">
+    <ul className="flex flex-wrap gap-x-5 gap-y-1">
       {present.map((o) => {
         const url = links[o.key]
-        const base =
-          'inline-flex items-center gap-1.5 rounded-full bg-green-tint px-2.5 py-1 text-xs font-medium text-forest'
         return (
-          <li key={o.key}>
+          <li key={o.key} className="inline-flex items-center gap-1.5">
+            <Check className="h-3.5 w-3.5 text-status-done" strokeWidth={2.5} aria-hidden />
             {url ? (
-              <a href={url} target="_blank" rel="noreferrer noopener" className={`${base} hover:underline`}>
-                <Check className="h-3.5 w-3.5" /> {o.label}
-                <ExternalLink className="h-3 w-3 opacity-70" />
+              <a
+                href={url}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="inline-flex items-center gap-1 text-brand-deep underline-offset-2 hover:underline"
+              >
+                {o.label}
+                <ExternalLink className="h-3 w-3" aria-hidden />
               </a>
             ) : (
-              <span className={base} title={o.hint}>
-                <Check className="h-3.5 w-3.5" /> {o.label}
-              </span>
+              <span title={o.hint}>{o.label}</span>
             )}
           </li>
         )
@@ -45,8 +47,8 @@ export function AvailabilityTags({ items, links = {} }: { items: AvailabilityKey
   const present = AVAILABILITY_OPTIONS.filter((o) => items.includes(o.key))
   if (present.length === 0) return null
   return (
-    <span className="inline-flex flex-wrap items-center gap-1 text-green">
-      <Check className="h-3 w-3" />
+    <span className="inline-flex flex-wrap items-center gap-1">
+      <Check className="h-3 w-3 text-status-done" strokeWidth={2.5} aria-hidden />
       {present.map((o, i) => {
         const url = links[o.key]
         return (
@@ -59,10 +61,12 @@ export function AvailabilityTags({ items, links = {} }: { items: AvailabilityKey
                 onClick={(e) => e.stopPropagation()}
                 className="hover:underline"
               >
-                {o.label}
+                {i === 0 ? o.label : o.label.toLowerCase()}
               </a>
-            ) : (
+            ) : i === 0 ? (
               o.label
+            ) : (
+              o.label.toLowerCase()
             )}
             {i < present.length - 1 ? ', ' : ''}
           </span>

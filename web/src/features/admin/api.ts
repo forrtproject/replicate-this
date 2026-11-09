@@ -105,6 +105,8 @@ export interface AdminComment {
   // Open (unresolved) user flags, and any reasons given with them.
   openFlags: number
   flagReasons: string[]
+  /** For replies: who wrote the comment being answered, and a short excerpt. */
+  replyTo: { authorName: string | null; excerpt: string } | null
 }
 
 export function useAdminComments() {

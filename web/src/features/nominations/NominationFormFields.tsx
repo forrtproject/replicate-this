@@ -5,8 +5,7 @@ import {
   type AvailabilityKey,
   type VerificationType,
 } from '@/types'
-import { DefinedTerm } from './VerificationBadge'
-import { JournalTags } from './JournalTags'
+import { matchJournalTags } from './journal-tags'
 
 /** The nomination fields shared by the submit and edit forms. */
 export interface NominationFormValues {
@@ -77,40 +76,46 @@ export function NominationFormFields({
         </Field>
       )}
 
+      <h2 className="section-title border-t border-line pt-6 text-lg">Kind of check</h2>
       <fieldset>
-        <legend className="mb-1 text-sm font-medium">Replication or reproduction?</legend>
-        <p className="mb-2 text-xs text-muted-foreground">
-          <DefinedTerm term="Reproduction" /> re-runs the original data or code (including
-          simulation and other computational studies) and/or checks the results hold up under
-          other reasonable analyses. <DefinedTerm term="Replication" /> collects new data.
-        </p>
-        <div className="space-y-1.5">
+        <legend className="mb-2 text-sm font-medium">
+          What kind of second look? <span className="font-normal text-muted-foreground">(required)</span>
+        </legend>
+        <div className="space-y-2.5">
           {(
             [
-              ['replication', 'Replication (collect new data)'],
-              ['reproduction', 'Reproduction (re-run the original data or code, and/or check robustness)'],
-              ['both', 'Either / not sure'],
+              ['replication', 'Replication', 'Run the study again with new data and the same methods.'],
+              [
+                'reproduction',
+                'Reproduction',
+                'Re-run the original analysis on the original data or code, and test whether the results are robust.',
+              ],
+              ['both', 'Either, or not sure', 'Leave it to the team that takes it on.'],
             ] as const
-          ).map(([value, label]) => (
-            <label key={value} className="flex items-center gap-2 text-sm">
+          ).map(([value, label, hint]) => (
+            <label key={value} className="flex items-start gap-2 text-sm">
               <input
                 type="radio"
                 name="verificationType"
                 value={value}
                 checked={values.verificationType === value}
                 onChange={() => set({ verificationType: value })}
-                className="accent-primary"
+                className="mt-1 accent-[var(--color-brand)]"
               />
-              {label}
+              <span>
+                {label}
+                <span className="block text-[0.8125rem] text-muted-foreground">{hint}</span>
+              </span>
             </label>
           ))}
         </div>
       </fieldset>
 
+      <h2 className="section-title border-t border-line pt-6 text-lg">The case for a second look</h2>
       <Field
-        label="Scientific justification"
+        label="Why revisit this?"
         required
-        hint="Why is this paper valuable to replicate or reproduce? e.g. highly influential, surprising results, methodologically innovative. At least 20 characters."
+        hint="Shown first on the study’s page. For example: it is highly cited, informs policy, the result was surprising, or the evidence is thin. At least 20 characters."
       >
         <textarea
           value={values.justification}
@@ -122,23 +127,12 @@ export function NominationFormFields({
         />
       </Field>
 
-      {isReproduction && (
-        <Field
-          label="Data location"
-          hint="Where do the original data or code live? e.g. a Zenodo or OSF link. For simulation studies, link the code."
-        >
-          <input
-            value={values.dataLocation}
-            onChange={(e) => set({ dataLocation: e.target.value })}
-            placeholder="https://osf.io/…"
-            className="input"
-          />
-        </Field>
-      )}
 
+      {(isReproduction || values.robustnessChecks.trim() !== '') && (
       <Field
         label="Suggested robustness checks"
-        hint="Any specific alternative specifications worth trying? (optional)"
+        optional
+        hint="For the reproduction: alternative analyses worth trying."
       >
         <textarea
           value={values.robustnessChecks}
@@ -147,11 +141,13 @@ export function NominationFormFields({
           className="input"
         />
       </Field>
+      )}
 
-      {isReplication && (
+      {(isReplication || values.designDeviations.trim() !== '') && (
         <Field
-          label="Suggested deviations from the original design"
-          hint="If replicating, how should the new design differ from the original? (optional)"
+          label="Suggested changes to the design"
+          optional
+          hint="For the replication: how the new study should differ from the original, if at all."
         >
           <textarea
             value={values.designDeviations}
@@ -162,12 +158,13 @@ export function NominationFormFields({
         </Field>
       )}
 
+      <h2 className="section-title border-t border-line pt-6 text-lg">Materials and tags</h2>
       <fieldset>
-        <legend className="mb-1 text-sm font-medium">
+        <legend className="mb-2 text-sm font-medium">
           What’s openly available?{' '}
           <span className="font-normal text-muted-foreground">(check all that apply)</span>
         </legend>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="space-y-3">
           {AVAILABILITY_OPTIONS.map((o) => {
             const checked = values.availability.includes(o.key)
             return (
@@ -177,11 +174,11 @@ export function NominationFormFields({
                     type="checkbox"
                     checked={checked}
                     onChange={() => toggleAvailability(o.key)}
-                    className="mt-0.5 accent-primary"
+                    className="mt-0.5 accent-[var(--color-brand)]"
                   />
                   <span>
                     {o.label}
-                    <span className="block text-xs text-muted-foreground">{o.hint}</span>
+                    <span className="block text-[0.8125rem] text-muted-foreground">{o.hint}</span>
                   </span>
                 </label>
                 {checked && (
@@ -212,8 +209,21 @@ export function NominationFormFields({
         </div>
       </fieldset>
 
+      <Field
+        label="Other data or code location"
+        optional
+        hint="For example an OSF or Zenodo page, if it isn’t linked above."
+      >
+        <input
+          value={values.dataLocation}
+          onChange={(e) => set({ dataLocation: e.target.value })}
+          placeholder="https://osf.io/…"
+          className="input"
+        />
+      </Field>
+
       <fieldset>
-        <legend className="mb-1 text-sm font-medium">
+        <legend className="mb-2 text-sm font-medium">
           Tags <span className="font-normal text-muted-foreground">(check all that apply)</span>
         </legend>
         <div className="space-y-2">
@@ -223,14 +233,14 @@ export function NominationFormFields({
               type="checkbox"
               checked={values.replicationWorkshop}
               onChange={(e) => set({ replicationWorkshop: e.target.checked })}
-              className="mt-0.5 accent-primary"
+              className="mt-0.5 accent-[var(--color-brand)]"
             />
             <span>
               <label htmlFor="replication-workshop" className="cursor-pointer">
-                Workshop Suitability
+                Suits a one-day workshop
               </label>
-              <span className="block text-xs text-muted-foreground">
-                This paper could be reproduced by a team in a one-day workshop.
+              <span className="block text-[0.8125rem] text-muted-foreground">
+                A team could replicate or reproduce it in a day.
               </span>
             </span>
           </div>
@@ -240,26 +250,47 @@ export function NominationFormFields({
               type="checkbox"
               checked={values.experimentalResearch}
               onChange={(e) => set({ experimentalResearch: e.target.checked })}
-              className="mt-0.5 accent-primary"
+              className="mt-0.5 accent-[var(--color-brand)]"
             />
-            <label htmlFor="experimental-research" className="cursor-pointer">
-              Experimental research
-            </label>
+            <span>
+              <label htmlFor="experimental-research" className="cursor-pointer">
+                Experimental research
+              </label>
+              <span className="block text-[0.8125rem] text-muted-foreground">
+                The study manipulates conditions rather than observing them.
+              </span>
+            </span>
           </div>
         </div>
       </fieldset>
 
-      {values.discipline && (
-        <div className="rounded-lg border border-line bg-muted/40 px-4 py-3">
-          <p className="text-sm font-medium">Target journals</p>
-          <p className="mb-2 mt-0.5 text-xs text-muted-foreground">
-            Based on your answers, the resulting study could be submitted to these outlets.
-            Tags update as you edit the form.
-          </p>
-          <JournalTags nomination={values} />
-        </div>
-      )}
+
     </>
+  )
+}
+
+/** Live list of journals the resulting study could go to, for the form's sidebar. */
+export function JournalPreview({ values }: { values: NominationFormValues }) {
+  return (
+    <section className="mt-4 rounded-lg border border-band-line bg-band p-5 text-sm" aria-labelledby="journals">
+      <h2 id="journals" className="label">
+        Where the result could be published
+      </h2>
+      {!values.discipline ? (
+        <p className="mt-2 text-muted-foreground">Choose a discipline to see the list.</p>
+      ) : (
+        <>
+          <ul className="mt-2 space-y-1 text-ink/85">
+            {matchJournalTags(values).map((j) => (
+              <li key={j.key} title={j.hint}>
+                {j.name}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs text-muted-foreground">Updates as you fill in the form.</p>
+        </>
+      )}
+    </section>
   )
 }
 
@@ -272,12 +303,15 @@ export function Field({
   label,
   hint,
   required = false,
+  optional = false,
   children,
 }: {
   label: string
   hint?: string
   /** Shows "(required)" after the label; the control itself carries `required`. */
   required?: boolean
+  /** Shows "(optional)" after the label. */
+  optional?: boolean
   children: React.ReactElement<{ id?: string; 'aria-describedby'?: string }>
 }) {
   const id = useId()
@@ -289,10 +323,11 @@ export function Field({
       <label htmlFor={id} className="mb-1 block text-sm font-medium">
         {label}
         {required && <span className="font-normal text-muted-foreground"> (required)</span>}
+        {optional && <span className="font-normal text-muted-foreground"> (optional)</span>}
       </label>
       {cloneElement(children, { id, 'aria-describedby': describedBy })}
       {hint && (
-        <p id={hintId} className="mt-1 text-xs text-muted-foreground">
+        <p id={hintId} className="mt-1 text-[0.8125rem] leading-snug text-muted-foreground">
           {hint}
         </p>
       )}

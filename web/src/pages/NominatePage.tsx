@@ -15,14 +15,16 @@ import { formatReference } from '@/features/nominations/format'
 import { yearError } from '@/features/nominations/reference'
 import { useDebounced } from '@/lib/hooks'
 import { ApiError } from '@/lib/api'
-import { MarkdownDoc } from '@/components/ui/MarkdownDoc'
 import type { NominationMetadata } from '@/types'
+import { NominationGuidance } from '@/features/nominations/NominationGuidance'
+import { JournalPreview } from '@/features/nominations/NominationFormFields'
 import { usePageTitle } from '@/lib/page-title'
+import { PageBand } from '@/components/layout/PageBand'
 
 const EMPTY_FORM: NominationFormValues = {
   discipline: '',
   disciplineOther: '',
-  verificationType: 'replication',
+  verificationType: 'both',
   justification: '',
   dataLocation: '',
   robustnessChecks: '',
@@ -92,7 +94,6 @@ export function NominatePage() {
   const [agreed, setAgreed] = useState(false)
   const [agreeError, setAgreeError] = useState(false)
   const [restored, setRestored] = useState(!!draft)
-  const [showGuidelines, setShowGuidelines] = useState(true)
 
   const [error, setError] = useState<string | null>(null)
   const [existingId, setExistingId] = useState<string | null>(null)
@@ -183,54 +184,36 @@ export function NominatePage() {
   }
 
   return (
-    <div className="mx-auto max-w-xl px-4 py-10">
-      <p className="eyebrow">Add to the registry</p>
-      <h1 className="mb-4 mt-1 font-display text-3xl font-semibold">Nominate a study</h1>
+    <div className="mx-auto max-w-5xl px-4 pb-16">
+      <PageBand bleed>
+      <h1 className="font-display text-[2rem] font-semibold leading-tight">Nominate a study</h1>
+      <p className="mt-1 max-w-2xl text-sm text-band-ink/80">
+        Suggest a published finding that deserves a second look. It appears in the registry
+        straight away, marked “Pending review” until a maintainer has checked it.
+      </p>
+      </PageBand>
 
-      {/* Read before writing: the guidelines and Code of Conduct come first. */}
-      <div className="mb-6 rounded-lg border border-line bg-muted/40">
-        <button
-          type="button"
-          onClick={() => setShowGuidelines((v) => !v)}
-          aria-expanded={showGuidelines}
-          className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium"
-        >
-          <span>Before you start: nomination guidelines</span>
-          <span className="text-xs text-green">{showGuidelines ? 'Hide' : 'Read'}</span>
-        </button>
-        {showGuidelines && (
-          <div className="max-h-72 overflow-y-auto border-t border-line px-4 py-3">
-            <MarkdownDoc src="/nomination-guidelines.md" nested />
-          </div>
-        )}
-        <p className="flex items-start gap-2 border-t border-line px-4 py-3 text-sm">
-          <span aria-hidden>🚨</span>
-          <span className="text-ink">
-            All nominations must respect the{' '}
-            <Link to="/code-of-conduct" target="_blank" className="font-medium text-green underline">
-              Code of Conduct
-            </Link>{' '}
-            or they won’t be approved. Nominations appear right away marked “Pending review”
-            until a maintainer reviews them.
-          </span>
-        </p>
-      </div>
+      <div className="grid gap-x-12 gap-y-8 lg:grid-cols-[minmax(0,36rem)_minmax(0,1fr)]">
+      {/* Read before writing: on wide screens the guidance sits beside the form. */}
+      <NominationGuidance>
+        <JournalPreview values={values} />
+      </NominationGuidance>
 
-      <form onSubmit={onSubmit} className="space-y-5">
+      <form onSubmit={onSubmit} className="space-y-6 lg:order-1">
         {restored && (
           <p className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-line bg-muted/40 px-3 py-2 text-sm">
             <span>We restored the nomination you were writing in this tab.</span>
             <button
               type="button"
               onClick={startOver}
-              className="font-medium text-green underline hover:text-forest"
+              className="font-medium text-brand underline hover:text-brand-deep"
             >
               Start over
             </button>
           </p>
         )}
         <fieldset className="space-y-3">
-          <legend className="mb-1 text-sm font-medium">The paper</legend>
+          <legend className="section-title mb-2 text-lg">The paper</legend>
           {!noDoi && (
             <Field
               label="DOI"
@@ -320,7 +303,7 @@ export function NominatePage() {
           />
           <span>
             I have read and agree to the{' '}
-            <Link to="/code-of-conduct" target="_blank" className="text-green underline">
+            <Link to="/code-of-conduct" target="_blank" className="text-brand underline">
               Code of Conduct
             </Link>
             , and this nomination is constructive and about the work, not the authors.
@@ -346,11 +329,12 @@ export function NominatePage() {
         <button
           type="submit"
           disabled={submit.isPending}
-          className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+          className="rounded-md bg-brand px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-deep"
         >
           {submit.isPending ? 'Submitting…' : 'Submit nomination'}
         </button>
       </form>
+      </div>
     </div>
   )
 }
@@ -384,7 +368,7 @@ function DoiPreview({
         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber" />
         <span>
           This study has already been nominated.{' '}
-          <Link to={`/nominations/${duplicateId}`} className="font-medium text-green underline">
+          <Link to={`/nominations/${duplicateId}`} className="font-medium text-brand underline">
             Upvote it there instead
           </Link>
           .
@@ -394,11 +378,12 @@ function DoiPreview({
   }
   if (metadata) {
     return (
-      <div className="flex items-start gap-2 rounded-md border border-green/30 bg-green-tint px-3 py-2">
-        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green" />
+      <div className="flex items-start gap-2 rounded-md border border-brand/30 bg-brand-tint px-3 py-2">
+        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
         <div className="min-w-0 text-sm">
           <p className="font-medium text-ink">{metadata.title || 'Untitled'}</p>
           <p className="text-xs text-muted-foreground">{formatReference(metadata)}</p>
+          <p className="mt-1 text-xs text-brand-deep">Not yet in the registry.</p>
         </div>
       </div>
     )
@@ -410,7 +395,7 @@ function DoiPreview({
         <span>
           {error}{' '}
           {canEnterManually && (
-            <button type="button" onClick={onEnterManually} className="font-medium text-green underline">
+            <button type="button" onClick={onEnterManually} className="font-medium text-brand underline">
               Enter the reference manually
             </button>
           )}

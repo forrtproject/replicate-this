@@ -85,8 +85,8 @@ export function VoteButton({
           // py-1.5 matches the forecast panel's Yes/No buttons.
           'flex w-full items-center justify-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors',
           on
-            ? 'border-green bg-green-tint text-forest hover:bg-muted'
-            : 'border-line text-ink hover:border-green hover:text-green',
+            ? 'border-brand bg-brand-tint text-brand-deep hover:bg-muted'
+            : 'border-line bg-card text-ink hover:border-brand hover:text-brand',
         )}
       >
         {on ? (
@@ -107,11 +107,12 @@ export function VoteButton({
       onClick={handleClick}
       aria-pressed={on}
       aria-label={tileLabel}
+      title={on ? 'You upvoted this. Click to undo.' : 'Upvote: I want this checked'}
       className={cn(
         'flex h-14 w-14 flex-col items-center justify-center gap-0.5 rounded-md border transition-colors',
         on
-          ? 'border-green bg-green text-white'
-          : 'border-line text-muted-foreground hover:border-green hover:text-green',
+          ? 'border-brand bg-brand-tint text-brand-deep'
+          : 'border-line text-muted-foreground hover:border-brand hover:text-brand',
       )}
     >
       <ChevronUp className="h-4 w-4" strokeWidth={2.5} aria-hidden />

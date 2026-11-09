@@ -24,9 +24,9 @@ export function disciplineLabel(n: { discipline: string; disciplineOther?: strin
   return n.discipline === 'Other' && n.disciplineOther ? n.disciplineOther : n.discipline
 }
 
+/** Citation-style reference: "Carney, D. et al. (2010). Psychological Science". */
 export function formatReference(m: NominationMetadata): string {
   const year = formatYear(m.publication_date)
-  return [formatAuthors(m.authors), m.journal, year && `(${year})`]
-    .filter(Boolean)
-    .join(' · ')
+  const lead = year ? `${formatAuthors(m.authors)} (${year})` : formatAuthors(m.authors)
+  return m.journal ? `${lead}. ${m.journal}` : lead
 }

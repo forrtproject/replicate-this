@@ -17,6 +17,7 @@ import { AvatarBubble } from '@/features/profile/AvatarEditor'
 // intact but not rendered. Re-import and restore the block below to re-enable.
 import { APPROACH_COPY } from '@/features/nominations/verification'
 import type { NominationDetail } from '@/types'
+import { formatDate } from '@/lib/dates'
 
 export function ContributionPanel({ nomination: n }: { nomination: NominationDetail }) {
   const { data: session } = useSession()
@@ -50,180 +51,197 @@ export function ContributionPanel({ nomination: n }: { nomination: NominationDet
   const showShareRow =
     viewerOnTeam && (!team?.viewerHasEmail || unsharedTeammates.length > 0)
 
-  return (
-    <div className="space-y-6 rounded-lg border border-border bg-card p-4">
-      {/* Study team roster */}
-      {showRoster && contributors && contributors.length > 0 && (
-        <section>
-          <h2 className="mb-2 text-sm font-semibold">
-            {copy.team} ({contributors.length})
-          </h2>
-          <ul className="space-y-2">
-            {contributors.map((ct) => {
-              // A member with no pitch and no email row is a single line — centre it
-              // against the avatar instead of leaving a gap beneath the name.
-              const hasDetail = Boolean(ct.message) || (viewerOnTeam && !ct.isSelf)
-              return (
-                <li
-                  key={ct.token}
-                  className={`flex gap-2.5 text-sm ${hasDetail ? '' : 'items-center'}`}
-                >
-                  <AvatarBubble
-                    image={ct.image}
-                    name={ct.name}
-                    className={`${hasDetail ? 'mt-0.5 ' : ''}h-8 w-8 shrink-0 text-base`}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <span className="flex flex-wrap items-center gap-x-2">
-                      <ResearcherLink name={ct.name} token={ct.token} className="font-medium" />
-                      <ContactLinks links={ct.links} />
-                      <span className="text-xs text-muted-foreground">
-                        · joined{' '}
-                        {new Date(ct.createdAt).toLocaleDateString(undefined, {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                        })}
-                      </span>
-                    </span>
-                    {ct.message && (
-                      <p className="mt-0.5 text-xs text-muted-foreground">“{ct.message}”</p>
-                    )}
-                    {viewerOnTeam && !ct.isSelf && (
-                      <TeammateEmail
-                        ct={ct}
-                        onShare={() => shareEmail.mutate({ recipientUid: ct.uid })}
-                        busy={shareEmail.isPending}
-                      />
-                    )}
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
+  const done = n.status === 'completed' || n.status === 'published'
+  const [showInquiry, setShowInquiry] = useState(false)
 
-          {showShareRow && (
-            <div className="mt-3 border-t border-border pt-3">
-              {team?.viewerHasEmail ? (
-                <button
-                  onClick={() => shareEmail.mutate({ all: true })}
-                  disabled={shareEmail.isPending}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted disabled:opacity-60"
-                >
-                  <Mail className="h-3.5 w-3.5" />
-                  Share my email with the whole team
-                </button>
-              ) : (
-                <p className="text-xs text-muted-foreground">
-                  Add a notification email in your{' '}
-                  <Link to="/profile" className="text-green underline">
-                    profile
-                  </Link>{' '}
-                  to share it with teammates.
-                </p>
-              )}
-            </div>
-          )}
-        </section>
+  return (
+    <section className="p-4" aria-labelledby="team">
+      <h2 id="team" className="label">
+        {copy.team}
+        {contributors && contributors.length > 0 && (
+          <span className="data ml-1.5 font-normal text-muted-foreground">{contributors.length}</span>
+        )}
+      </h2>
+
+      {/* Study team roster */}
+      {showRoster && contributors && contributors.length > 0 ? (
+        <ul className="mt-3 space-y-3">
+          {contributors.map((ct) => (
+            <li key={ct.token} className="flex gap-2.5 text-sm">
+              <AvatarBubble image={ct.image} name={ct.name} className="h-8 w-8 shrink-0 text-base" />
+              <div className="min-w-0 flex-1">
+                <span className="flex flex-wrap items-center gap-x-2">
+                  <ResearcherLink name={ct.name} token={ct.token} className="font-medium text-ink" />
+                  <ContactLinks links={ct.links} />
+                </span>
+                <span className="block text-xs text-muted-foreground">Joined {formatDate(ct.createdAt)}</span>
+                {ct.message && (
+                  <p className="mt-1 text-xs leading-relaxed text-ink/80">{ct.message}</p>
+                )}
+                {viewerOnTeam && !ct.isSelf && (
+                  <TeammateEmail
+                    ct={ct}
+                    onShare={() => shareEmail.mutate({ recipientUid: ct.uid })}
+                    busy={shareEmail.isPending}
+                  />
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-2 text-sm text-muted-foreground">
+          {done ? 'No team members listed.' : 'No one has joined yet.'}
+        </p>
       )}
 
-      {/* Contribute */}
-      <section className={showRoster && contributors?.length ? 'border-t border-border pt-4' : ''}>
-        <h2 className="mb-1 text-sm font-semibold">{copy.join}</h2>
-        <p className="mb-3 text-xs text-muted-foreground">{copy.joinHint}</p>
-
-        {isOwner ? (
-          <p className="text-sm text-muted-foreground">You nominated this study.</p>
-        ) : n.userContributed ? (
-          <div className="flex items-center justify-between gap-2">
-            <span className="inline-flex items-center gap-1 text-sm text-primary">
-              <Check className="h-4 w-4" /> You’re contributing
-            </span>
+      {showShareRow && (
+        <div className="mt-3 border-t border-line pt-3">
+          {team?.viewerHasEmail ? (
             <button
-              onClick={() => withdraw.mutate()}
-              className="text-xs text-muted-foreground underline hover:text-destructive"
+              onClick={() => shareEmail.mutate({ all: true })}
+              disabled={shareEmail.isPending}
+              className="btn-secondary btn-sm"
             >
-              Withdraw
+              <Mail className="h-3.5 w-3.5" aria-hidden />
+              Share my email with the whole team
             </button>
-          </div>
-        ) : showForm ? (
-          <div className="space-y-2">
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={3}
-              placeholder="Optional: your expertise, lab readiness, timeline…"
-              className="input"
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={() =>
-                  contribute.mutate(message, { onSuccess: () => setShowForm(false) })
-                }
-                disabled={contribute.isPending}
-                className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
-              >
-                {contribute.isPending ? 'Joining…' : 'Confirm'}
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Add a notification email in your{' '}
+              <Link to="/profile" className="text-brand-deep underline">
+                profile
+              </Link>{' '}
+              to share it with teammates.
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Joining */}
+      {!done && (
+        <div className="mt-4 border-t border-line pt-4">
+          {!session ? (
+            <>
+              <button onClick={requireLogin} className="btn-secondary w-full">
+                Sign in to join the team
               </button>
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{copy.joinHint}</p>
+            </>
+          ) : isOwner ? (
+            <p className="text-sm text-muted-foreground">
+              You nominated this study. You’ll be notified when someone joins its team.
+            </p>
+          ) : n.userContributed ? (
+            <div className="flex items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-deep">
+                <Check className="h-4 w-4" aria-hidden /> You’re on the team
+              </span>
               <button
-                onClick={() => setShowForm(false)}
-                className="rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground"
+                onClick={() => withdraw.mutate()}
+                className="text-xs text-muted-foreground underline hover:text-destructive"
               >
-                Cancel
+                Leave
               </button>
             </div>
-          </div>
-        ) : (
-          <button
-            onClick={() => (session ? setShowForm(true) : requireLogin())}
-            className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
-          >
-            Contribute to this study
-          </button>
-        )}
-      </section>
-
-      {/* Team Slack channel — integration on hold, UI hidden (backend retained). */}
-
-      {/* Inquiry */}
-      {!isOwner && (
-        <section className="border-t border-border pt-4">
-          <h2 className="mb-1 text-sm font-semibold">Contact the team</h2>
-          <p className="mb-3 text-xs text-muted-foreground">
-            Send a message to the nominator and contributors. They’ll be notified in-app.
-          </p>
-          {inquirySent ? (
-            <p className="text-sm text-primary">Message sent.</p>
-          ) : (
+          ) : showForm ? (
             <div className="space-y-2">
+              <label htmlFor="join-message" className="block text-sm font-medium">
+                Introduce yourself <span className="font-normal text-muted-foreground">(optional)</span>
+              </label>
               <textarea
+                id="join-message"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={3}
+                placeholder="Expertise, lab capacity, timeline"
+                className="input"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() =>
+                    contribute.mutate(message, { onSuccess: () => setShowForm(false) })
+                  }
+                  disabled={contribute.isPending}
+                  className="btn-primary"
+                >
+                  {contribute.isPending ? 'Joining…' : 'Join the team'}
+                </button>
+                <button
+                  onClick={() => setShowForm(false)}
+                  className="rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:text-ink"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <button
+                onClick={() => (session ? setShowForm(true) : requireLogin())}
+                // Before review, approving is the page's main action, not joining.
+                className={`w-full ${n.status === 'pending' ? 'btn-secondary' : 'btn-primary'}`}
+              >
+                {copy.join}
+              </button>
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{copy.joinHint}</p>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Message the nominator and team (Slack integration on hold; backend retained). */}
+      {session && !isOwner && (
+        <div className="mt-4 border-t border-line pt-4">
+          {inquirySent ? (
+            <p className="text-sm text-brand-deep">Message sent. The team will see it in their notifications.</p>
+          ) : showInquiry ? (
+            <div className="space-y-2">
+              <label htmlFor="inquiry" className="block text-sm font-medium">
+                {n.contributions > 0 ? 'Message the nominator and team' : 'Message the nominator'}
+              </label>
+              <textarea
+                id="inquiry"
                 value={inquiryText}
                 onChange={(e) => setInquiryText(e.target.value)}
                 rows={3}
-                placeholder="Your question or offer…"
                 className="input"
               />
-              <button
-                onClick={() =>
-                  session
-                    ? inquiry.mutate(inquiryText, {
-                        onSuccess: () => {
-                          setInquirySent(true)
-                          setInquiryText('')
-                        },
-                      })
-                    : requireLogin()
-                }
-                disabled={inquiry.isPending || inquiryText.trim().length < 5}
-                className="rounded-md border border-border px-3 py-1.5 text-sm font-medium hover:bg-muted disabled:opacity-60"
-              >
-                {inquiry.isPending ? 'Sending…' : 'Send message'}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() =>
+                    inquiry.mutate(inquiryText, {
+                      onSuccess: () => {
+                        setInquirySent(true)
+                        setInquiryText('')
+                      },
+                    })
+                  }
+                  disabled={inquiry.isPending || inquiryText.trim().length < 5}
+                  className="btn-secondary"
+                >
+                  {inquiry.isPending ? 'Sending…' : 'Send message'}
+                </button>
+                <button
+                  onClick={() => setShowInquiry(false)}
+                  className="rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:text-ink"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
+          ) : (
+            <button
+              onClick={() => setShowInquiry(true)}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-deep hover:underline"
+            >
+              <Mail className="h-4 w-4" aria-hidden /> {n.contributions > 0 ? 'Message the team' : 'Message the nominator'}
+            </button>
           )}
-        </section>
+        </div>
       )}
-    </div>
+
+    </section>
   )
 }
 
@@ -245,22 +263,22 @@ function TeammateEmail({
       {ct.email ? (
         <span className="inline-flex items-center gap-1 text-muted-foreground">
           <Mail className="h-3 w-3" />
-          <a href={`mailto:${ct.email}`} className="text-green hover:underline">
+          <a href={`mailto:${ct.email}`} className="text-brand hover:underline">
             {ct.email}
           </a>
         </span>
       ) : (
-        <span className="text-muted-foreground/70">Email not shared with you</span>
+        <span className="text-muted-foreground">Email not shared with you</span>
       )}
       {ct.youSharedWithThem ? (
-        <span className="inline-flex items-center gap-1 text-green">
+        <span className="inline-flex items-center gap-1 text-brand">
           <Check className="h-3 w-3" /> You shared your email
         </span>
       ) : (
         <button
           onClick={onShare}
           disabled={busy}
-          className="text-muted-foreground underline hover:text-green disabled:opacity-60"
+          className="text-muted-foreground underline hover:text-brand disabled:opacity-60"
         >
           Share your email
         </button>

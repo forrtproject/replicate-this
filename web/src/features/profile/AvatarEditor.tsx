@@ -1,29 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
-import { Upload, X, ChevronDown, Smile } from 'lucide-react'
+import { Upload, ChevronDown, Smile } from 'lucide-react'
 import { ApiError } from '@/lib/api'
 import { EMOJI_GROUPS } from './emoji'
 import { useUpdateAvatar } from './api'
 
-// A handful of the catalogue shown inline, so the common picks are one click away.
-const QUICK_EMOJI = ['🔬', '🧪', '🧬', '🔭', '📊', '📈', '🧠', '⚗️', '🦠', '📚', '🤖', '🌌']
 
 /** True when the stored avatar value is an inline image rather than an emoji. */
 function isImageAvatar(image: string | undefined): boolean {
   return !!image && image.startsWith('data:image/')
 }
 
-// Apple-style: emojis sit centered on a soft colored gradient circle. Pick a
-// gradient deterministically from the emoji so each one gets a stable colour.
-const EMOJI_GRADIENTS = [
-  'linear-gradient(135deg, #60a5fa, #6366f1)',
-  'linear-gradient(135deg, #f472b6, #db2777)',
-  'linear-gradient(135deg, #34d399, #059669)',
-  'linear-gradient(135deg, #fbbf24, #f97316)',
-  'linear-gradient(135deg, #a78bfa, #7c3aed)',
-  'linear-gradient(135deg, #22d3ee, #0891b2)',
-  'linear-gradient(135deg, #f87171, #dc2626)',
-  'linear-gradient(135deg, #94a3b8, #475569)',
-]
+// Emojis and initials sit on a flat, muted tint drawn from the site palette.
+// The tint is picked deterministically from the emoji or name, so it is stable.
+const EMOJI_GRADIENTS = ['#dfe8f8', '#ebe5d6', '#dfe5ec', '#ecdfdc', '#e3e0ec', '#e2e8d8']
 function gradientFor(seed: string): string {
   let hash = 0
   for (const ch of seed) hash = (hash * 31 + ch.codePointAt(0)!) >>> 0
@@ -46,22 +35,26 @@ export function AvatarBubble({
   }
   if (image) {
     return (
-      <span
-        className={`${base} leading-none text-white shadow-inner`}
-        style={{ background: gradientFor(image) }}
-      >
+      <span className={`${base} leading-none`} style={{ background: gradientFor(image) }}>
         {image}
       </span>
     )
   }
   return (
     <span
-      className={`${base} font-medium text-white`}
+      className={`${base} font-display font-semibold text-ink/75`}
       style={{ background: gradientFor(name ?? '?') }}
     >
-      {(name ?? '?').slice(0, 1).toUpperCase()}
+      {initial(name)}
     </span>
   )
+}
+
+/** First letter of the name, skipping academic titles ("Dr. Jane Cortez" → "J"). */
+function initial(name: string | null | undefined): string {
+  const words = (name ?? '?').trim().split(/\s+/)
+  const first = words.find((w) => !/^(dr|prof|professor|mr|mrs|ms|mx)\.?$/i.test(w)) ?? words[0]
+  return (first || '?').slice(0, 1).toUpperCase()
 }
 
 /** Downscale an uploaded image to a small inline data URL (keeps it under the cap). */
@@ -130,10 +123,11 @@ export function AvatarEditor({ current, name }: { current: string; name?: string
             type="button"
             onClick={() => fileRef.current?.click()}
             disabled={update.isPending}
-            className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-2 text-sm font-medium hover:border-green disabled:opacity-60"
+            className="btn-secondary"
           >
-            <Upload className="h-4 w-4" /> Upload image
+            <Upload className="h-4 w-4" aria-hidden /> Upload a photo
           </button>
+          <EmojiPicker selected={emoji} onSelect={pick} />
           {current && (
             <button
               type="button"
@@ -142,9 +136,9 @@ export function AvatarEditor({ current, name }: { current: string; name?: string
                 save('')
               }}
               disabled={update.isPending}
-              className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-2 text-sm font-medium hover:border-destructive disabled:opacity-60"
+              className="px-2 text-sm text-muted-foreground hover:text-destructive"
             >
-              <X className="h-4 w-4" /> Remove
+              Use initial
             </button>
           )}
         </div>
@@ -157,27 +151,7 @@ export function AvatarEditor({ current, name }: { current: string; name?: string
         />
       </div>
 
-      <div>
-        <p className="mb-1.5 text-xs text-muted-foreground">Or pick an emoji</p>
-        <div className="flex flex-wrap items-center gap-1.5">
-          {QUICK_EMOJI.map((e) => (
-            <button
-              key={e}
-              type="button"
-              onClick={() => pick(e)}
-              className={`rounded-full ring-offset-2 ring-offset-card transition-shadow hover:ring-2 hover:ring-green ${
-                emoji === e ? 'ring-2 ring-green' : ''
-              }`}
-              aria-label={`Use ${e}`}
-              aria-pressed={emoji === e}
-            >
-              <AvatarBubble image={e} className="h-9 w-9 text-lg" />
-            </button>
-          ))}
-          <EmojiPicker selected={emoji} onSelect={pick} />
-        </div>
-      </div>
-
+      <p className="text-xs text-muted-foreground">A new picture is saved as soon as you choose it.</p>
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   )
@@ -218,10 +192,10 @@ function EmojiPicker({
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-haspopup="dialog"
-        className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-2 text-sm font-medium hover:border-green"
+        className="btn-secondary"
       >
-        <Smile className="h-4 w-4" />
-        More emojis
+        <Smile className="h-4 w-4" aria-hidden />
+        Choose an emoji
         <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
@@ -246,7 +220,7 @@ function EmojiPicker({
                     aria-label={`Use ${e}`}
                     aria-pressed={selected === e}
                     className={`flex h-8 w-8 items-center justify-center rounded-md text-xl leading-none hover:bg-muted ${
-                      selected === e ? 'bg-green-tint ring-1 ring-green' : ''
+                      selected === e ? 'bg-brand-tint ring-1 ring-brand' : ''
                     }`}
                   >
                     {e}

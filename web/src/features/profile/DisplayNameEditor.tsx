@@ -4,10 +4,20 @@ import { ApiError } from '@/lib/api'
 import { useNameSuggestion, useUpdateName } from './api'
 
 export const DISPLAY_NAME_HINT =
-  'How you appear on your nominations, comments and contributions. We encourage your real name, since it makes collaborating and crediting work easier, and started you off with the one from your sign-in where we had it. Prefer a pseudonym? Hit Randomize for a suggestion, then Save. Names are unique across the site.'
+  'Shown on your nominations, comments and study teams. A real name makes it easier to collaborate and credit work; a pseudonym is fine too. Names are unique on the site.'
 
 /** Edit the display name, with a Randomize button that suggests a pseudonym. */
-export function DisplayNameEditor({ current }: { current: string }) {
+export function DisplayNameEditor({
+  current,
+  onDraftChange,
+}: {
+  current: string
+  /**
+   * Hands the edited name to a parent that saves it itself (the welcome flow
+   * saves on Continue); the editor then shows no Save button of its own.
+   */
+  onDraftChange?: (name: string) => void
+}) {
   const update = useUpdateName()
   const suggest = useNameSuggestion()
   const [name, setName] = useState(current)
@@ -29,50 +39,62 @@ export function DisplayNameEditor({ current }: { current: string }) {
   function roll() {
     setError('')
     suggest.mutate(undefined, {
-      onSuccess: (res) => setName(res.name),
+      onSuccess: (res) => {
+        setName(res.name)
+        onDraftChange?.(res.name)
+      },
       onError: () => setError('Could not generate a suggestion. Try again.'),
     })
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         <input
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => {
+            setName(e.target.value)
+            onDraftChange?.(e.target.value)
+          }}
           maxLength={50}
           aria-label="Display name"
           className="input max-w-72"
         />
         <button
           type="button"
-          onClick={save}
-          disabled={update.isPending || name.trim().length < 3 || name === current}
-          className="rounded-md bg-green px-3 py-2 text-sm font-medium text-white hover:bg-forest disabled:opacity-60"
-        >
-          {update.isPending ? 'Saving…' : 'Save'}
-        </button>
-        <button
-          type="button"
           onClick={roll}
           disabled={suggest.isPending}
-          title="Suggest a random pseudonym"
-          className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-2 text-sm font-medium hover:border-green disabled:opacity-60"
+          className="btn-secondary"
         >
-          <Dices className="h-4 w-4" />
-          {suggest.isPending ? 'Rolling…' : 'Randomize'}
+          <Dices className="h-4 w-4" aria-hidden />
+          {suggest.isPending ? 'Suggesting…' : 'Suggest a pseudonym'}
         </button>
-        {name !== current && !suggest.isPending && (
+      </div>
+      {!onDraftChange && (
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={save}
+          disabled={update.isPending || name.trim().length < 3 || name === current}
+          className="btn-primary"
+        >
+          {update.isPending ? 'Saving…' : 'Save name'}
+        </button>
+        {saved ? (
+          <span role="status" className="text-sm text-brand-deep">
+            Saved
+          </span>
+        ) : name === current ? null : (
           <button
             type="button"
             onClick={() => setName(current)}
-            className="text-xs text-muted-foreground underline hover:text-ink"
+            className="text-sm text-muted-foreground underline hover:text-ink"
           >
-            Reset
+            Undo
           </button>
         )}
-        {saved && <span className="text-xs text-green">Saved</span>}
       </div>
+      )}
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   )

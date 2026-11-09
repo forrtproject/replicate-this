@@ -12,8 +12,12 @@ function NavItem({ to, children }: { to: string; children: React.ReactNode }) {
       to={to}
       className={({ isActive }) =>
         cn(
-          'text-sm transition-colors hover:text-green',
-          isActive ? 'font-medium text-ink' : 'text-muted-foreground',
+          // The current page is marked on the word itself: ink, medium weight and
+          // an underline in the same colour, close under the text.
+          'text-sm transition-colors hover:text-ink',
+          isActive
+            ? 'font-medium text-ink underline decoration-current decoration-[1.5px] underline-offset-[6px]'
+            : 'text-muted-foreground',
         )
       }
     >
@@ -30,11 +34,12 @@ function NotificationBell() {
     <button
       onClick={() => navigate('/dashboard')}
       aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`}
-      className="relative -m-2.5 rounded-md p-2.5 text-muted-foreground transition-colors hover:text-green"
+      title="Notifications"
+      className="relative -m-2.5 rounded-md p-2.5 text-muted-foreground transition-colors hover:text-brand"
     >
       <Bell className="h-5 w-5" />
       {unread > 0 && (
-        <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-green px-1 text-[10px] font-bold text-white">
+        <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-bold text-white ring-2 ring-paper">
           {unread > 9 ? '9+' : unread}
         </span>
       )}
@@ -60,16 +65,16 @@ export function RootLayout() {
           <NavItem to="/nominate">Nominate</NavItem>
           <NavItem to="/dashboard">Dashboard</NavItem>
           <NavItem to="/profile">Profile</NavItem>
-          {isMaintainer && <NavItem to="/admin">Admin</NavItem>}
+          {isMaintainer && <NavItem to="/admin">Maintainer tools</NavItem>}
           <button
             onClick={() => signOut()}
-            className="text-left text-sm text-muted-foreground transition-colors hover:text-amber"
+            className="text-left text-sm text-muted-foreground transition-colors hover:text-ink sm:ml-2 sm:border-l sm:border-line sm:pl-5"
           >
             Sign out
           </button>
         </>
       ) : (
-        <NavItem to="/sign-in">Sign in / Register</NavItem>
+        <NavItem to="/sign-in">Sign in</NavItem>
       )}
     </>
   )
@@ -106,7 +111,7 @@ export function RootLayout() {
               aria-expanded={menuOpen}
               aria-controls="mobile-menu"
               aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-              className="-m-2.5 rounded-md p-2.5 text-muted-foreground hover:text-green sm:hidden"
+              className="-m-2.5 rounded-md p-2.5 text-muted-foreground hover:text-brand sm:hidden"
             >
               {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
@@ -134,14 +139,19 @@ export function RootLayout() {
         <Outlet />
       </main>
 
-      <footer className="border-t border-line bg-paper">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-4 text-xs text-muted-foreground">
-          <span>FORRT · Replication Journal Federation</span>
+      <footer className="bg-brand-deep text-on-deep">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-xs">
+          <span>
+            Run by <a href="https://forrt.org" className="text-white hover:underline">FORRT</a> and the{' '}
+            <a href="https://forrt.org/rjf/" className="text-white hover:underline">
+              Replication Journal Federation
+            </a>
+          </span>
           <nav className="flex items-center gap-4">
-            <Link to="/guidelines" className="inline-block py-2 hover:text-green">
+            <Link to="/guidelines" className="inline-block py-2 hover:text-white hover:underline">
               Guidelines
             </Link>
-            <Link to="/code-of-conduct" className="inline-block py-2 hover:text-green">
+            <Link to="/code-of-conduct" className="inline-block py-2 hover:text-white hover:underline">
               Code of Conduct
             </Link>
           </nav>

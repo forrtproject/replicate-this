@@ -5,7 +5,7 @@ import { useSession } from '@/lib/auth-client'
 import { useToast } from '@/lib/toast'
 import { savePendingAction, takePendingAction } from '@/lib/pending-action'
 import { useSetPrediction } from './api'
-import { FORECAST_CONSENSUS_MIN, FORECAST_QUESTION, forecastSummary } from './verification'
+import { FORECAST_CONSENSUS_MIN, forecastSummary } from './verification'
 import type { VerificationType } from '@/types'
 
 interface Props {
@@ -14,6 +14,10 @@ interface Props {
   predictYes: number
   predictNo: number
   userPrediction: boolean | null
+  /** The check is done: show the forecast as it stood, without voting. */
+  closed?: boolean
+  /** Signed out: results only, no Yes/No buttons. */
+  readOnly?: boolean
 }
 
 /**
@@ -26,6 +30,8 @@ export function PredictionBar({
   predictYes,
   predictNo,
   userPrediction,
+  closed = false,
+  readOnly = false,
 }: Props) {
   const { data: session } = useSession()
   const navigate = useNavigate()
@@ -88,52 +94,74 @@ export function PredictionBar({
     setPrediction.mutate(next, { onSettled: () => setOptimistic(null) })
   }
 
-  const forecast = FORECAST_QUESTION[verificationType] ?? FORECAST_QUESTION.replication
   // Plain-language read of the split, worded for how many responses there are.
   const consensus = forecastSummary(verificationType, yes, no)
-  // With only a handful of responses a percentage overstates them: show counts.
+  // With only a handful of responses a split overstates them.
   const few = total < FORECAST_CONSENSUS_MIN
 
+  // One display rule everywhere: below the threshold, only how many have
+  // answered; from the threshold on, the split as a bar with percentages.
+  const split = !few && (
+    <div className="mt-3">
+      <div className="flex h-2 overflow-hidden rounded-full bg-[#dcd8cc]" aria-hidden>
+        <div className="bg-brand" style={{ width: `${yesPct}%` }} />
+      </div>
+      <p className="mt-1.5 flex justify-between text-xs text-muted-foreground">
+        <span>
+          <span className="data font-medium text-ink">{yesPct}%</span> yes
+        </span>
+        <span>
+          <span className="data font-medium text-ink">{100 - yesPct}%</span> no
+        </span>
+      </p>
+    </div>
+  )
+  const count = (
+    <>
+      <span className="data">{total}</span> {total === 1 ? 'prediction' : 'predictions'}
+    </>
+  )
+
+  if (closed || readOnly) {
+    return (
+      <div>
+        {split}
+        <p className="mt-2 text-xs text-muted-foreground">
+          {total === 0
+            ? closed
+              ? 'No one made a prediction.'
+              : 'No predictions yet.'
+            : few
+              ? <>{count} so far, too few to show a split.</>
+              : count}
+        </p>
+      </div>
+    )
+  }
+
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="space-y-1.5">
-        {/* h-7 matches the interest panel's label row, so both bars land on one line. */}
-        <div className="flex h-7 items-baseline justify-between text-xs text-muted-foreground">
-          <span>{forecast.question}</span>
-          <span>
-            <span className="data">{total}</span>{' '}
-            {total === 1 ? 'prediction' : 'predictions'}
-          </span>
-        </div>
-
-        {/* Empty until someone predicts; otherwise a zero-response bar reads as all "No". */}
-        <div className="flex h-2.5 overflow-hidden rounded-full bg-muted" aria-hidden>
-          {total > 0 && (
-            <>
-              <div className="bg-green transition-all" style={{ width: `${yesPct}%` }} />
-              <div className="bg-amber transition-all" style={{ width: `${100 - yesPct}%` }} />
-            </>
-          )}
-        </div>
-
-        <div className="flex gap-2">
-          <PredictButton active={mine === true} onClick={() => choose(true)}>
-            Yes {total > 0 && <span className="data">· {few ? yes : `${yesPct}%`}</span>}
-          </PredictButton>
-          <PredictButton active={mine === false} onClick={() => choose(false)}>
-            No {total > 0 && <span className="data">· {few ? no : `${100 - yesPct}%`}</span>}
-          </PredictButton>
-        </div>
+    <div>
+      {split}
+      <div className="mt-3 flex gap-2">
+        <PredictButton active={mine === true} onClick={() => choose(true)}>
+          Yes
+        </PredictButton>
+        <PredictButton active={mine === false} onClick={() => choose(false)}>
+          No
+        </PredictButton>
       </div>
-
-      <div className="mt-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-1 pt-4 text-xs text-muted-foreground">
-        <span>{consensus}</span>
+      <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+        {consensus}
         {mine !== null && (
-          <span>
-            Your call: <span className="font-medium text-ink">{mine ? 'Yes' : 'No'}</span>
-          </span>
+          <>
+            {' '}
+            You said <span className="font-medium text-ink">{mine ? 'yes' : 'no'}</span>.
+          </>
         )}
-      </div>
+      </p>
+      {mine === null && (
+        <p className="mt-1 text-xs text-muted-foreground">Predictions are anonymous and can be changed.</p>
+      )}
     </div>
   )
 }
@@ -152,10 +180,10 @@ function PredictButton({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        'flex-1 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors',
+        'inline-flex flex-1 items-center justify-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors',
         active
-          ? 'border-green bg-green-tint text-forest'
-          : 'border-line text-muted-foreground hover:border-green hover:text-ink',
+          ? 'border-brand bg-brand-tint text-brand-deep'
+          : 'border-line bg-card text-ink hover:border-brand',
       )}
     >
       {children}

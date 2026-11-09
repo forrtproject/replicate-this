@@ -1,29 +1,32 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Users, MessageSquare } from 'lucide-react'
 import type { NominationSummary } from '@/types'
 import { ResearcherLink } from '@/features/profile/ResearcherLink'
 import { VoteButton } from './VoteButton'
 import { StatusBadge } from './StatusBadge'
-import { VerificationBadge } from './VerificationBadge'
 import { AvailabilityTags } from './Availability'
-import { JournalTags } from './JournalTags'
-import { ReplicationWorkshopTag } from './ReplicationWorkshopTag'
+import { VERIFICATION_CONFIG } from './verification'
 import { disciplineLabel, formatReference } from './format'
 
 /**
- * Registry card. The whole card opens the nomination: the title link is
- * stretched over it (`after:absolute after:inset-0`). Anything else
- * interactive inside — the vote button, the nominator's name, availability
- * links, tag tooltips — is positioned above that overlay so it keeps its own
- * click.
+ * One row of the registry list. The whole row opens the nomination: the title
+ * link is stretched over it (`after:absolute after:inset-0`). The vote button
+ * and the nominator's name sit above that overlay so they keep their own click.
  */
-export function NominationCard({ nomination: n }: { nomination: NominationSummary }) {
+export function NominationCard({
+  nomination: n,
+  showNominator = true,
+}: {
+  nomination: NominationSummary
+  /** Off on a researcher's own profile, where it would only repeat their name. */
+  showNominator?: boolean
+}) {
   const location = useLocation()
+
   return (
-    // min-w-0 lets the card shrink to a phone's width instead of growing to
-    // fit its longest unbreakable line.
-    <article className="group relative flex min-w-0 cursor-pointer gap-3 rounded-lg border border-line bg-card p-4 sm:gap-4 transition-all hover:border-green/40 hover:shadow-[0_1px_0_0_var(--color-green)]">
-      <div className="relative z-10">
+    // min-w-0 lets the row shrink to a phone's width instead of growing to fit
+    // its longest unbreakable line.
+    <article className="group relative flex min-w-0 gap-4 px-4 py-4 transition-colors hover:bg-[#f6f5ef] sm:gap-5 sm:px-5">
+      <div className="relative z-10 pt-0.5">
         <VoteButton
           nominationId={n.id}
           upvotes={n.upvotes}
@@ -33,53 +36,50 @@ export function NominationCard({ nomination: n }: { nomination: NominationSummar
       </div>
 
       <div className="min-w-0 flex-1">
-        <div className="mb-1.5 flex flex-wrap items-center gap-2">
-          <VerificationBadge type={n.verificationType} />
-          <StatusBadge status={n.status} />
-        </div>
-
-        {/* A heading per card, so screen-reader users can jump study to study. */}
-        <h3 className="font-display text-lg font-semibold leading-snug">
+        {/* A heading per row, so screen-reader users can jump study to study. */}
+        <h3 className="font-display text-[1.1875rem] font-semibold leading-snug">
           <Link
             to={`/nominations/${n.id}`}
             // Where the reader came from (filters, sort), so the study page's
             // back link returns there rather than to the bare list.
             state={{ from: location.pathname + location.search }}
-            className="text-ink [overflow-wrap:anywhere] after:absolute after:inset-0 after:rounded-lg group-hover:text-green"
+            className="text-ink [overflow-wrap:anywhere] after:absolute after:inset-0 group-hover:text-brand-deep focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-[-2px] focus-visible:after:outline-brand"
           >
             {n.metadata.title || n.doi}
           </Link>
         </h3>
 
-        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground [overflow-wrap:anywhere]">
+        <p className="mt-0.5 line-clamp-2 text-sm text-ink/70 [overflow-wrap:anywhere]">
           {formatReference(n.metadata)}
         </p>
 
-        <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-          <span className="rounded-full bg-muted px-2 py-0.5 text-ink/70">{disciplineLabel(n)}</span>
-          {n.replicationWorkshop && <ReplicationWorkshopTag />}
-          <JournalTags nomination={n} focusable={false} />
-          {n.contributions > 0 && (
-            <span className="inline-flex items-center gap-1">
-              <Users className="h-3 w-3" />
-              {n.contributions} contributing
-            </span>
-          )}
+        {/* Line 1: where it stands. Line 2: what exists and who is involved. */}
+        <p className="meta mt-2 text-[0.8125rem] text-muted-foreground">
+          <StatusBadge status={n.status} className="text-[0.8125rem]" />
+          <span className="text-ink/80">{VERIFICATION_CONFIG[n.verificationType].short}</span>
+          <span>{disciplineLabel(n)}</span>
+          {n.contributions > 0 && <span>{n.contributions} on the team</span>}
           {n.comments > 0 && (
-            <span className="inline-flex items-center gap-1">
-              <MessageSquare className="h-3 w-3" />
-              {n.comments}
-            </span>
-          )}
-          {n.nominatorToken && (
             <span>
-              Nominated by <ResearcherLink name={n.nominatorName} token={n.nominatorToken} />
+              {n.comments} {n.comments === 1 ? 'comment' : 'comments'}
             </span>
           )}
-          <span className="relative z-10">
-            <AvailabilityTags items={n.availability} links={n.availabilityLinks} />
-          </span>
-        </div>
+        </p>
+
+        {(n.availability.length > 0 || (showNominator && n.nominatorToken)) && (
+          <div className="meta mt-1 hidden text-[0.8125rem] text-muted-foreground sm:flex">
+            {showNominator && n.nominatorToken && (
+              <span className="relative z-10">
+                Nominated by <ResearcherLink name={n.nominatorName} token={n.nominatorToken} />
+              </span>
+            )}
+            {n.availability.length > 0 && (
+              <span className="relative z-10">
+                <AvailabilityTags items={n.availability} links={n.availabilityLinks} />
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </article>
   )

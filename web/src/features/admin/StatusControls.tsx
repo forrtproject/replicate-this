@@ -51,10 +51,10 @@ export function StatusControls({
   }
 
   return (
-    <div className="mt-5 rounded-lg border border-amber/30 bg-amber/5 p-3">
-      <p className="mb-2 inline-flex items-center gap-1.5 text-xs font-semibold text-amber-800">
-        <ShieldCheck className="h-3.5 w-3.5" /> Maintainer controls
-      </p>
+    <section className="rounded-lg border border-line bg-card p-4" aria-labelledby="maintainer">
+      <h2 id="maintainer" className="label mb-3 inline-flex items-center gap-1.5">
+        <ShieldCheck className="h-3.5 w-3.5 text-muted-foreground" aria-hidden /> Maintainer: change status
+      </h2>
       <div className="flex flex-wrap gap-2">
         {actions.map((a) => (
           <button
@@ -63,8 +63,8 @@ export function StatusControls({
             disabled={setStatus.isPending}
             className={
               a.revert
-                ? 'rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted disabled:opacity-60'
-                : 'rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60'
+                ? 'rounded-md border border-line px-3 py-1.5 text-sm hover:border-brand disabled:opacity-60'
+                : 'rounded-md bg-brand px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-deep disabled:opacity-60'
             }
           >
             {a.label}
@@ -78,6 +78,6 @@ export function StatusControls({
         </p>
       )}
       {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
-    </div>
+    </section>
   )
 }

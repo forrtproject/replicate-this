@@ -20,6 +20,11 @@ export function LinksEditor({ initial }: { initial: ProfileLinks }) {
   )
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
+  // Compared with what was last saved, so Save is only live when there is a change.
+  const [baseline, setBaseline] = useState<ProfileLinks>(initial)
+  const dirty = PROFILE_LINKS.some(
+    ({ key }) => (links[key] ?? '').trim() !== (baseline[key] ?? '').trim(),
+  )
 
   const fields = PROFILE_LINKS.filter((l) => l.primary || shown.includes(l.key))
   const addable = PROFILE_LINKS.filter((l) => !l.primary && !shown.includes(l.key))
@@ -44,6 +49,7 @@ export function LinksEditor({ initial }: { initial: ProfileLinks }) {
       // Show the canonical form the server stored (e.g. a full ORCID URL).
       onSuccess: (res) => {
         setLinks(res.links)
+        setBaseline(res.links)
         setSaved(true)
         setTimeout(() => setSaved(false), 1500)
       },
@@ -55,8 +61,8 @@ export function LinksEditor({ initial }: { initial: ProfileLinks }) {
     <div className="space-y-2.5">
       {fields.map(({ key, label, placeholder, primary }) => (
         <label key={key} className="grid grid-cols-[8.5rem_1fr_auto] items-center gap-3 text-sm">
-          <span className="inline-flex items-center gap-2 text-muted-foreground">
-            <LinkIcon kind={key} />
+          <span className="inline-flex items-center gap-2 font-medium text-ink">
+            <LinkIcon kind={key} mono={key !== 'orcid'} className="h-4 w-4 text-muted-foreground" />
             {label}
           </span>
           <input
@@ -81,23 +87,24 @@ export function LinksEditor({ initial }: { initial: ProfileLinks }) {
       ))}
 
       {addable.length > 0 && (
-        <div className="pt-1">
-          <p className="mb-1.5 text-xs text-muted-foreground">Add another profile</p>
-          <div className="flex flex-wrap gap-1.5">
+        <label className="block pt-1">
+          <span className="sr-only">Add another profile</span>
+          <select
+            value=""
+            onChange={(e) => {
+              const key = e.target.value as ProfileLinkKey
+              if (key) setShown((s) => [...s, key])
+            }}
+            className="input max-w-64"
+          >
+            <option value="">Add another profile…</option>
             {addable.map(({ key, label }) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setShown((s) => [...s, key])}
-                title={`Add ${label}`}
-                className="inline-flex items-center gap-1.5 rounded-full border border-line bg-card px-2.5 py-1 text-xs font-medium hover:border-green"
-              >
-                <LinkIcon kind={key} className="h-3.5 w-3.5" />
+              <option key={key} value={key}>
                 {label}
-              </button>
+              </option>
             ))}
-          </div>
-        </div>
+          </select>
+        </label>
       )}
 
       {error && <p className="text-sm text-destructive">{error}</p>}
@@ -105,12 +112,16 @@ export function LinksEditor({ initial }: { initial: ProfileLinks }) {
         <button
           type="button"
           onClick={save}
-          disabled={update.isPending}
-          className="rounded-md bg-green px-3 py-2 text-sm font-medium text-white hover:bg-forest disabled:opacity-60"
+          disabled={update.isPending || !dirty}
+          className="btn-primary"
         >
           {update.isPending ? 'Saving…' : 'Save links'}
         </button>
-        {saved && <span className="text-xs text-green">Saved</span>}
+        {saved && (
+          <span role="status" className="text-sm text-brand-deep">
+            Saved
+          </span>
+        )}
       </div>
     </div>
   )

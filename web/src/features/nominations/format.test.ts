@@ -30,6 +30,6 @@ describe('formatReference', () => {
         journal: 'Psychological Science',
         publication_date: '2010-09-21',
       }),
-    ).toBe('Carney, D. et al. · Psychological Science · (2010)')
+    ).toBe('Carney, D. et al. (2010). Psychological Science')
   })
 })

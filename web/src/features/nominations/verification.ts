@@ -14,64 +14,66 @@ export const VERIFICATION_CONFIG: Record<
 > = {
   replication: { label: 'Suggested: replication', short: 'Replication', term: 'Replication' },
   reproduction: { label: 'Suggested: reproduction', short: 'Reproduction', term: 'Reproduction' },
-  both: { label: 'Suggested: replication or reproduction', short: 'Replication / Reproduction', term: null },
+  both: { label: 'Suggested: replication or reproduction', short: 'Replication or reproduction', term: null },
 }
 
 /**
- * Action wording that matches the requested check, so a reproduction is never
- * described as needing new data. "Either / not sure" uses neutral wording.
+ * Action wording. The upvote, team and join labels are the same for every
+ * study, so the core actions read the same everywhere; only the join hint names
+ * the kind of work, so a reproduction is never described as needing new data.
  */
 export const APPROACH_COPY: Record<
   VerificationType,
   { want: string; wanted: string; team: string; join: string; joinHint: string }
 > = {
   replication: {
-    want: 'I want this replicated',
-    wanted: 'You want this replicated',
-    team: 'Replication team',
-    join: 'Replicate this study',
-    joinHint: 'Signal that you intend to help run a replication (new data, same methods).',
-  },
-  reproduction: {
-    want: 'I want this reproduced',
-    wanted: 'You want this reproduced',
-    team: 'Reproduction team',
-    join: 'Reproduce this study',
-    joinHint:
-      'Signal that you intend to help re-run the original analysis and check its robustness.',
-  },
-  both: {
-    want: 'I want this revisited',
-    wanted: 'You want this revisited',
+    want: 'I want this checked',
+    wanted: 'You want this checked',
     team: 'Study team',
     join: 'Join the study team',
-    joinHint: 'Signal that you intend to help replicate or reproduce this study.',
+    joinHint: 'For people who intend to help run the replication: new data, same methods.',
+  },
+  reproduction: {
+    want: 'I want this checked',
+    wanted: 'You want this checked',
+    team: 'Study team',
+    join: 'Join the study team',
+    joinHint: 'For people who intend to help re-run the original analysis and test its robustness.',
+  },
+  both: {
+    want: 'I want this checked',
+    wanted: 'You want this checked',
+    team: 'Study team',
+    join: 'Join the study team',
+    joinHint: 'For people who intend to help replicate or reproduce this study.',
   },
 }
 
 /**
- * The community-forecast question, worded for the check being asked for: "will
- * it replicate?" means nothing for a reproduction, where the question is
- * whether the results survive re-analysis and robustness checks.
+ * The community-forecast question. One question everywhere, so forecasts can be
+ * compared across studies; the qualifier says what kind of check will answer it.
  */
 export const FORECAST_QUESTION: Record<
   VerificationType,
-  { question: string; yes: string; no: string }
+  { question: string; qualifier: string; yes: string; no: string }
 > = {
   replication: {
-    question: 'Will it replicate?',
-    yes: 'Most expect this to replicate.',
-    no: 'Most expect this not to replicate.',
+    question: 'Will the finding hold up?',
+    qualifier: 'The paper’s main claim, tested in a replication with new data.',
+    yes: 'Most expect it to hold up.',
+    no: 'Most expect it not to hold up.',
   },
   reproduction: {
-    question: 'Will the results prove robust?',
-    yes: 'Most expect the results to hold up.',
-    no: 'Most expect the results not to hold up.',
+    question: 'Will the finding hold up?',
+    qualifier: 'The paper’s main claim, when the original analysis is re-run and varied.',
+    yes: 'Most expect it to hold up.',
+    no: 'Most expect it not to hold up.',
   },
   both: {
     question: 'Will the finding hold up?',
-    yes: 'Most expect the finding to hold up.',
-    no: 'Most expect the finding not to hold up.',
+    qualifier: 'The paper’s main claim, in a replication or a reproduction.',
+    yes: 'Most expect it to hold up.',
+    no: 'Most expect it not to hold up.',
   },
 }
 
@@ -84,14 +86,14 @@ export const FORECAST_CONSENSUS_MIN = 5
  */
 export function forecastSummary(type: VerificationType, yes: number, no: number): string {
   const total = yes + no
-  if (total === 0) return 'Predictions are anonymous and you can change yours any time.'
-  if (total === 1) return `The one prediction so far is ${yes === 1 ? 'Yes' : 'No'}.`
+  if (total === 0) return 'No predictions yet.'
   if (total < FORECAST_CONSENSUS_MIN) {
-    return `${yes} Yes and ${no} No so far: too few predictions to call.`
+    return `${total} ${total === 1 ? 'prediction' : 'predictions'} so far, too few to show a split.`
   }
   const yesPct = (yes / total) * 100
   const copy = FORECAST_QUESTION[type] ?? FORECAST_QUESTION.replication
-  if (yesPct >= 65) return copy.yes
-  if (yesPct <= 35) return copy.no
-  return 'Researchers are split on this one.'
+  const n = `${total} predictions.`
+  if (yesPct >= 65) return `${copy.yes} ${n}`
+  if (yesPct <= 35) return `${copy.no} ${n}`
+  return `Researchers are split. ${n}`
 }

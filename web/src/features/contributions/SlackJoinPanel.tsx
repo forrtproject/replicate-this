@@ -88,7 +88,7 @@ export function SlackJoinPanel({
                 href={inviteUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-0.5 font-medium text-green underline"
+                className="inline-flex items-center gap-0.5 font-medium text-brand underline"
               >
                 Create your account / join the workspace <ExternalLink className="h-3 w-3" />
               </a>

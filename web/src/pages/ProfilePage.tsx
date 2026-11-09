@@ -10,6 +10,7 @@ import { ApiError } from '@/lib/api'
 import { isValidEmail } from '@/lib/utils'
 import { EMAIL_PREF_OPTIONS, type EmailPrefs } from '@/types'
 import { usePageTitle } from '@/lib/page-title'
+import { PageBand } from '@/components/layout/PageBand'
 
 export function ProfilePage() {
   usePageTitle('Your profile')
@@ -18,27 +19,29 @@ export function ProfilePage() {
   const token = session?.user?.id?.slice(0, 8) ?? ''
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 px-4 py-10">
-      <div className="flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <p className="eyebrow">Your account</p>
-          <h1 className="mt-1 font-display text-3xl font-semibold">Profile</h1>
-        </div>
-        {token && (
-          <Link to={`/researchers/${token}`} className="text-sm text-green hover:underline">
-            View your public profile →
-          </Link>
-        )}
-      </div>
+    <div className="mx-auto max-w-5xl px-4 pb-16">
+      <PageBand bleed className="mb-0!">
+        <h1 className="font-display text-[2rem] font-semibold leading-tight">Profile</h1>
+        <p className="mt-1 text-sm text-band-ink/80">
+          How others see you on the registry, and how we reach you.{' '}
+          {token && (
+            <Link to={`/researchers/${token}`} className="text-brand-deep underline-offset-2 hover:underline">
+              View your public profile
+            </Link>
+          )}
+        </p>
+      </PageBand>
 
-      <AvatarCard />
-      <DisplayNameCard />
-      <LinksCard />
-      <EmailNotificationsCard
-        isMaintainer={(session?.user as { role?: string } | undefined)?.role === 'maintainer'}
-      />
+      <div className="divide-y divide-line">
+        <AvatarCard />
+        <DisplayNameCard />
+        <LinksCard />
+        <EmailNotificationsCard
+          isMaintainer={(session?.user as { role?: string } | undefined)?.role === 'maintainer'}
+        />
+        <DangerZone />
+      </div>
       <ResearcherIdFooter id={researcherId} />
-      <DangerZone />
     </div>
   )
 }
@@ -47,8 +50,8 @@ function AvatarCard() {
   const { data: profile, isLoading } = useProfile()
   return (
     <Card
-      title="Profile photo"
-      hint="Pick an emoji or upload a picture. It appears on your profile and next to your name on study teams."
+      title="Picture"
+      hint="Shown on your public profile and next to your name on study teams."
     >
       {isLoading || !profile ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
@@ -59,12 +62,25 @@ function AvatarCard() {
   )
 }
 
-function Card({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
+/** One settings group: title and explanation on the left, controls on the right. */
+function Card({
+  title,
+  hint,
+  tone,
+  children,
+}: {
+  title: string
+  hint?: string
+  tone?: 'danger'
+  children: React.ReactNode
+}) {
   return (
-    <section className="rounded-lg border border-line bg-card p-5">
-      <h2 className="font-display text-lg font-semibold">{title}</h2>
-      {hint && <p className="mb-3 mt-0.5 text-xs text-muted-foreground">{hint}</p>}
-      <div className={hint ? '' : 'mt-3'}>{children}</div>
+    <section className="grid gap-4 py-8 md:grid-cols-[16rem_minmax(0,1fr)] md:gap-10">
+      <div>
+        <h2 className={`section-title text-lg ${tone === 'danger' ? 'text-destructive' : ''}`}>{title}</h2>
+        {hint && <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{hint}</p>}
+      </div>
+      <div className="min-w-0 max-w-xl">{children}</div>
     </section>
   )
 }
@@ -75,21 +91,21 @@ function Card({ title, hint, children }: { title: string; hint?: string; childre
 function ResearcherIdFooter({ id }: { id: string }) {
   const [copied, setCopied] = useState(false)
   return (
-    <p className="flex flex-wrap items-center gap-2 px-1 text-xs text-muted-foreground">
+    <p className="mt-2 flex flex-wrap items-center gap-2 border-t border-line pt-6 text-xs text-muted-foreground">
       <span>
-        Researcher ID <span className="data font-medium">#{id}</span>. You only need it to
+        Researcher ID <span className="data rounded bg-muted px-1.5 py-0.5 font-medium text-ink">{id}</span>. You only need it to
         request the maintainer role.
       </span>
       <button
         onClick={() =>
-          navigator.clipboard?.writeText(`#${id}`).then(() => {
+          navigator.clipboard?.writeText(id).then(() => {
             setCopied(true)
             setTimeout(() => setCopied(false), 1500)
           })
         }
-        className="inline-flex items-center gap-1 rounded border border-line px-1.5 py-0.5 hover:border-green"
+        className="inline-flex items-center gap-1 rounded border border-line px-1.5 py-0.5 hover:border-brand"
       >
-        {copied ? <Check className="h-3 w-3 text-green" /> : <Copy className="h-3 w-3" />}
+        {copied ? <Check className="h-3 w-3 text-brand" /> : <Copy className="h-3 w-3" />}
         {copied ? 'Copied' : 'Copy'}
       </button>
     </p>
@@ -113,8 +129,8 @@ function LinksCard() {
   const { data: profile, isLoading } = useProfile()
   return (
     <Card
-      title="Public profile links"
-      hint="Optional links shown on your public profile, nominations and contributions, so others can find, credit and reach you. Add only what you're happy to share."
+      title="Public links"
+      hint="Optional. Shown next to your name so others can find, credit and reach you. Add only what you’re happy to share."
     >
       {isLoading || !profile ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
@@ -130,7 +146,7 @@ function EmailNotificationsCard({ isMaintainer }: { isMaintainer: boolean }) {
   return (
     <Card
       title="Email notifications"
-      hint="Where we email you about activity on the site. We take this from your sign-in; change it to any address you prefer. Everything also arrives as an in-app notification, so uncheck anything you'd rather not hear about by email."
+      hint="Everything also appears in your dashboard. If your sign-in provider shared an address, we filled it in; any address works."
     >
       {isLoading || !profile ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
@@ -162,6 +178,8 @@ function EmailPrefsEditor({
 
   const options = EMAIL_PREF_OPTIONS.filter((o) => !o.maintainerOnly || isMaintainer)
   const emailValid = isValidEmail(email)
+  const dirty =
+    email !== initialEmail || options.some((o) => (prefs[o.key] === true) !== (initialPrefs[o.key] === true))
 
   function save() {
     setError('')
@@ -181,7 +199,7 @@ function EmailPrefsEditor({
   return (
     <div className="space-y-3">
       <label className="block text-sm">
-        <span className="mb-1 block text-muted-foreground">Notification email</span>
+        <span className="mb-1 block font-medium">Send emails to</span>
         <input
           type="email"
           autoComplete="email"
@@ -193,16 +211,21 @@ function EmailPrefsEditor({
         />
       </label>
 
+      {!emailValid ? (
+        <p className="text-sm text-muted-foreground">
+          Email notifications are off. Add an address to choose what to receive.
+        </p>
+      ) : (
       <fieldset>
-        <legend className="mb-1.5 text-sm text-muted-foreground">Email me about</legend>
-        <div className="space-y-1.5">
+        <legend className="mb-2 text-sm font-medium">Email me about</legend>
+        <div className="space-y-2.5">
           {options.map((o) => (
             <label key={o.key} className="flex items-start gap-2 text-sm">
               <input
                 type="checkbox"
                 checked={prefs[o.key] === true}
                 onChange={(e) => setPrefs((p) => ({ ...p, [o.key]: e.target.checked }))}
-                className="mt-0.5 accent-primary"
+                className="mt-1 accent-[var(--color-brand)]"
               />
               <span>
                 {o.label}
@@ -212,18 +235,23 @@ function EmailPrefsEditor({
           ))}
         </div>
       </fieldset>
+      )}
 
       {error && <p className="text-sm text-destructive">{error}</p>}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3 pt-1">
         <button
           onClick={save}
-          disabled={update.isPending || !emailValid}
+          disabled={update.isPending || !emailValid || !dirty}
           title={emailValid ? undefined : 'Enter a valid email address first.'}
-          className="rounded-md bg-green px-3 py-2 text-sm font-medium text-white hover:bg-forest disabled:opacity-60"
+          className="btn-primary"
         >
           {update.isPending ? 'Saving…' : 'Save email settings'}
         </button>
-        {saved && <span className="text-xs text-green">Saved</span>}
+        {saved && (
+          <span role="status" className="text-sm text-brand-deep">
+            Saved
+          </span>
+        )}
       </div>
     </div>
   )
@@ -241,13 +269,12 @@ function DangerZone() {
   }
 
   return (
-    <section className="rounded-lg border border-destructive/30 bg-destructive/5 p-5">
-      <h2 className="font-display text-lg font-semibold text-destructive">Delete account</h2>
-      <p className="mb-3 mt-0.5 text-xs text-muted-foreground">
-        Signs you out for good and erases your login and personal details (name, links,
-        provider). Your nominations, votes, contributions and messages are kept as public
-        scientific records, shown as “Deleted account.” This cannot be undone.
-      </p>
+    <Card
+      title="Delete account"
+      tone="danger"
+      hint="Erases your login and personal details. Your nominations, votes, contributions and messages stay as public records under “Deleted account”."
+    >
+      <p className="mb-3 text-sm text-muted-foreground">This cannot be undone.</p>
       {confirming ? (
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm">Are you sure?</span>
@@ -268,11 +295,11 @@ function DangerZone() {
       ) : (
         <button
           onClick={() => setConfirming(true)}
-          className="rounded-md border border-destructive/40 px-3 py-1.5 text-sm font-medium text-destructive hover:bg-destructive/10"
+          className="btn-secondary text-destructive!"
         >
           Delete my account
         </button>
       )}
-    </section>
+    </Card>
   )
 }

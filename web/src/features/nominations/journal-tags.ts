@@ -28,7 +28,7 @@ const wantsReproduction = (t: VerificationType) => t === 'reproduction' || t ===
 const RULES: (JournalTag & { matches: (n: JournalTagInput) => boolean })[] = [
   {
     key: 'R2',
-    name: 'R²',
+    name: 'Replication Research',
     hint: 'Accepts replication and reproduction studies from all disciplines.',
     matches: () => true,
   },

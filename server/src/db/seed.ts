@@ -16,9 +16,9 @@ async function seed() {
   await db.delete(schema.user)
 
   const users = [
-    { id: 'seed_admin_0001', name: 'SteadyAxiom12', role: 'maintainer', email: 'a@privacy.forrt.org' },
-    { id: 'seed_alice_0002', name: 'CuriousQuasar42', role: 'user', email: 'b@privacy.forrt.org' },
-    { id: 'seed_bob_0003', name: 'RigorousNeutrino7', role: 'user', email: 'c@privacy.forrt.org' },
+    { id: '4f2a9c71e8b3d05a', name: 'SteadyAxiom12', role: 'maintainer', email: 'a@privacy.forrt.org' },
+    { id: 'c81e5d3a90f7b264', name: 'CuriousQuasar42', role: 'user', email: 'b@privacy.forrt.org' },
+    { id: '9b0d47e2a6c1f835', name: 'RigorousNeutrino7', role: 'user', email: 'c@privacy.forrt.org' },
   ]
   await db.insert(schema.user).values(
     users.map((u) => ({
@@ -96,26 +96,26 @@ async function seed() {
   const inserted = await db
     .insert(schema.nominations)
     .values(
-      nominations.map((n) => ({ ...n, nominatorUid: 'seed_alice_0002' })),
+      nominations.map((n) => ({ ...n, nominatorUid: 'c81e5d3a90f7b264' })),
     )
     .returning({ id: schema.nominations.id })
 
   const [n1, n2, n3] = inserted
 
   await db.insert(schema.votes).values([
-    { nominationId: n1.id, userUid: 'seed_admin_0001' },
-    { nominationId: n1.id, userUid: 'seed_bob_0003' },
-    { nominationId: n2.id, userUid: 'seed_bob_0003' },
+    { nominationId: n1.id, userUid: '4f2a9c71e8b3d05a' },
+    { nominationId: n1.id, userUid: '9b0d47e2a6c1f835' },
+    { nominationId: n2.id, userUid: '9b0d47e2a6c1f835' },
   ])
 
   await db.insert(schema.predictions).values([
-    { nominationId: n1.id, userUid: 'seed_admin_0001', willReplicate: false },
-    { nominationId: n1.id, userUid: 'seed_bob_0003', willReplicate: false },
-    { nominationId: n2.id, userUid: 'seed_bob_0003', willReplicate: true },
+    { nominationId: n1.id, userUid: '4f2a9c71e8b3d05a', willReplicate: false },
+    { nominationId: n1.id, userUid: '9b0d47e2a6c1f835', willReplicate: false },
+    { nominationId: n2.id, userUid: '9b0d47e2a6c1f835', willReplicate: true },
   ])
 
   await db.insert(schema.contributions).values([
-    { nominationId: n2.id, contributorUid: 'seed_bob_0003', message: 'Have a lab ready for Q3.' },
+    { nominationId: n2.id, contributorUid: '9b0d47e2a6c1f835', message: 'Have a lab ready for Q3.' },
   ])
 
   console.log(`Seeded ${users.length} users and ${inserted.length} nominations.`)

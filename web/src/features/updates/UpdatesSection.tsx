@@ -5,6 +5,7 @@ import { ResearcherLink } from '@/features/profile/ResearcherLink'
 import { RichText } from '@/components/ui/RichText'
 import { ApiError } from '@/lib/api'
 import type { NominationDetail } from '@/types'
+import { formatWhen } from '@/lib/dates'
 import { useUpdates, usePostUpdate } from './api'
 
 /**
@@ -12,13 +13,22 @@ import { useUpdates, usePostUpdate } from './api'
  * team (nominator, contributors, maintainers). Posting is optional; an update
  * with an article link asks the maintainers to mark the study completed.
  */
-export function UpdatesSection({ nomination: n }: { nomination: NominationDetail }) {
+export function UpdatesSection({
+  nomination: n,
+  resultShownAbove = false,
+}: {
+  nomination: NominationDetail
+  /** The page already leads with the result; list that update as a one-line entry. */
+  resultShownAbove?: boolean
+}) {
   const { data: session } = useSession()
   const isMaintainer = (session?.user as { role?: string } | undefined)?.role === 'maintainer'
   const { data: updates, isLoading } = useUpdates(n.id)
   const post = usePostUpdate(n.id)
 
   const canPost = n.viewerIsNominator || n.userContributed || isMaintainer
+  // Same choice as the result block on the page: the update that links the write-up.
+  const resultId = (updates?.find((u) => u.articleUrl) ?? updates?.[0])?.id
 
   const [showForm, setShowForm] = useState(false)
   const [content, setContent] = useState('')
@@ -41,35 +51,32 @@ export function UpdatesSection({ nomination: n }: { nomination: NominationDetail
     )
   }
 
-  if (!canPost && (!updates || updates.length === 0)) return null
+  // The update that carries the result is already the page's lead; don't repeat it.
+  const shown = resultShownAbove ? (updates ?? []).filter((u) => u.id !== resultId) : updates
+  // Updates start once work does: before that, an empty section is only noise.
+  const workStarted = n.status === 'in_progress' || n.status === 'completed' || n.status === 'published'
+  if ((!canPost || !workStarted) && (!shown || shown.length === 0)) return null
 
   return (
-    <section className="mt-6 rounded-lg border border-border bg-card p-4">
-      <h2 className="mb-1 text-sm font-semibold">
-        Progress updates {updates && updates.length > 0 && `(${updates.length})`}
+    <section aria-labelledby="updates">
+      <h2 id="updates" className="section-title">
+        Progress updates
       </h2>
-      <p className="mb-3 text-xs text-muted-foreground">
-        Occasional notes from the study team on how the work is going.
+      <p className="mb-4 mt-1 text-sm text-muted-foreground">
+        Notes from the nominator and study team on how the work is going.
       </p>
 
       {isLoading && <p className="text-sm text-muted-foreground">Loading updates…</p>}
-      {updates && updates.length === 0 && (
-        <p className="text-sm text-muted-foreground">No updates yet.</p>
+      {shown && shown.length === 0 && (
+        <p className="text-sm text-muted-foreground">No updates yet. Post one when there’s news.</p>
       )}
 
-      <ol className="space-y-3">
-        {updates?.map((u) => (
-          <li key={u.id} className="border-t border-line pt-3 first:border-t-0 first:pt-0">
-            <p className="flex flex-wrap items-center gap-x-2 text-sm">
-              <ResearcherLink name={u.name} token={u.token} className="font-medium" />
-              <span className="text-xs text-muted-foreground">
-                ·{' '}
-                {new Date(u.createdAt).toLocaleDateString(undefined, {
-                  year: 'numeric',
-                  month: 'short',
-                  day: 'numeric',
-                })}
-              </span>
+      <ol className="space-y-5 border-l-2 border-line pl-5">
+        {shown?.map((u) => (
+          <li key={u.id}>
+            <p className="flex flex-wrap items-baseline gap-x-2 text-sm">
+              <ResearcherLink name={u.name} token={u.token} className="font-medium text-ink" />
+              <span className="text-xs text-muted-foreground">{formatWhen(u.createdAt)}</span>
             </p>
             <RichText className="mt-1 text-sm leading-relaxed">{u.content}</RichText>
             {u.articleUrl && (
@@ -77,10 +84,10 @@ export function UpdatesSection({ nomination: n }: { nomination: NominationDetail
                 href={u.articleUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-1 inline-flex items-center gap-1 text-sm text-green hover:underline"
+                className="mt-1.5 inline-flex items-center gap-1 text-sm font-medium text-brand-deep hover:underline"
               >
-                <FileText className="h-3.5 w-3.5" /> Research article{' '}
-                <ExternalLink className="h-3 w-3" />
+                <FileText className="h-3.5 w-3.5" aria-hidden /> Read the write-up{' '}
+                <ExternalLink className="h-3 w-3" aria-hidden />
               </a>
             )}
           </li>
@@ -88,7 +95,7 @@ export function UpdatesSection({ nomination: n }: { nomination: NominationDetail
       </ol>
 
       {canPost && (
-        <div className={updates && updates.length > 0 ? 'mt-4 border-t border-line pt-4' : 'mt-2'}>
+        <div className="mt-4">
           {showForm ? (
             <div className="space-y-2">
               <textarea
@@ -115,7 +122,7 @@ export function UpdatesSection({ nomination: n }: { nomination: NominationDetail
                 <button
                   onClick={submit}
                   disabled={post.isPending || content.trim().length < 2}
-                  className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
+                  className="btn-primary"
                 >
                   {post.isPending ? 'Posting…' : 'Post update'}
                 </button>
@@ -129,15 +136,9 @@ export function UpdatesSection({ nomination: n }: { nomination: NominationDetail
             </div>
           ) : (
             <>
-              <button
-                onClick={() => setShowForm(true)}
-                className="rounded-md border border-border px-3 py-1.5 text-sm font-medium hover:bg-muted"
-              >
-                Share an update
+              <button onClick={() => setShowForm(true)} className="btn-secondary">
+                Post an update
               </button>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Optional. Post when there’s something to share.
-              </p>
             </>
           )}
         </div>

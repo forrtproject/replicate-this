@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom'
+import { Link, createBrowserRouter, Navigate } from 'react-router-dom'
 import { RootLayout } from '@/components/layout/RootLayout'
 import { RequireAuth } from '@/components/auth/RequireAuth'
 import { SignInPage } from '@/pages/SignInPage'
@@ -35,7 +35,25 @@ export const router = createBrowserRouter([
         ),
       },
       { path: 'sign-in', element: <SignInPage /> },
-      { path: 'guidelines', element: <DocPage src="/nomination-guidelines.md" title="Nomination guidelines" /> },
+      {
+        path: 'guidelines',
+        element: (
+          <DocPage
+            src="/nomination-guidelines.md"
+            title="Nomination guidelines"
+            footer={
+              <div className="flex flex-wrap items-center gap-4">
+                <Link to="/nominate" className="btn-primary">
+                  Nominate a study
+                </Link>
+                <Link to="/nominations" className="text-sm font-medium text-brand-deep hover:underline">
+                  Search existing nominations
+                </Link>
+              </div>
+            }
+          />
+        ),
+      },
       { path: 'code-of-conduct', element: <DocPage src="/code-of-conduct.md" title="Code of Conduct" /> },
       {
         path: 'nominate',

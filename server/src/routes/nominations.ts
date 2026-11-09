@@ -221,6 +221,13 @@ nominationsRouter.post('/', async (c) => {
     })
     .returning({ id: schema.nominations.id })
 
+  // Nominators follow their own nominations by default (they can unfollow),
+  // as people who join a team do.
+  await db
+    .insert(schema.subscriptions)
+    .values({ nominationId: inserted.id, userUid: user.id })
+    .onConflictDoNothing()
+
   await notifyMaintainers('new_nomination', { nominationId: inserted.id, doi })
 
   return c.json({ id: inserted.id }, 201)
