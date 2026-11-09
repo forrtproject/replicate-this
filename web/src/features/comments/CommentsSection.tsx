@@ -236,7 +236,6 @@ function CommentThread({
           )}
         </div>
 
-        {(
           <>
             <RichText className="mt-1 text-[0.9375rem] leading-relaxed">{c.content}</RichText>
             <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -329,7 +328,6 @@ function CommentThread({
               </div>
             )}
           </>
-        )}
 
         {collapsed && (
           <button onClick={() => setCollapsed(false)} className="mt-1 text-xs text-muted-foreground hover:text-ink">

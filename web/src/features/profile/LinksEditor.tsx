@@ -108,7 +108,6 @@ export function LinksEditor({ initial }: { initial: ProfileLinks }) {
       )}
 
       {error && <p className="text-sm text-destructive">{error}</p>}
-      {(
       <div className="flex items-center gap-2 pt-1">
         <button
           type="button"
@@ -124,7 +123,6 @@ export function LinksEditor({ initial }: { initial: ProfileLinks }) {
           </span>
         )}
       </div>
-      )}
     </div>
   )
 }
