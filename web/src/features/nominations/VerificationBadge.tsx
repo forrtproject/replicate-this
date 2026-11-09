@@ -1,4 +1,4 @@
-import { FlaskConical, HelpCircle } from 'lucide-react'
+import { FlaskConical } from 'lucide-react'
 import { Tooltip } from '@/components/ui/Tooltip'
 import type { VerificationType } from '@/types'
 import { VERIFICATION_CONFIG, TERM_DEFINITIONS } from './verification'
@@ -15,7 +15,6 @@ export function DefinedTerm({
     <Tooltip content={TERM_DEFINITIONS[term]}>
       <span className="cursor-help text-ink underline decoration-dotted underline-offset-2">
         {lowercase ? term.toLowerCase() : term}
-        <HelpCircle className="ml-0.5 inline h-3 w-3 align-text-top opacity-60" />
       </span>
     </Tooltip>
   )

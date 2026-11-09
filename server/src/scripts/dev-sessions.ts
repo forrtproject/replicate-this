@@ -53,8 +53,8 @@ async function main() {
 
   const out = {
     cookieName: 'replicate-this.session_token',
-    admin: await mint('seed_admin_0001'),
-    user: await mint('seed_alice_0002'),
+    admin: await mint('4f2a9c71e8b3d05a'),
+    user: await mint('c81e5d3a90f7b264'),
     newcomer: await mint(NEWCOMER_ID),
   }
   console.log(JSON.stringify(out))

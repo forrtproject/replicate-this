@@ -68,7 +68,7 @@ export function NominationDetailPage() {
   ) : (
     <div>
       <Link to={signInHref} className="btn-primary w-full">
-        Sign in to take part
+        {done ? 'Sign in to follow' : 'Sign in to take part'}
       </Link>
       <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
         {done
@@ -84,14 +84,14 @@ export function NominationDetailPage() {
 
       {/* Header: what the paper is, and where it stands. */}
       <header className="mt-5">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.8125rem] text-muted-foreground">
+        <div className="meta text-[0.8125rem] text-muted-foreground">
           <StatusBadge status={n.status} className="text-[0.8125rem]" />
           <span className="text-ink/80">{VERIFICATION_CONFIG[n.verificationType].short}</span>
           <span>{disciplineLabel(n)}</span>
           {n.replicationWorkshop && <span>Suits a replication workshop</span>}
         </div>
 
-        <h1 className="mt-3 max-w-4xl font-display text-[2rem] font-semibold leading-[1.15] tracking-[-0.01em] [overflow-wrap:anywhere] sm:text-[2.5rem]">
+        <h1 className="mt-3 max-w-4xl font-display text-[1.875rem] font-semibold leading-[1.15] tracking-[-0.01em] [overflow-wrap:anywhere] sm:text-[2.25rem]">
           {n.metadata.title || n.doi}
         </h1>
 
@@ -168,7 +168,7 @@ export function NominationDetailPage() {
           <CommentsSection nominationId={n.id} />
         </div>
 
-        <aside className="space-y-4 lg:pt-1" aria-label="Take part">
+        <aside className="space-y-4" aria-label="Take part">
           <div className="hidden lg:block">{actions}</div>
           {isMaintainer && n.status !== 'pending' && (
             <StatusControls nominationId={n.id} status={n.status} />
@@ -179,8 +179,9 @@ export function NominationDetailPage() {
               {done ? 'Forecast before the result' : 'Forecast'}
             </h2>
             <p className="mt-0.5 text-sm text-ink">
-              {done ? forecast.question.replace(/^Will /, 'Would ') : forecast.question}
+              {done ? 'Would the finding hold up?' : forecast.question}
             </p>
+            <p className="text-xs text-muted-foreground">{forecast.qualifier}</p>
             <PredictionBar
               nominationId={n.id}
               verificationType={n.verificationType}
@@ -191,29 +192,36 @@ export function NominationDetailPage() {
               readOnly={!session}
             />
           </section>
-          {!(done && n.contributions === 0) && <ContributionPanel nomination={n} />}
+          <ContributionPanel nomination={n} />
         </aside>
       </div>
     </article>
   )
 }
 
-/** "A replication (new data, same methods) would test whether…" with term tooltips. */
+/** What the suggested check involves, in one plain sentence (term has a tooltip). */
 function SuggestedCheck({ nomination: n }: { nomination: NominationDetail }) {
-  const { term } = VERIFICATION_CONFIG[n.verificationType]
   if (n.verificationType === 'both') {
     return (
       <>
-        The nominator suggests a <DefinedTerm term="Replication" /> or a{' '}
-        <DefinedTerm term="Reproduction" />; either would help.
+        Either check would help: a <DefinedTerm term="Replication" /> runs the study again with new
+        data, a <DefinedTerm term="Reproduction" /> re-runs the original analysis.
       </>
     )
   }
-  return term ? (
+  if (n.verificationType === 'reproduction') {
+    return (
+      <>
+        A <DefinedTerm term="Reproduction" /> re-runs the original analysis on the original data or
+        code and tests how robust the results are.
+      </>
+    )
+  }
+  return (
     <>
-      The nominator suggests a <DefinedTerm term={term} /> to test whether the finding holds.
+      A <DefinedTerm term="Replication" /> runs the study again with new data and the same methods.
     </>
-  ) : null
+  )
 }
 
 /** Openly available materials, data location, suggested checks, possible outlets. */
@@ -247,13 +255,11 @@ function StudyDetails({ nomination: n }: { nomination: NominationDetail }) {
         )}
         {journals.length > 0 && (
           <Row label="Could be published in">
-            <ul className="space-y-1">
+            <ul className="space-y-2">
               {journals.map((j) => (
                 <li key={j.key}>
                   <span className="text-ink">{j.name}</span>
-                  {j.name.replace('²', '2') !== j.key && (
-                    <span className="text-muted-foreground"> ({j.key})</span>
-                  )}
+                  <span className="block text-xs text-muted-foreground">{j.hint}</span>
                 </li>
               ))}
             </ul>
@@ -339,9 +345,16 @@ function PendingNotice({
       aria-labelledby="review"
       className="rounded-lg border border-line bg-card px-5 py-4"
     >
-      <h2 id="review" className="font-semibold text-ink">
-        {asMaintainer ? 'This nomination needs a review' : 'Waiting for review'}
-      </h2>
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 id="review" className="font-semibold text-ink">
+          {asMaintainer ? 'This nomination needs a review' : 'Waiting for review'}
+        </h2>
+        {asMaintainer && (
+          <Link to="/admin" className="text-sm font-medium text-forest hover:underline">
+            Review queue
+          </Link>
+        )}
+      </div>
       <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
         {asMaintainer
           ? 'Approving marks it as reviewed and lists it as looking for contributors. Rejecting removes it from the registry and sends the nominator your reason.'
@@ -393,9 +406,7 @@ function PendingNotice({
               <button onClick={() => setRejecting(true)} className="btn-secondary text-destructive!">
                 Reject
               </button>
-              <Link to="/admin" className="ml-2 text-sm text-muted-foreground hover:text-ink hover:underline">
-                All nominations awaiting review
-              </Link>
+
             </div>
           )}
           {error && <p className="mt-2 text-sm text-destructive">{error}</p>}

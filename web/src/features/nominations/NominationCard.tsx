@@ -54,7 +54,7 @@ export function NominationCard({
         </p>
 
         {/* Line 1: where it stands. Line 2: what exists and who is involved. */}
-        <p className="mt-2 flex flex-wrap items-center gap-y-1 text-[0.8125rem] text-muted-foreground [&>*+*]:before:mx-2 [&>*+*]:before:text-line [&>*+*]:before:content-['/']">
+        <p className="meta mt-2 text-[0.8125rem] text-muted-foreground">
           <StatusBadge status={n.status} className="text-[0.8125rem]" />
           <span className="text-ink/80">{VERIFICATION_CONFIG[n.verificationType].short}</span>
           <span>{disciplineLabel(n)}</span>
@@ -67,15 +67,15 @@ export function NominationCard({
         </p>
 
         {(n.availability.length > 0 || (showNominator && n.nominatorToken)) && (
-          <div className="mt-1 hidden flex-wrap items-center gap-x-5 gap-y-1 text-[0.8125rem] text-muted-foreground sm:flex">
-            {n.availability.length > 0 && (
-              <span className="relative z-10">
-                <AvailabilityTags items={n.availability} links={n.availabilityLinks} />
-              </span>
-            )}
+          <div className="meta mt-1 hidden text-[0.8125rem] text-muted-foreground sm:flex">
             {showNominator && n.nominatorToken && (
               <span className="relative z-10">
                 Nominated by <ResearcherLink name={n.nominatorName} token={n.nominatorToken} />
+              </span>
+            )}
+            {n.availability.length > 0 && (
+              <span className="relative z-10">
+                <AvailabilityTags items={n.availability} links={n.availabilityLinks} />
               </span>
             )}
           </div>

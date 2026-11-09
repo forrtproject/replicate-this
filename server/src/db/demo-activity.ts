@@ -75,6 +75,9 @@ async function makeFixturesRealistic() {
       .where(sql`${schema.nominations.metadata}->>'title' = ${sw.from}`)
   }
 
+  // Demo data locations point at example.org; drop them rather than show fake links.
+  await db.execute(sql`update nominations set data_location = '' where data_location like '%example.org%'`)
+
   // Stagger dates: accounts joined over the past year, nominations over the
   // past five months, newest last in this list.
   const users = await db.select({ id: schema.user.id }).from(schema.user)
@@ -96,16 +99,28 @@ async function makeFixturesRealistic() {
       .set({ createdAt: created, lastActivityAt: created })
       .where(eq(schema.nominations.id, nom.id))
   }
-  await db.execute(sql`update contributions set created_at = now() - interval '25 days'`)
+  await db.execute(sql`update contributions set created_at = now() - interval '25 days' where created_at > now() - interval '1 day'`)
+
+  // Finished studies list who did the work.
+  for (const [title, uid, message] of [
+    ['Growth in a Time of Debt', 'demo_user_06', 'Ran the re-analysis from the original spreadsheet.'],
+    ['Growth in a Time of Debt', 'demo_user_05', 'Checked the country weightings.'],
+    ['Why Most Published Research Findings Are False', 'demo_user_11', 'Re-derived the PPV model and its sensitivity analyses.'],
+  ] as const) {
+    await db
+      .insert(schema.contributions)
+      .values({ nominationId: await byTitle(title), contributorUid: uid, message, createdAt: ago(90) })
+      .onConflictDoNothing()
+  }
 
   // The signed-in demo researcher has backed and forecast a few studies, so
   // the "you upvoted" and "you said" states appear.
   for (const title of ['Feeling the Future', 'Inhibiting and Facilitating']) {
     const id = await byTitle(title)
-    await db.insert(schema.votes).values({ nominationId: id, userUid: 'seed_alice_0002' }).onConflictDoNothing()
+    await db.insert(schema.votes).values({ nominationId: id, userUid: 'c81e5d3a90f7b264' }).onConflictDoNothing()
     await db
       .insert(schema.predictions)
-      .values({ nominationId: id, userUid: 'seed_alice_0002', willReplicate: false })
+      .values({ nominationId: id, userUid: 'c81e5d3a90f7b264', willReplicate: false })
       .onConflictDoNothing()
   }
 }
@@ -146,7 +161,7 @@ async function main() {
     },
     {
       nominationId: egoDepletion,
-      authorUid: 'seed_alice_0002',
+      authorUid: 'c81e5d3a90f7b264',
       content:
         'Worth checking the manipulation checks reported in Hagger et al. (2016): self-reported effort barely differed between conditions in several labs.',
       createdAt: ago(5),
@@ -180,7 +195,7 @@ async function main() {
       nominationId: egoDepletion,
       authorUid: 'demo_user_04',
       content:
-        'Team of four labs confirmed. The protocol draft is on OSF and we are collecting feedback until the end of the month.',
+        'The protocol draft is on OSF and we are collecting feedback until the end of the month. We are also looking for one or two more labs to run the second site.',
       createdAt: ago(20),
     },
     {
@@ -194,15 +209,15 @@ async function main() {
   ])
 
   await db.insert(schema.notifications).values([
-    { userUid: 'seed_alice_0002', type: 'nomination_approved', data: { nominationId: powerPosing }, createdAt: ago(1) },
+    { userUid: 'c81e5d3a90f7b264', type: 'nomination_approved', data: { nominationId: powerPosing }, createdAt: ago(1) },
     {
-      userUid: 'seed_alice_0002',
+      userUid: 'c81e5d3a90f7b264',
       type: 'new_contribution',
-      data: { nominationId: await byTitle('Estimating the reproducibility'), contributorToken: 'seed_bob' },
+      data: { nominationId: await byTitle('Estimating the reproducibility'), contributorToken: '9b0d47e2' },
       createdAt: ago(3),
     },
     {
-      userUid: 'seed_alice_0002',
+      userUid: 'c81e5d3a90f7b264',
       type: 'nomination_approved',
       data: { nominationId: await byTitle('An obesity-associated gut microbiome') },
       readAt: ago(6),
@@ -211,7 +226,7 @@ async function main() {
   ])
 
   // Keep the seed admin's own view of its role consistent.
-  await db.update(schema.user).set({ onboarded: true }).where(eq(schema.user.id, 'seed_admin_0001'))
+  await db.update(schema.user).set({ onboarded: true }).where(eq(schema.user.id, '4f2a9c71e8b3d05a'))
   console.log('Demo activity added.')
 }
 

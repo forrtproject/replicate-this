@@ -103,7 +103,7 @@ function Row({ comment: c }: { comment: AdminComment }) {
               <button
                 onClick={() => hide.mutate({ id: c.id, hidden: true })}
                 disabled={hide.isPending}
-                className="btn-secondary text-destructive!"
+                className="btn-secondary btn-sm"
               >
                 <EyeOff className="h-4 w-4" aria-hidden /> Hide
               </button>
@@ -111,7 +111,7 @@ function Row({ comment: c }: { comment: AdminComment }) {
                 onClick={() => hide.mutate({ id: c.id, hidden: false })}
                 disabled={hide.isPending}
                 title="Dismiss the flags and leave the comment up"
-                className="btn-secondary"
+                className="btn-secondary btn-sm"
               >
                 <Check className="h-4 w-4" aria-hidden /> Keep
               </button>
@@ -120,7 +120,7 @@ function Row({ comment: c }: { comment: AdminComment }) {
             <button
               onClick={() => hide.mutate({ id: c.id, hidden: !c.hidden })}
               disabled={hide.isPending}
-              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-ink disabled:opacity-60"
+              className="btn-secondary btn-sm"
             >
               {c.hidden ? <Eye className="h-4 w-4" aria-hidden /> : <EyeOff className="h-4 w-4" aria-hidden />}
               {c.hidden ? 'Restore' : 'Hide'}

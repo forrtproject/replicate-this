@@ -92,7 +92,7 @@ function Row({ nomination: n, tab }: { nomination: AdminNomination; tab: 'pendin
             {n.doi ? `, doi:${n.doi}` : ', no DOI'}
             {n.metadataManual && ' (reference entered by hand)'}
           </p>
-          <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[0.8125rem] text-muted-foreground">
+          <p className="meta mt-2 text-[0.8125rem] text-muted-foreground">
             <span className="text-ink/80">{VERIFICATION_CONFIG[n.verificationType].short}</span>
             <span>{disciplineLabel(n)}</span>
             <span>

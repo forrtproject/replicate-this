@@ -210,17 +210,18 @@ function EmailPrefsEditor({
         />
       </label>
 
+      {!emailValid ? (
+        <p className="text-sm text-muted-foreground">
+          Email notifications are off. Add an address to choose what to receive.
+        </p>
+      ) : (
       <fieldset>
         <legend className="mb-2 text-sm font-medium">Email me about</legend>
-        {!emailValid && (
-          <p className="mb-2 text-[0.8125rem] text-muted-foreground">Add an address above to choose what to receive.</p>
-        )}
         <div className="space-y-2.5">
           {options.map((o) => (
             <label key={o.key} className="flex items-start gap-2 text-sm">
               <input
                 type="checkbox"
-                disabled={!emailValid}
                 checked={prefs[o.key] === true}
                 onChange={(e) => setPrefs((p) => ({ ...p, [o.key]: e.target.checked }))}
                 className="mt-1 accent-[var(--color-green)]"
@@ -233,6 +234,7 @@ function EmailPrefsEditor({
           ))}
         </div>
       </fieldset>
+      )}
 
       {error && <p className="text-sm text-destructive">{error}</p>}
       <div className="flex items-center gap-3 pt-1">

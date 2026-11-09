@@ -4,7 +4,6 @@ import { EyeOff, Eye, ThumbsUp, Flag } from 'lucide-react'
 import { useSession } from '@/lib/auth-client'
 import { cn } from '@/lib/utils'
 import { researcherLabel } from '@/features/nominations/format'
-import { ContactLinks } from '@/features/profile/ContactLinks'
 import { ResearcherLink } from '@/features/profile/ResearcherLink'
 import { useHideComment } from '@/features/admin/api'
 import { RichText } from '@/components/ui/RichText'
@@ -214,7 +213,6 @@ function CommentThread({
       >
         <div className="flex flex-wrap items-center gap-x-2 text-sm">
           <ResearcherLink name={c.name} token={c.token} className="font-medium text-ink" />
-          {!deleted && <ContactLinks links={c.links} />}
           <span className="text-xs text-muted-foreground">{formatWhen(c.createdAt)}</span>
           {c.hidden && <span className="text-xs font-medium text-amber">Hidden</span>}
           {canModerate && (

@@ -1,4 +1,3 @@
-import { BookOpenCheck, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { NominationStatus } from '@/types'
 import { STATUS_HINTS, STATUS_LABELS } from './status'
@@ -6,15 +5,16 @@ import { STATUS_HINTS, STATUS_LABELS } from './status'
 /**
  * Lifecycle status as a marker plus label, not a filled pill. One colour per
  * stage, so stages never look alike: grey ring = unreviewed, green dot = open
- * for contributors, amber dot = a team is working, check = completed, open
- * book = published.
+ * for contributors, amber dot = a team is working, dark green dot = completed,
+ * ringed dark green dot = published. Ticks are kept for open materials.
  */
 const MARK: Record<NominationStatus, string> = {
   pending: 'border-[1.5px] border-status-pending bg-transparent',
   approved: 'bg-status-open',
   in_progress: 'bg-status-progress',
-  completed: '',
-  published: '',
+  completed: 'bg-status-done',
+  // Published: the completed dot with a ring around it.
+  published: 'bg-status-done ring-[1.5px] ring-status-done ring-offset-[1.5px] ring-offset-card',
   rejected: 'bg-destructive',
 }
 
@@ -29,7 +29,6 @@ const TEXT: Record<NominationStatus, string> = {
 }
 
 export function StatusBadge({ status, className }: { status: NominationStatus; className?: string }) {
-  const done = status === 'completed' || status === 'published'
   return (
     <span
       title={STATUS_HINTS[status]}
@@ -39,13 +38,7 @@ export function StatusBadge({ status, className }: { status: NominationStatus; c
         className,
       )}
     >
-      {status === 'published' ? (
-        <BookOpenCheck className="h-3.5 w-3.5 text-status-done" strokeWidth={2.25} aria-hidden />
-      ) : done ? (
-        <Check className="h-3.5 w-3.5 text-status-done" strokeWidth={2.75} aria-hidden />
-      ) : (
-        <span className={cn('h-2 w-2 shrink-0 rounded-full', MARK[status])} aria-hidden />
-      )}
+      <span className={cn('h-2 w-2 shrink-0 rounded-full', MARK[status])} aria-hidden />
       {STATUS_LABELS[status]}
     </span>
   )

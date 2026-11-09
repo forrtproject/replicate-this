@@ -1,7 +1,29 @@
 import { Link } from 'react-router-dom'
 
 /** The short version of the nomination guidelines, beside the nominate and edit forms. */
-export function NominationGuidance() {
+export function NominationGuidance({ editing = false }: { editing?: boolean }) {
+  if (editing) {
+    return (
+      <aside className="lg:order-2">
+        <div className="rounded-lg border border-line bg-card p-5 text-sm leading-relaxed lg:sticky lg:top-20">
+          <h2 className="label">When editing</h2>
+          <ul className="mt-2 list-disc space-y-1.5 pl-4 text-ink/85 marker:text-muted-foreground">
+            <li>Keep the case about the evidence, never the authors.</li>
+            <li>Add links to data, code or materials as they become available.</li>
+            <li>Comments and votes stay with the nomination when you save.</li>
+          </ul>
+          <p className="mt-4 flex gap-4 border-t border-line pt-3">
+            <Link to="/guidelines" target="_blank" className="font-medium text-forest hover:underline">
+              Full guidelines
+            </Link>
+            <Link to="/code-of-conduct" target="_blank" className="font-medium text-forest hover:underline">
+              Code of Conduct
+            </Link>
+          </p>
+        </div>
+      </aside>
+    )
+  }
   return (
     <aside className="lg:order-2">
       <div className="rounded-lg border border-line bg-card p-5 text-sm leading-relaxed lg:sticky lg:top-20">

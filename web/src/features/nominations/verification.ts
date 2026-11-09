@@ -50,28 +50,30 @@ export const APPROACH_COPY: Record<
 }
 
 /**
- * The community-forecast question, worded for the check being asked for: "will
- * it replicate?" means nothing for a reproduction, where the question is
- * whether the results survive re-analysis and robustness checks.
+ * The community-forecast question. One question everywhere, so forecasts can be
+ * compared across studies; the qualifier says what kind of check will answer it.
  */
 export const FORECAST_QUESTION: Record<
   VerificationType,
-  { question: string; yes: string; no: string }
+  { question: string; qualifier: string; yes: string; no: string }
 > = {
   replication: {
-    question: 'Will it replicate?',
-    yes: 'Most expect this to replicate.',
-    no: 'Most expect this not to replicate.',
+    question: 'Will the finding hold up?',
+    qualifier: 'In a replication with new data.',
+    yes: 'Most expect it to hold up.',
+    no: 'Most expect it not to hold up.',
   },
   reproduction: {
-    question: 'Will the results prove robust?',
-    yes: 'Most expect the results to hold up.',
-    no: 'Most expect the results not to hold up.',
+    question: 'Will the finding hold up?',
+    qualifier: 'When the original analysis is re-run and varied.',
+    yes: 'Most expect it to hold up.',
+    no: 'Most expect it not to hold up.',
   },
   both: {
     question: 'Will the finding hold up?',
-    yes: 'Most expect the finding to hold up.',
-    no: 'Most expect the finding not to hold up.',
+    qualifier: 'In a replication or a reproduction.',
+    yes: 'Most expect it to hold up.',
+    no: 'Most expect it not to hold up.',
   },
 }
 

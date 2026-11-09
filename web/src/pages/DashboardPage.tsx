@@ -46,6 +46,7 @@ export function DashboardPage() {
   const { data: all } = useNominations()
   const titles = new Map((all ?? []).map((n) => [n.id, n.metadata.title || n.doi || 'Untitled']))
   for (const n of nominations.data ?? []) titles.set(n.id, n.metadata?.title || n.doi || 'Untitled')
+  const interest = new Map((all ?? []).map((n) => [n.id, n.upvotes]))
 
   const isNew =
     nominations.data?.length === 0 && contributions.data?.length === 0
@@ -151,7 +152,12 @@ export function DashboardPage() {
                   id: n.id,
                   title: n.metadata?.title || n.doi || 'Untitled',
                   status: n.status,
-                  note: `Nominated ${formatDate(n.createdAt)}`,
+                  note: [
+                    ...(interest.has(n.id)
+                      ? [`${interest.get(n.id)} ${interest.get(n.id) === 1 ? 'upvote' : 'upvotes'}`]
+                      : []),
+                    `Nominated ${formatDate(n.createdAt)}`,
+                  ],
                 }))}
               />
             )}
@@ -171,7 +177,10 @@ export function DashboardPage() {
                     id: n.id,
                     title: n.metadata?.title || n.doi || 'Untitled',
                     status: n.status,
-                    note: `${n.contributions} on the team`,
+                    note: [
+                      `${n.upvotes} ${n.upvotes === 1 ? 'upvote' : 'upvotes'}`,
+                      `${n.contributions} on the team`,
+                    ],
                   }
                 })}
               />
@@ -188,7 +197,7 @@ export function DashboardPage() {
 function StudyList({
   items,
 }: {
-  items: { id: string; title: string; status: NominationStatus; note: string }[]
+  items: { id: string; title: string; status: NominationStatus; note: string[] }[]
 }) {
   return (
     <ul className="divide-y divide-line rounded-lg border border-line bg-card">
@@ -202,9 +211,11 @@ function StudyList({
             <span className="block font-display text-[1.0625rem] font-semibold leading-snug text-ink">
               {n.title}
             </span>
-            <span className="mt-1 flex flex-wrap items-center gap-x-4 text-[0.8125rem] text-muted-foreground">
+            <span className="meta mt-1 text-[0.8125rem] text-muted-foreground">
               <StatusBadge status={n.status} className="text-[0.8125rem]" />
-              <span>{n.note}</span>
+              {n.note.map((part) => (
+                <span key={part}>{part}</span>
+              ))}
             </span>
             </span>
             <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
@@ -277,7 +288,7 @@ function LookingForContributors() {
         Looking for contributors
       </h2>
       <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-        Open studies with the smallest teams, where another person helps most.
+        Open studies that no one, or only a few people, have joined yet.
       </p>
       {suggestions.length === 0 ? (
         <p className="mt-3 text-sm text-muted-foreground">
@@ -295,9 +306,11 @@ function LookingForContributors() {
                 <span className="block font-display text-[1rem] font-semibold leading-snug text-ink">
                   {n.metadata.title || n.doi}
                 </span>
-                <span className="mt-0.5 block text-xs text-muted-foreground">
-                  {VERIFICATION_CONFIG[n.verificationType].short},{' '}
-                  {n.contributions === 0 ? 'no team yet' : `${n.contributions} on the team`}
+                <span className="meta mt-0.5 text-xs text-muted-foreground">
+                  <span>{VERIFICATION_CONFIG[n.verificationType].short}</span>
+                  <span>
+                    {n.upvotes} {n.upvotes === 1 ? 'upvote' : 'upvotes'}
+                  </span>
                 </span>
               </Link>
             </li>

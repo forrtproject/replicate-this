@@ -18,8 +18,8 @@ describe('forecastSummary', () => {
   })
 
   it('summarises a clear majority in the wording of the requested check', () => {
-    expect(forecastSummary('replication', 8, 2)).toBe('Most expect this to replicate. 10 predictions.')
-    expect(forecastSummary('reproduction', 1, 9)).toBe('Most expect the results not to hold up. 10 predictions.')
+    expect(forecastSummary('replication', 8, 2)).toBe('Most expect it to hold up. 10 predictions.')
+    expect(forecastSummary('reproduction', 1, 9)).toBe('Most expect it not to hold up. 10 predictions.')
     expect(forecastSummary('both', 5, 5)).toBe('Researchers are split. 10 predictions.')
   })
 })

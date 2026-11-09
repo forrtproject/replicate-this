@@ -127,25 +127,12 @@ export function NominationFormFields({
         />
       </Field>
 
-      {isReproduction && (
-        <Field
-          label="Data location"
-          optional
-          hint="Where the original data or code live, such as an OSF or Zenodo link."
-        >
-          <input
-            value={values.dataLocation}
-            onChange={(e) => set({ dataLocation: e.target.value })}
-            placeholder="https://osf.io/…"
-            className="input"
-          />
-        </Field>
-      )}
 
+      {(isReproduction || values.robustnessChecks.trim() !== '') && (
       <Field
         label="Suggested robustness checks"
         optional
-        hint="Alternative analyses worth trying."
+        hint="For the reproduction: alternative analyses worth trying."
       >
         <textarea
           value={values.robustnessChecks}
@@ -154,12 +141,13 @@ export function NominationFormFields({
           className="input"
         />
       </Field>
+      )}
 
-      {isReplication && (
+      {(isReplication || values.designDeviations.trim() !== '') && (
         <Field
           label="Suggested changes to the design"
           optional
-          hint="How a replication should differ from the original, if at all."
+          hint="For the replication: how the new study should differ from the original, if at all."
         >
           <textarea
             value={values.designDeviations}
@@ -221,6 +209,19 @@ export function NominationFormFields({
         </div>
       </fieldset>
 
+      <Field
+        label="Data location"
+        optional
+        hint="Where the original data or code live, such as an OSF or Zenodo link, if not linked above."
+      >
+        <input
+          value={values.dataLocation}
+          onChange={(e) => set({ dataLocation: e.target.value })}
+          placeholder="https://osf.io/…"
+          className="input"
+        />
+      </Field>
+
       <fieldset>
         <legend className="mb-2 text-sm font-medium">
           Tags <span className="font-normal text-muted-foreground">(check all that apply)</span>
@@ -236,10 +237,10 @@ export function NominationFormFields({
             />
             <span>
               <label htmlFor="replication-workshop" className="cursor-pointer">
-                Suits a replication workshop
+                Suits a one-day workshop
               </label>
               <span className="block text-[0.8125rem] text-muted-foreground">
-                This paper could be reproduced by a team in a one-day workshop.
+                A team could replicate or reproduce it in a day.
               </span>
             </span>
           </div>
@@ -263,22 +264,23 @@ export function NominationFormFields({
         </div>
       </fieldset>
 
-      {values.discipline && (
-        <div className="rounded-lg border border-line bg-card px-4 py-3">
+      <div className="rounded-lg border border-line bg-card px-4 py-3">
           <p className="text-sm font-medium">Where the result could be published</p>
           <p className="mt-0.5 text-xs text-muted-foreground">
             Based on your answers so far; the list updates as you edit.
           </p>
+          {!values.discipline ? (
+            <p className="mt-2 text-sm text-muted-foreground">Choose a discipline to see the list.</p>
+          ) : (
           <ul className="mt-2 space-y-0.5 text-sm">
             {matchJournalTags(values).map((j) => (
               <li key={j.key}>
-                {j.name}
-                {j.name.replace('²', '2') !== j.key && <span className="text-muted-foreground"> ({j.key})</span>}
+                {j.name} <span className="text-muted-foreground">({j.key})</span>
               </li>
             ))}
           </ul>
-        </div>
-      )}
+          )}
+      </div>
     </>
   )
 }

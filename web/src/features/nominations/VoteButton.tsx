@@ -107,6 +107,7 @@ export function VoteButton({
       onClick={handleClick}
       aria-pressed={on}
       aria-label={tileLabel}
+      title={on ? 'You want this checked. Click to undo.' : 'Upvote: I want this checked'}
       className={cn(
         'flex h-14 w-14 flex-col items-center justify-center gap-0.5 rounded-md border transition-colors',
         on

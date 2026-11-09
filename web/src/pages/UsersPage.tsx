@@ -3,7 +3,6 @@ import { useAdminUsers, useSetUserRole, type AdminUser } from '@/features/admin/
 import { AdminPageHeader } from '@/features/admin/AdminTabs'
 import { formatDate } from '@/lib/dates'
 import { researcherLabel } from '@/features/nominations/format'
-import { ContactLinks } from '@/features/profile/ContactLinks'
 import { useSession } from '@/lib/auth-client'
 import { ApiError } from '@/lib/api'
 import { cn } from '@/lib/utils'
@@ -77,10 +76,9 @@ export function UsersPage() {
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap items-center gap-x-2">
                       <span className="font-medium">{researcherLabel(u.name, u.token)}</span>
-                      <ContactLinks links={u.links} />
                       {u.providers.length > 0 && (
                         <span className="text-xs text-muted-foreground">
-                          {u.providers.join(', ')}
+                          via {u.providers.join(', ')}
                         </span>
                       )}
                       {isMe && <span className="text-xs text-muted-foreground">(you)</span>}
@@ -108,7 +106,7 @@ export function UsersPage() {
                         onClick={() => change(u, 'user')}
                         disabled={maintainers <= 1}
                         title={maintainers <= 1 ? 'Cannot remove the last maintainer' : undefined}
-                        className="text-xs font-medium text-muted-foreground underline-offset-2 hover:text-destructive hover:underline disabled:opacity-40"
+                        className="btn-secondary btn-sm text-destructive!"
                       >
                         Remove maintainer role
                       </button>
@@ -119,7 +117,7 @@ export function UsersPage() {
                             change(u, 'maintainer')
                           }
                         }}
-                        className="text-xs font-medium text-forest underline-offset-2 hover:underline"
+                        className="btn-secondary btn-sm"
                       >
                         Make maintainer
                       </button>
