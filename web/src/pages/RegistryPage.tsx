@@ -11,6 +11,8 @@ import { DISCIPLINES, type NominationStatus, type NominationSummary } from '@/ty
 import { usePageTitle } from '@/lib/page-title'
 import { useSession } from '@/lib/auth-client'
 import { PageBand } from '@/components/layout/PageBand'
+import { SlantedBlock } from '@/components/layout/SlantedBlock'
+import { withBase } from '@/lib/config'
 
 // "Newest" is the default on purpose: ranking by votes first would keep the
 // already-popular nominations on top and make them ever more popular (a
@@ -99,9 +101,10 @@ export function RegistryPage() {
   return (
     <div>
       {showIntro ? (
-        <section className="bg-brand-deep text-white">
-          <div className="mx-auto max-w-5xl px-4 pb-14 pt-16 sm:pb-16 sm:pt-20">
-          <h1 className="max-w-3xl font-display text-[2.5rem] font-medium leading-[1.05] tracking-[-0.02em] sm:text-[3.5rem]">
+        <SlantedBlock className="bg-brand-deep text-white">
+          <div className="mx-auto grid max-w-5xl items-center gap-x-10 px-4 pb-14 pt-16 sm:pb-16 sm:pt-20 lg:grid-cols-[1fr_auto]">
+          <div>
+          <h1 className="max-w-3xl text-balance font-display text-[2.5rem] font-medium leading-[1.05] tracking-[-0.02em] sm:text-[3.5rem]">
             Studies worth checking twice
           </h1>
           <p className="mt-5 max-w-2xl text-[1.0625rem] leading-relaxed text-on-deep">
@@ -121,7 +124,17 @@ export function RegistryPage() {
             </Link>
           </div>
           </div>
-        </section>
+          {/* FORRT brick illustration (CC BY-NC-SA 4.0, forrt.org): two near-identical
+              towers, one with a different brick, under a magnifying glass. */}
+          <img
+            src={withBase('/images/replication-bricks.webp')}
+            alt=""
+            width={640}
+            height={349}
+            className="hidden w-[22rem] lg:block"
+          />
+          </div>
+        </SlantedBlock>
       ) : (
         <PageBand>
         <div className="flex flex-wrap items-end justify-between gap-4">

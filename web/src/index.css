@@ -1,68 +1,77 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap');
 @import 'tailwindcss';
 
 /*
   Replicate This — "Scholarly & approachable."
-  Warm paper, deep ink, a friendly blue. Newsreader (editorial serif) for page
-  titles and study titles, the things a reader would cite; Inter for everything
-  else. Figures use Inter's tabular numerals. Calm and journal-like.
+  Shares its look with its two homes. From FORRT's identity: warm paper, slate
+  ink, lapis blue, Newsreader (editorial serif) for page and study titles and
+  Source Sans 3 for everything else, and the brick illustrations. From the
+  University of Münster's: the same lapis, the diagonal edge on colour blocks
+  (with a thin cyan line beside it) and triangle bullets. Figures use tabular
+  numerals. Calm and journal-like.
 */
 @theme {
-  --color-background: #faf9f5; /* paper */
-  --color-foreground: #17211f; /* ink  */
-  --color-muted: #f1efe8;
+  --color-background: #fefdf6; /* paper */
+  --color-foreground: #262d35; /* ink  */
+  --color-muted: #f2f1ea;
   --color-muted-foreground: #56625d;
   --color-border: #e5e2d9;
   --color-input: #d7d3c8;
-  --color-ring: #2858c8;
+  --color-ring: #005a87;
 
-  --color-primary: #2858c8;
+  --color-primary: #005a87;
   --color-primary-foreground: #ffffff;
 
-  --color-secondary: #f1efe8;
-  --color-secondary-foreground: #17211f;
+  --color-secondary: #f2f1ea;
+  --color-secondary-foreground: #262d35;
 
-  --color-accent: #ebf1fc; /* soft blue surface */
-  --color-accent-foreground: #1c3a7d;
+  --color-accent: #e3eef5; /* soft blue surface */
+  --color-accent-foreground: #003f5f;
 
   --color-destructive: #a8322d; /* brick red, distinct from in-progress amber */
   --color-destructive-foreground: #ffffff;
 
   --color-card: #ffffff;
-  --color-card-foreground: #17211f;
+  --color-card-foreground: #262d35;
 
   /* Named brand tokens */
-  --color-ink: #17211f;
-  --color-paper: #faf9f5;
-  --color-brand-deep: #1c3a7d;
-  --color-brand: #2858c8; /* 5.4:1 or better on paper, band and tint; white on it 6.3:1 */
-  --color-brand-tint: #ebf1fc;
-  /* Text on the deep blue blocks (hero, result, footer). */
-  --color-on-deep: #dce6fa;
-  --color-on-deep-label: #b9ccf2;
+  --color-ink: #262d35;
+  --color-paper: #fefdf6;
+  /* Lapis: FORRT's research blue and Münster's lapis (#00578a) are the same hue. */
+  --color-brand-deep: #003f5f; /* 11.0:1 on paper */
+  --color-brand: #005a87; /* 7.3:1 on paper, 6.3:1 on band and tint; white on it 7.5:1 */
+  --color-brand-tint: #e3eef5;
+  /* Münster cyan: decorative lines only, never text. */
+  --color-cyan: #009dd1;
+  /* Text on the deep blue blocks (hero, result, footer): 8.8:1 and 6.4:1. */
+  --color-on-deep: #d6e6f1;
+  --color-on-deep-label: #a9c8dc;
   --color-amber: #b4531a;
   --color-line: #e5e2d9;
   /* Colour blocks: a pale blue band behind every page header, deep blue for
      the visitor hero, finished-study results and the footer. */
-  --color-band: #e6eefb;
-  --color-band-line: #cbd9f2;
-  --color-band-ink: #13284f;
+  --color-band: #e3eef5;
+  --color-band-line: #c3d8e6;
+  --color-band-ink: #0d2c40;
 
   --radius: 0.5rem;
 
-  /* Smallest text is 13px: timestamps and helper lines stay comfortable to read. */
-  --text-xs: 0.8125rem;
-  --text-xs--line-height: 1.125rem;
+  /* Source Sans 3 runs smaller than most UI faces, so the small steps sit a
+     pixel above Tailwind's: 14px is the smallest text (timestamps, helper lines). */
+  --text-xs: 0.875rem;
+  --text-xs--line-height: 1.25rem;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.375rem;
 
   --font-display: 'Newsreader', Georgia, 'Times New Roman', serif;
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Source Sans 3', 'Source Sans Pro', ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, 'SFMono-Regular', monospace;
 
   /* Status scale: each lifecycle stage gets its own colour. */
   --color-status-pending: #8a8f8c;
-  --color-status-open: #2858c8;
+  --color-status-open: #005a87;
   --color-status-progress: #b45309;
-  --color-status-done: #1c3a7d;
+  --color-status-done: #003f5f;
 }
 
 html,
@@ -78,7 +87,6 @@ html {
 
 body {
   margin: 0;
-  font-feature-settings: 'cv11', 'ss01';
   background-color: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-sans);
@@ -153,7 +161,7 @@ h3 {
 .label {
   font-family: var(--font-sans);
   letter-spacing: 0;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-ink);
 }
@@ -167,7 +175,7 @@ h3 {
   gap: 0.375rem;
   border-radius: var(--radius);
   padding: 0.4375rem 0.875rem;
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   line-height: 1.25rem;
   font-weight: 600;
   transition: background-color 0.15s, border-color 0.15s;
@@ -199,7 +207,7 @@ h3 {
 }
 .btn-sm {
   padding: 0.25rem 0.625rem;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
 }
 
 /* Shared form control */
@@ -216,7 +224,7 @@ h3 {
 }
 @media (min-width: 640px) {
   .input {
-    font-size: 0.875rem;
+    font-size: 0.9375rem;
   }
 }
 .input:focus {
@@ -272,7 +280,20 @@ h3 {
   margin: 0.3em 0;
 }
 .markdown ul {
-  list-style: disc;
+  list-style: none;
+}
+/* Triangle bullets, as in the Münster templates. */
+.markdown ul > li {
+  position: relative;
+}
+.markdown ul > li::before {
+  content: '';
+  position: absolute;
+  left: -1.05em;
+  top: 0.62em;
+  border-style: solid;
+  border-width: 0.3em 0 0.3em 0.5em;
+  border-color: transparent transparent transparent var(--color-brand);
 }
 .markdown ol {
   list-style: decimal;
@@ -307,6 +328,17 @@ h3 {
   margin-top: 0;
 }
 
+/*
+  Diagonal lower edge for a colour block, after the Münster templates: the
+  block drops by a fixed height from left to right, so the angle stays gentle
+  on phones and wide screens alike. <SlantedBlock> adds the bottom padding
+  and the thin cyan line that runs just below the edge.
+*/
+.slant-bottom {
+  --slant: 2.75rem;
+  position: relative;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--slant)), 0 100%);
+}
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.001ms !important;

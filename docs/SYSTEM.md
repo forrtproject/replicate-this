@@ -459,5 +459,10 @@ Behaviour that spans pages, and where it lives in `web/src`:
   typed.
 - **Accessibility baseline.** Skip link, visible focus, 16px inputs on phones
   (so iOS doesn't zoom), a sticky header with matching `scroll-padding-top`,
-  reduced motion respected, and the brand blue at `#2858c8` (6.0:1 on the page
-  background, 5.4:1 on the header band).
+  reduced motion respected, and the lapis brand blue at `#005a87` (7.3:1 on the page
+  background, 6.3:1 on the header band).
+- **Visual identity.** Shared with the project's two homes: FORRT's paper, ink,
+  lapis blue, Newsreader and Source Sans 3, and the University of Münster's
+  diagonal edge with a cyan line (`SlantedBlock`) and triangle bullets. The
+  visitor hero shows FORRT's brick illustration
+  (`web/public/images/replication-bricks.webp`, © FORRT, CC BY-NC-SA 4.0).
